@@ -59,68 +59,57 @@ class Tournament {
     }
   }
 
-  static generateMultipleOfFourMatches (runners: number[]): Match[] {
+  static generateMatches (runners: number[]): Match[] {
     const matches: Match[] = []
-    // matches can always be divided in 4 blocks
-    for (let i = 0; i < 4; i++) {
-      // the overall idea here: put all players in a line and then group then by increments which get bigger
-      // ignore the players that have already been grouped if they end up being in the same group
-      // this will generate a list of matchups which then are broken into matches
-      // and each player plays only once in each of these blocks so in total they will play 4 times
-      const increment: number = i + 1
-      const matchups: number[] = []
 
-      // using index for the player, converting to their id at the end
-      let currentPlayer: number = 0
-      while (matchups.length < runners.length) {
-        while (matchups.includes(currentPlayer)) {
-          currentPlayer = (currentPlayer + 1) % runners.length
-        }
-        matchups.push(currentPlayer)
-        currentPlayer = (currentPlayer + increment) % runners.length
-      }
+    let untakenPlayers:{[key: number]: boolean} = {}
+    let takenPlayers:{[key: number]: boolean} = {}
 
-      for (let j = 0; j < matchups.length; j += 4) {
-        const matchPlayers = matchups.slice(j, j + 4).map((x: number) => runners[x])
-        matches.push({
-          runners: matchPlayers,
-          standings: []
-        })
+    const resetTakenPlayers = () => {
+      untakenPlayers = {}
+      takenPlayers = {}
+      for (const runner of runners) {
+        untakenPlayers[runner] = true
+        takenPlayers[runner] = false
       }
     }
-    return matches
-  }
 
-  static swapPlayersInMatches (match1: Match, match2: Match, match1Swap: number, match2Swap: number): void {
-    const temp: number = match1.runners[match1Swap]
-    match1.runners[match1Swap] = match2.runners[match2Swap]
-    match2.runners[match2Swap] = temp
-  }
+    const getRandomPlayer = (): number => {
+      const keys = Object.keys(untakenPlayers)
+      const randomIndex = Math.floor(Math.random() * keys.length)
 
-  static generateMatches (runners: number[]): Match[] {
-    const multiple = Math.floor(runners.length / 4) * 4
-    const matches: Match[] = Tournament.generateMultipleOfFourMatches(runners.slice(0, multiple))
-
-    // the idea of this algorithm is to take the remaining players and spread them across the generated matches
-    // from the previous step, making sure that each player plays 4 times and that they don't play twice in the same match
-    const remainingPlayers = runners.slice(multiple)
-    let addedPlayers: number = 0
-    for (const player of remainingPlayers) {
-      const newMatch: Match = {
-        runners: [player, player, player, player],
-        standings: []
-      }
-      for (let i = 0; i < 3; i++) {
-        // addedPlayers is being used just to displace the index by 1
-        const swapMatchIndex = addedPlayers % 2 + i * 2
-        for (const runner of matches[swapMatchIndex].runners) {
-          if (!newMatch.runners.includes(runner)) {
-            Tournament.swapPlayersInMatches(matches[swapMatchIndex], newMatch, matches[swapMatchIndex].runners.indexOf(runner), i)
-            break
+      if (untakenPlayers[Number(keys[randomIndex])] === true) {
+        return Number(keys[randomIndex])
+      } else {
+        // search for closest untaken
+        for (let i = 0; i < keys.length; i++) {
+          const searchIndex = (randomIndex + i) % keys.length
+          if (untakenPlayers[Number(keys[searchIndex])] === true) {
+            return Number(keys[searchIndex])
           }
         }
+        // if no player is found, we need to reset and go again because all players are taken
+        resetTakenPlayers()
+        return getRandomPlayer()
       }
-      addedPlayers++
+    }
+
+    resetTakenPlayers()
+
+    // randomly build matches, with the same number of matches as the number of runners
+    // we can guarantee we will be able to close the bracket this way with everyone playing
+    // the same number of times
+    for (let i = 0; i < runners.length; i++) {
+      const newMatch: Match = {
+        runners: [],
+        standings: []
+      }
+      while (newMatch.runners.length < 4) {
+        const player = getRandomPlayer()
+        newMatch.runners.push(player)
+        untakenPlayers[player] = false
+        takenPlayers[player] = true
+      }
       matches.push(newMatch)
     }
 
