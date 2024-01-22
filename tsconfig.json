@@ -1,0 +1,17 @@
+{
+  "exclude": ["node_modules", "public", "build"],
+  "compilerOptions": {
+    "target": "es2016",
+    "lib": ["es6"],
+    "module": "CommonJS",
+    "rootDir": "src",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "outDir": "build",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "skipLibCheck": true
+  }
+}
