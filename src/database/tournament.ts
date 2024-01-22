@@ -62,10 +62,10 @@ class Tournament {
   static generateMatches (runners: number[]): Match[] {
     const matches: Match[] = []
 
-    let untakenPlayers:{[key: number]: boolean} = {}
-    let takenPlayers:{[key: number]: boolean} = {}
+    let untakenPlayers: { [key: number]: boolean } = {}
+    let takenPlayers: { [key: number]: boolean } = {}
 
-    const resetTakenPlayers = () => {
+    const resetTakenPlayers = (): void => {
       untakenPlayers = {}
       takenPlayers = {}
       for (const runner of runners) {
@@ -78,13 +78,13 @@ class Tournament {
       const keys = Object.keys(untakenPlayers)
       const randomIndex = Math.floor(Math.random() * keys.length)
 
-      if (untakenPlayers[Number(keys[randomIndex])] === true) {
+      if (untakenPlayers[Number(keys[randomIndex])]) {
         return Number(keys[randomIndex])
       } else {
         // search for closest untaken
         for (let i = 0; i < keys.length; i++) {
           const searchIndex = (randomIndex + i) % keys.length
-          if (untakenPlayers[Number(keys[searchIndex])] === true) {
+          if (untakenPlayers[Number(keys[searchIndex])]) {
             return Number(keys[searchIndex])
           }
         }
