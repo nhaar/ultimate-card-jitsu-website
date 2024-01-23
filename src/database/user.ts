@@ -1,3 +1,4 @@
+import { Request, Response, NextFunction } from 'express'
 import bcrypt = require('bcrypt')
 
 import Database from './database'
@@ -22,10 +23,10 @@ export default class User {
     return new User(query.rows[0].id)
   }
 
-  static async getUserByName (username: string): Promise<User> {
+  static async getUserByName (username: string): Promise<User | null> {
     const db = new Database()
     const res = await db.getQuery('SELECT * FROM players WHERE username = $1', [username])
-    if (res.rows.length === 0) throw new Error('user not found')
+    if (res.rows.length === 0) return null
     return new User(res.rows[0].id)
   }
 
@@ -55,5 +56,25 @@ export default class User {
 
   async updateColumn (column: string, value: any): Promise<void> {
     await this.db.getQuery(`UPDATE players SET ${column} = $1 WHERE id = $2`, [value, this.id])
+  }
+
+  static checkAdminMiddleware (req: Request, res: Response, next: NextFunction): void {
+    void (async (req: Request, res: Response, next: NextFunction) => {
+      const { token } = req.body
+      if (typeof (token) !== 'string') {
+        res.status(400).json({ error: 'session token must be a string' })
+        return
+      }
+      const creator: User | null = await User.getUserByToken(token)
+      if (creator === null) {
+        res.status(401).json({ error: 'invalid session token' })
+        return
+      }
+      if (!(await creator.isAdmin())) {
+        res.status(401).json({ error: 'user is not an admin' })
+        return
+      }
+      next()
+    })(req, res, next)
   }
 }

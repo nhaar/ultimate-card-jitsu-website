@@ -1,5 +1,9 @@
 import Database from './database'
 
+interface PlayerPoints {
+  [key: number]: number
+}
+
 interface PlayerStandings {
   runnerId: number
   firsts: number
@@ -26,8 +30,20 @@ interface Bracket {
   final: TournamentPhase
 }
 
+interface TieStandings {
+  [key: number]: number[]
+}
+
 class Tournament {
   bracket: Bracket
+
+  static readonly FIRST_PLACE_POINTS = 4
+  static readonly SECOND_PLACE_POINTS = 3
+  static readonly THIRD_PLACE_POINTS = 1
+  static readonly FOURTH_PLACE_POINTS = 0
+  static readonly FINAL_MATCHES = 3
+
+  tieStandings: TieStandings = {}
 
   constructor (...args: any[]) {
     if (args.length === 0) {
@@ -192,6 +208,158 @@ class Tournament {
       await db.getQuery('UPDATE tournament SET data = $1', [JSON.stringify(new Tournament(...runners))])
     }
     return tournament
+  }
+
+  getMatches (): Match[] {
+    return [...this.bracket.start.matches, ...this.bracket.final.matches]
+  }
+
+  updateScore (matchIndex: number, standings: number[]): undefined | number {
+    if (standings.length !== 4) {
+      return 1
+    }
+
+    let targetMatches: Match[]
+    let isFirstPhase: boolean = false
+    if (this.bracket.start.matches.length > matchIndex) {
+      isFirstPhase = true
+      targetMatches = this.bracket.start.matches
+    } else {
+      matchIndex -= this.bracket.start.matches.length
+      targetMatches = this.bracket.final.matches
+    }
+    if (targetMatches[matchIndex] === undefined) {
+      return 2
+    }
+    targetMatches[matchIndex].standings = standings
+
+    if (isFirstPhase) {
+      if (this.isFirstPhaseComplete() && !this.containsTie()) {
+        this.updateFinalists()
+      }
+    }
+
+    return undefined
+  }
+
+  getPlayerPoints (): PlayerPoints {
+    const playerPoints: PlayerPoints = {}
+
+    for (const match of this.getMatches()) {
+      for (let i = 0; i < match.standings.length; i++) {
+        const runner = match.runners[match.standings[i]]
+        if (playerPoints[runner] === undefined) {
+          playerPoints[runner] = 0
+        }
+        switch (i) {
+          case 0:
+            playerPoints[runner] += Tournament.FIRST_PLACE_POINTS
+            break
+          case 1:
+            playerPoints[runner] += Tournament.SECOND_PLACE_POINTS
+            break
+          case 2:
+            playerPoints[runner] += Tournament.THIRD_PLACE_POINTS
+            break
+          case 3:
+            playerPoints[runner] += Tournament.FOURTH_PLACE_POINTS
+            break
+        }
+      }
+    }
+
+    return playerPoints
+  }
+
+  isFirstPhaseComplete (): boolean {
+    for (const match of this.bracket.start.matches) {
+      if (match.standings.length === 0) {
+        return false
+      }
+    }
+    return true
+  }
+
+  getTies (): { [key: number]: number[] } {
+    const playerPoints = this.getPlayerPoints()
+
+    const pointMap: { [key: number]: number } = {}
+    for (const player in playerPoints) {
+      if (pointMap[playerPoints[Number(player)]] === undefined) {
+        pointMap[playerPoints[Number(player)]] = 0
+      }
+      pointMap[playerPoints[Number(player)]]++
+    }
+    const pointTies: { [key: number]: number[] } = {}
+
+    for (const pointValue in pointMap) {
+      const ties: number[] = []
+
+      if (pointMap[Number(pointValue)] > 1) {
+        for (const player in playerPoints) {
+          if (playerPoints[Number(player)] === Number(pointValue)) {
+            ties.push(Number(player))
+          }
+        }
+      }
+
+      pointTies[Number(pointValue)] = ties
+    }
+
+    return pointTies
+  }
+
+  containsTie (): boolean {
+    const ties = this.getTies()
+    for (const pointValue in ties) {
+      if (ties[Number(pointValue)].length > 1) {
+        return true
+      }
+    }
+    return false
+  }
+
+  updateFinalists (): void {
+    const playerPoints = this.getPlayerPoints()
+
+    const sortedPlayers = Object.keys(playerPoints).sort((a, b) => {
+      const pointDiff = playerPoints[Number(a)] - playerPoints[Number(b)]
+      if (pointDiff === 0) {
+        const tieStandings = this.tieStandings[playerPoints[Number(a)]]
+        const aIndex = tieStandings.indexOf(Number(a))
+        const bIndex = tieStandings.indexOf(Number(b))
+        return aIndex - bIndex
+      } else {
+        return pointDiff
+      }
+    })
+
+    const finalists: PlayerStandings[] = []
+    for (let i = 0; i < 4; i++) {
+      finalists.push({
+        runnerId: Number(sortedPlayers[i]),
+        firsts: 0,
+        seconds: 0,
+        thirds: 0,
+        fourths: 0
+      })
+    }
+
+    this.bracket.final.players = finalists
+    for (let i = 0; i < Tournament.FINAL_MATCHES; i++) {
+      const runners = finalists.map(finalist => {
+        return finalist.runnerId
+      })
+      this.bracket.final.matches.push({
+        runners,
+        standings: []
+      })
+    }
+  }
+
+  settleTies (tieStandings: TieStandings): void {
+    this.tieStandings = tieStandings
+    this.updateFinalists()
   }
 }
 

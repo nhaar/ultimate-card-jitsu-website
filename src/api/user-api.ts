@@ -6,7 +6,7 @@ import { asyncWrapper } from '../utils/utils'
 
 const router = express.Router()
 
-router.use('/login', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+router.post('/login', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   const { username, password } = req.body
 
   if (typeof (username) !== 'string') {
@@ -28,7 +28,7 @@ router.use('/login', asyncWrapper(async (req: Request, res: Response): Promise<v
   }
 }))
 
-router.use('/register', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+router.post('/register', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   const { username, password, creatorToken } = req.body
 
   if ((await User.userExists(username))) {
@@ -67,7 +67,7 @@ router.use('/register', asyncWrapper(async (req: Request, res: Response): Promis
   res.sendStatus(200)
 }))
 
-router.use('/edit', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+router.post('/edit', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   const { token, username, cpimaginedUser, cpimaginedPass, pronouns, pfp } = req.body
 
   if (typeof (token) !== 'string') {
