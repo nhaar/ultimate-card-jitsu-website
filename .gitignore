@@ -22,3 +22,9 @@ yarn-error.log*
 
 # server URL
 /src/urls.ts
+
+# discord widget ID, should be copied from the server
+/src/discord-widget.ts
+
+# set to the twitch channel to embed the tournament
+/src/stream-channel.ts

@@ -1,4 +1,4 @@
-import { SERVER_URL } from "./urls"
+import { SERVER_URL } from './urls'
 
 export async function postJSON (route: string, object: object): Promise<Response> {
   const response = await fetch(SERVER_URL + '/' + route, {
