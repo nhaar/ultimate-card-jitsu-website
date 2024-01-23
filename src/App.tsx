@@ -1,6 +1,5 @@
 import React from 'react'
 
-import { origin } from './origin'
 import './styles/styles.scss'
 import './styles/navbar.css'
 import './styles/candombe.css'
@@ -11,7 +10,7 @@ export default function App (): JSX.Element {
     <div>
       <nav className='navbar fire-nav' role='navigation' aria-label='main navigation'>
         <div className='navbar-brand'>
-          <a className='navbar-item' href={origin}>
+          <a className='navbar-item' href='/'>
             <img
               src={Logo} width={855 / 4} height={645 / 4} style={{
                 maxHeight: 'none'
@@ -27,7 +26,7 @@ export default function App (): JSX.Element {
 
         <div id='fireNavbar' className='navbar-menu'>
           <div className='navbar-start'>
-            <a className='navbar-item' href={origin}>
+            <a className='navbar-item' href='/'>
               Bracket
             </a>
 
