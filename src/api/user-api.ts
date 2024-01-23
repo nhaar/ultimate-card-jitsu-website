@@ -2,7 +2,7 @@ import express = require('express')
 import { Request, Response } from 'express'
 
 import User from '../database/user'
-import { asyncWrapper } from '../utils/utils'
+import { asyncWrapper, formatCookies } from '../utils/utils'
 
 const router = express.Router()
 
@@ -98,6 +98,28 @@ router.post('/edit', asyncWrapper(async (req: Request, res: Response): Promise<v
   }
 
   res.sendStatus(200)
+}))
+
+router.post('/user-role', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+  if (req.headers.cookies === undefined) {
+    res.status(400).json({ error: 'no cookies' })
+    return
+  }
+  const { token } = formatCookies(req.headers.cookies as string)
+  if (typeof (token) !== 'string') {
+    res.status(200).json({ role: 'none' })
+    return
+  }
+  const user: User | null = await User.getUserByToken(token)
+  if (user === null) {
+    res.status(200).json({ role: 'none' })
+    return
+  }
+  if (await user.isAdmin()) {
+    res.status(200).json({ role: 'admin' })
+    return
+  }
+  res.status(200).json({ role: 'user' })
 }))
 
 export default router

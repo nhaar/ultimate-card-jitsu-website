@@ -8,3 +8,16 @@ export function asyncWrapper (asyncFn: (req: Request, res: Response) => Promise<
     })
   }
 }
+
+export function formatCookies (str: string): { [key: string]: string } {
+  const matches = str.match(/\w+=\w+(?=($|;))/g)
+  const cookies: { [key: string]: string } = {}
+  if (matches != null) {
+    matches.forEach(match => {
+      const [name, value] = match.match(/\w+/g) as [string, string]
+      cookies[name] = value
+    })
+  }
+
+  return cookies
+}

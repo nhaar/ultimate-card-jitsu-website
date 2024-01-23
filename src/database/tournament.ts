@@ -216,6 +216,16 @@ class Tournament {
     return tournament
   }
 
+  static async getTournamentDate (): Promise<Date | null> {
+    const db = new Database()
+    const query = await db.getQuery('SELECT * FROM tournament_date', [])
+    if (query.rows.length === 0) {
+      return null
+    } else {
+      return query.rows[0].date
+    }
+  }
+
   getMatches (): Match[] {
     return [...this.bracket.start.matches, ...this.bracket.final.matches]
   }
