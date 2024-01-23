@@ -4,7 +4,8 @@ import './styles/styles.scss'
 import './styles/navbar.css'
 import './styles/candombe.css'
 import Logo from './images/logo.png'
-import MaingePage from './MainPage'
+import MainPage from './MainPage'
+import PlayerPage from './PlayerPage'
 
 function Navbar (): JSX.Element {
   return (
@@ -30,7 +31,7 @@ function Navbar (): JSX.Element {
             Bracket
           </a>
 
-          <a className='navbar-item'>
+          <a className='navbar-item' href='/player'>
             Player Page
           </a>
         </div>
@@ -44,7 +45,11 @@ export default function App (): JSX.Element {
 
   switch (window.location.pathname) {
     case '/': {
-      Page = <MaingePage />
+      Page = <MainPage />
+      break
+    }
+    case '/player': {
+      Page = <PlayerPage />
       break
     }
     default: {
