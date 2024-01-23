@@ -1,0 +1,14 @@
+@charset "utf-8";
+
+$volcano-metal: #2b2c30;
+$hot-sauce-yellow: #dfdd3e;
+$cj-logo-orange: #ea9124;
+$volcano-lava: #eb650f;
+
+$navbar-background-color: $volcano-metal;
+$navbar-height: 10rem;
+$navbar-item-color: $cj-logo-orange;
+
+$body-background-color: $volcano-lava;
+
+@import "~bulma/bulma";

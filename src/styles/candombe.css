@@ -1,0 +1,11 @@
+@font-face {
+  font-family: 'Candombe';
+  src: url('Candombe.eot');
+  src: url('Candombe.eot?#iefix') format('embedded-opentype'),
+      url('Candombe.woff2') format('woff2'),
+      url('Candombe.woff') format('woff'),
+      url('Candombe.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
