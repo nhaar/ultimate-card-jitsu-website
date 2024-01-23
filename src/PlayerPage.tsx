@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { postAndGetJSON } from './utils'
+import LoginPage from './LoginPage'
 
 type UserRole = 'user' | 'admin' | 'none'
 
@@ -21,7 +22,7 @@ export default function PlayerPage (): JSX.Element {
       return <div>Loading...</div>
     }
     case 'none': {
-      return <div>Not logged in</div>
+      return <LoginPage />
     }
     case 'user': {
       return <div>Logged in as user</div>
