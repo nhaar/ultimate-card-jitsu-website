@@ -4,9 +4,8 @@ import express = require('express')
 import { Request, Response } from 'express'
 import cors = require('cors')
 
+import Database from './database/database'
 import api from './api/api'
-
-import Tournament from './database/tournament'
 
 const app = express()
 
@@ -22,4 +21,11 @@ app.use('*', (req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, '../public/index.html'))
 })
 
-console.log(Tournament.generateMatches([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
+const db = new Database()
+db.initTables()
+
+const PORT = 5000
+
+app.listen(PORT, () => {
+  console.log(`Listening on port ${PORT}`)
+})

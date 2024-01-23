@@ -80,6 +80,9 @@ router.get('/tie', asyncWrapper(async (req: Request, res: Response): Promise<voi
   res.json({ exists: containsTie, ties }).status(200)
 }))
 
-router.get('/')
+router.get('/active', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+  const exists = await Tournament.tournamentExists()
+  res.json({ active: exists }).status(200)
+}))
 
 export default router

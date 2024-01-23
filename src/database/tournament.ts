@@ -196,6 +196,12 @@ class Tournament {
     }
   }
 
+  static async tournamentExists (): Promise<boolean> {
+    const db = new Database()
+    const query = await db.getQuery('SELECT * FROM tournament', [])
+    return query.rows.length > 0
+  }
+
   static async createTournament (...runners: number[]): Promise<Tournament> {
     const tournament: Tournament = new Tournament(...runners)
 
