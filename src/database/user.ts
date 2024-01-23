@@ -1,3 +1,5 @@
+import crypto = require('crypto')
+
 import { Request, Response, NextFunction } from 'express'
 import bcrypt = require('bcrypt')
 
@@ -11,6 +13,16 @@ export default class User {
   constructor (id: number) {
     this.db = new Database()
     this.id = id
+  }
+
+  static async generateToken (): Promise<string> {
+    return crypto.randomBytes(256).toString('hex')
+  }
+
+  async startSession (): Promise<string> {
+    const token = await User.generateToken()
+    await this.updateColumn('token', token)
+    return token
   }
 
   static async encryptPassword (password: string): Promise<string> {
