@@ -1,7 +1,6 @@
 import { SERVER_URL } from './urls'
 
 export async function postJSON (route: string, object: object): Promise<Response> {
-  console.log(document.cookie, 'O CUK')
   const response = await fetch(SERVER_URL + '/' + route, {
     method: 'POST',
     body: JSON.stringify(object),
