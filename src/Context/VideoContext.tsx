@@ -22,7 +22,7 @@ function ContextProvider({ children }:{ children: JSX.Element[] | JSX.Element}):
   useEffect(() => {
     const socket = io(SERVER_URL).on('me', (id: string) => setMe(id))
 
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+    navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
     .then((currentStream) => {
       setStream(currentStream)
       if (myVideo.current === null) {
