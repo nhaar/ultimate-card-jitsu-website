@@ -20,6 +20,13 @@ function ContextProvider ({ children }: { children: JSX.Element[] | JSX.Element 
   // use of any for call and connectionRef should be fixed
 
   useEffect(() => {
+    // immediately answer call.
+    if (call.isReceivedCall && !callAccepted) {
+      answerCall()
+    }
+  }, [call, callAccepted])
+
+  useEffect(() => {
     const socket = io(SERVER_URL).on('me', (id: string) => setMe(id))
 
     navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
