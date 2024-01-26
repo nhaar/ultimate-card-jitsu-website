@@ -9,8 +9,6 @@ import { ContextProvider } from './Context/VideoContext'
  * @returns
  */
 export default function UserPage (): JSX.Element {
-  const [stream, setStream] = useState<MediaStream | null>(null)
-
   return (
     <ContextProvider>
       <div>

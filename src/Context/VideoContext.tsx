@@ -27,17 +27,9 @@ function ContextProvider ({ children }: { children: JSX.Element[] | JSX.Element 
   }, [call, callAccepted])
 
   useEffect(() => {
-    const socket = io(SERVER_URL).on('me', (id: string) => setMe(id))
+    const socket = io(SERVER_URL).on('me', (id: string) => setMe(id));
 
-    navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
-      .then((currentStream) => {
-        setStream(currentStream)
-        if (myVideo.current === null) {
-          console.log('myVideo is null')
-        } else {
-          myVideo.current.srcObject = currentStream
-        }
-      });
+
 
     (socket).on('callUser', ({ from, name: callerName, signal }) => {
       setCall({ isReceivedCall: true, from, name: callerName, signal })
@@ -88,6 +80,18 @@ function ContextProvider ({ children }: { children: JSX.Element[] | JSX.Element 
     window.location.reload()
   }
 
+  function startScreensharing () {
+    navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
+    .then((currentStream) => {
+      setStream(currentStream)
+      if (myVideo.current === null) {
+        console.log('myVideo is null')
+      } else {
+        myVideo.current.srcObject = currentStream
+      }
+    });
+  }
+
   return (
     <SocketContext.Provider value={{
       call,
@@ -101,7 +105,9 @@ function ContextProvider ({ children }: { children: JSX.Element[] | JSX.Element 
       me,
       callUser,
       leaveCall,
-      answerCall
+      answerCall,
+      setStream,
+      startScreensharing
     }}
     >
       {children}
