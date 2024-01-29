@@ -3,6 +3,7 @@ import { io, Socket } from 'socket.io-client'
 
 import Peer from 'simple-peer'
 import { SERVER_URL } from '../urls'
+import { formatCookies } from '../utils'
 
 const SocketContext = createContext<any>(undefined)
 function ContextProvider ({ children }: { children: JSX.Element[] | JSX.Element }): JSX.Element {
@@ -28,8 +29,6 @@ function ContextProvider ({ children }: { children: JSX.Element[] | JSX.Element 
 
   useEffect(() => {
     const socket = io(SERVER_URL).on('me', (id: string) => setMe(id));
-
-
 
     (socket).on('callUser', ({ from, name: callerName, signal }) => {
       setCall({ isReceivedCall: true, from, name: callerName, signal })
@@ -92,6 +91,19 @@ function ContextProvider ({ children }: { children: JSX.Element[] | JSX.Element 
     });
   }
 
+  function connectPlayer() {
+    console.log(socket)
+    socket?.emit('connectPlayer')
+  }
+
+  function connectAdmin() {
+    const token = formatCookies(document.cookie).token
+    socket?.on('getPlayers', (players: any) => {
+      console.log(players)
+    })
+    socket?.emit('connectAdmin', { token })
+  }
+
   return (
     <SocketContext.Provider value={{
       call,
@@ -107,7 +119,10 @@ function ContextProvider ({ children }: { children: JSX.Element[] | JSX.Element 
       leaveCall,
       answerCall,
       setStream,
-      startScreensharing
+      startScreensharing,
+      connectPlayer,
+      connectAdmin,
+      socket
     }}
     >
       {children}

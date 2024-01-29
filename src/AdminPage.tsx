@@ -9,7 +9,6 @@ export default function AdminPage (): JSX.Element {
     <ContextProvider>
       <div>
         <AdminVideoPlayer />
-        <Options />
       </div>
     </ContextProvider>
   )

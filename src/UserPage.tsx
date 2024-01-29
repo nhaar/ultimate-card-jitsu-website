@@ -13,8 +13,6 @@ export default function UserPage (): JSX.Element {
     <ContextProvider>
       <div>
         <VidePlayer />
-        <Options />
-        <Notifications />
       </div>
     </ContextProvider>
   )

@@ -1,8 +1,16 @@
-import { useContext } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { SocketContext } from './Context/VideoContext'
 
 export default function VidePlayer (): JSX.Element {
-  const { myVideo, startScreensharing, userVideo } = useContext(SocketContext)
+  const { myVideo, startScreensharing, userVideo, connectPlayer, socket } = useContext(SocketContext)
+  const [isConnected, setIsConnected] = useState(false)
+
+  useEffect(() => {
+    if (socket !== undefined && !isConnected) {
+      connectPlayer()
+      setIsConnected(true)
+    }
+  }, [socket])
 
   return (
     <div>
