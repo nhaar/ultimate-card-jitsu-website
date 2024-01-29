@@ -5,6 +5,11 @@ import Peer from 'simple-peer'
 import { SERVER_URL } from '../urls'
 import { formatCookies } from '../utils'
 
+/** Info that is sent by the backend for each player */
+export interface PlayerInfo {
+  id: string
+}
+
 const SocketContext = createContext<any>(undefined)
 function ContextProvider ({ children }: { children: JSX.Element[] | JSX.Element }): JSX.Element {
   const [callAccepted, setCallAccepted] = useState(false)
@@ -17,6 +22,7 @@ function ContextProvider ({ children }: { children: JSX.Element[] | JSX.Element 
   const userVideo = useRef<HTMLVideoElement>(null)
   const connectionRef = useRef<any>(null)
   const [socket, setSocket] = useState<Socket | undefined>(undefined)
+  const [playerInfo, setPlayerInfo] = useState<Array<PlayerInfo>>([])
 
   // use of any for call and connectionRef should be fixed
 
@@ -98,8 +104,8 @@ function ContextProvider ({ children }: { children: JSX.Element[] | JSX.Element 
 
   function connectAdmin() {
     const token = formatCookies(document.cookie).token
-    socket?.on('getPlayers', (players: any) => {
-      console.log(players)
+    socket?.on('getPlayers', (data: { players: PlayerInfo[] }) => {
+      setPlayerInfo(data.players)
     })
     socket?.emit('connectAdmin', { token })
   }
@@ -122,7 +128,8 @@ function ContextProvider ({ children }: { children: JSX.Element[] | JSX.Element 
       startScreensharing,
       connectPlayer,
       connectAdmin,
-      socket
+      socket,
+      playerInfo
     }}
     >
       {children}
