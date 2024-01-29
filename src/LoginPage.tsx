@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { postJSON } from './utils'
 
+/** Component for the login page */
 export default function LoginPage (): JSX.Element {
   const [username, setUsername] = useState<string>('')
   const [password, setPassword] = useState<string>('')
 
+  /** Attempts to log in player */
   function handleClickLogin (): void {
     void (async () => {
       const response = await postJSON('api/user/login', {

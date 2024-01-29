@@ -3,13 +3,18 @@ import { getJSON } from './utils'
 import { WIDGET_ID } from './discord-widget'
 import { STREAM_CHANNEL } from './stream-channel'
 
+/** Stage of the tournament */
 enum TournamentState {
+  /** Default */
   Unknown,
+  /** Starting soon, not started */
   NotStarted,
   InProgress,
+  /** Just finished, wrapping up */
   Finished
 }
 
+/** Component for the page before the tournament starts */
 function PreTournamentPage (): JSX.Element {
   const [tournamentDate, setTournamentDate] = useState<Date | null | undefined>(undefined)
 
@@ -76,6 +81,7 @@ function PreTournamentPage (): JSX.Element {
   )
 }
 
+/** Component for the main page */
 export default function MainPage (): JSX.Element {
   const [tournamentState, setTournamentState] = useState<TournamentState>(TournamentState.Unknown)
 

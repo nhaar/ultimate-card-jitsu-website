@@ -6,6 +6,7 @@ import AdminPage from './AdminPage'
 
 type UserRole = 'user' | 'admin' | 'none'
 
+/** Component for the player page, which encompasses all possible users of the website (admins, regular players) */
 export default function PlayerPage (): JSX.Element {
   const [userRole, setUserRole] = useState<UserRole | undefined>(undefined)
 

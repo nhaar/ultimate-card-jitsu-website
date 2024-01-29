@@ -1,15 +1,13 @@
-import { useState } from "react"
-import { AdminVideoPlayer } from "./AdminVideoPlayer"
-import { ContextProvider } from "./Context/VideoContext"
-import Options from "./Options"
+import { AdminVideoPlayer } from './AdminVideoPlayer'
+import { SocketContextProvider } from './Context/VideoContext'
 
-
+/** Component that handles the admin page */
 export default function AdminPage (): JSX.Element {
   return (
-    <ContextProvider>
+    <SocketContextProvider>
       <div>
         <AdminVideoPlayer />
       </div>
-    </ContextProvider>
+    </SocketContextProvider>
   )
 }

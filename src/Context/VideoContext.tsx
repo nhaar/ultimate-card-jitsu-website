@@ -10,22 +10,52 @@ export interface PlayerInfo {
   id: string
 }
 
+/** Info from incoming call */
+interface CallInfo {
+  /** Whether or not is currently receiving a call */
+  isReceivedCall: boolean
+  /** Id of caller */
+  from?: string
+  /** Signal of the call being received, if any */
+  signal?: Peer.SignalData
+}
+
+/** Stores all important variables for using the websocket and RTC */
 const SocketContext = createContext<any>(undefined)
-function ContextProvider ({ children }: { children: JSX.Element[] | JSX.Element }): JSX.Element {
+
+/**
+ * An element that wraps any children in the context for using the websocket and RTC
+ */
+function SocketContextProvider ({ children }: { children: JSX.Element[] | JSX.Element }): JSX.Element {
+  /** Whether or not have accepted to be in a call */
   const [callAccepted, setCallAccepted] = useState(false)
-  const [callEnded, setCallEnded] = useState(false)
+
+  /** The media stream with the content to be shared, or undefined if not capturing */
+  // TO-DO: Must watch edge cases for when stream is undefined
   const [stream, setStream] = useState<MediaStream | undefined>(undefined)
-  const [name, setName] = useState('')
-  const [call, setCall] = useState<{ [key: string]: any }>({})
+
+  /** To receive incoming calls */
+  const [call, setCall] = useState<CallInfo>({ isReceivedCall: false })
+
+  /** Id of the socket */
   const [me, setMe] = useState('')
+
+  /** Reference to a video element that will store one's own video (used for users) */
   const myVideo = useRef<HTMLVideoElement>(null)
+
+  /** Reference to a video element that will store another's video (used for admins) */
   const userVideo = useRef<HTMLVideoElement>(null)
-  const connectionRef = useRef<any>(null)
+
+  /** Reference to peer handling the current connection */
+  const connectionRef = useRef<Peer.Instance | null>(null)
+
+  /** Socket connection, or undefined if none */
   const [socket, setSocket] = useState<Socket | undefined>(undefined)
-  const [playerInfo, setPlayerInfo] = useState<Array<PlayerInfo>>([])
 
-  // use of any for call and connectionRef should be fixed
+  /** All player info received from backend, if is an admin */
+  const [playerInfo, setPlayerInfo] = useState<PlayerInfo[]>([])
 
+  /** This effect handles automatically answering received calls */
   useEffect(() => {
     // immediately answer call.
     if (call.isReceivedCall && !callAccepted) {
@@ -33,17 +63,19 @@ function ContextProvider ({ children }: { children: JSX.Element[] | JSX.Element 
     }
   }, [call, callAccepted])
 
+  /** This effect automatically connects to the websocket */
   useEffect(() => {
-    const socket = io(SERVER_URL).on('me', (id: string) => setMe(id));
-
-    (socket).on('callUser', ({ from, name: callerName, signal }) => {
-      setCall({ isReceivedCall: true, from, name: callerName, signal })
-    })
-
+    const socket = io(SERVER_URL).on('me', (id: string) => setMe(id))
     setSocket(socket)
+
+    /** When receiving a call from the websocket */
+    socket?.on('callUser', ({ from, signal }) => {
+      setCall({ isReceivedCall: true, from, signal })
+    })
   }, [])
 
-  function answerCall () {
+  /** Answers an incoming call and starts receiving/sending data */
+  function answerCall (): void {
     setCallAccepted(true)
     const peer = new Peer({ initiator: false, trickle: false, stream })
     peer.on('signal', (data) => {
@@ -56,14 +88,22 @@ function ContextProvider ({ children }: { children: JSX.Element[] | JSX.Element 
         userVideo.current.srcObject = currentStream
       }
     })
-    peer.signal(call.signal)
+    if (call.signal === undefined) {
+      console.log('call.signal is undefined')
+    } else {
+      peer.signal(call.signal)
+    }
     connectionRef.current = peer
   }
 
-  function callUser (id: string) {
+  /**
+   * Call an user from the websocket
+   * @param id User's socket ID
+   */
+  function callUser (id: string): void {
     const peer = new Peer({ initiator: true, trickle: false, stream })
     peer.on('signal', (data) => {
-      socket?.emit('callUser', { userToCall: id, signalData: data, from: me, name })
+      socket?.emit('callUser', { userToCall: id, signalData: data, from: me })
     })
     peer.on('stream', (currentStream) => {
       if (userVideo.current === null) {
@@ -79,30 +119,34 @@ function ContextProvider ({ children }: { children: JSX.Element[] | JSX.Element 
     connectionRef.current = peer
   }
 
-  function leaveCall () {
-    setCallEnded(true)
-    connectionRef.current.destroy()
+  /** Leave the current call */
+  function leaveCall (): void {
+    if (connectionRef.current !== null) {
+      connectionRef.current.destroy()
+    }
     window.location.reload()
   }
 
-  function startScreensharing () {
-    navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
-    .then((currentStream) => {
-      setStream(currentStream)
-      if (myVideo.current === null) {
-        console.log('myVideo is null')
-      } else {
-        myVideo.current.srcObject = currentStream
-      }
-    });
+  /** To save screenshare data as a stream */
+  function startScreensharing (): void {
+    void navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
+      .then((currentStream) => {
+        setStream(currentStream)
+        if (myVideo.current === null) {
+          console.log('myVideo is null')
+        } else {
+          myVideo.current.srcObject = currentStream
+        }
+      })
   }
 
-  function connectPlayer() {
-    console.log(socket)
+  /** Connects a player to the screensharing queue */
+  function connectPlayer (): void {
     socket?.emit('connectPlayer')
   }
 
-  function connectAdmin() {
+  /** Connects an admin to the screensharing queue */
+  function connectAdmin (): void {
     const token = formatCookies(document.cookie).token
     socket?.on('getPlayers', (data: { players: PlayerInfo[] }) => {
       setPlayerInfo(data.players)
@@ -117,9 +161,6 @@ function ContextProvider ({ children }: { children: JSX.Element[] | JSX.Element 
       myVideo,
       userVideo,
       stream,
-      name,
-      setName,
-      callEnded,
       me,
       callUser,
       leaveCall,
@@ -137,4 +178,4 @@ function ContextProvider ({ children }: { children: JSX.Element[] | JSX.Element 
   )
 }
 
-export { ContextProvider, SocketContext }
+export { SocketContextProvider, SocketContext }

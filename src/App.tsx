@@ -7,6 +7,7 @@ import Logo from './images/logo.png'
 import MainPage from './MainPage'
 import PlayerPage from './PlayerPage'
 
+/** Component for the website's whole navbar */
 function Navbar (): JSX.Element {
   return (
     <nav className='navbar fire-nav' role='navigation' aria-label='main navigation'>
@@ -40,6 +41,7 @@ function Navbar (): JSX.Element {
   )
 }
 
+/** Component for the entire App */
 export default function App (): JSX.Element {
   let Page: JSX.Element
 

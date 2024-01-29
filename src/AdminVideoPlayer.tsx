@@ -1,18 +1,20 @@
-import { useContext, useEffect, useState } from "react"
-import { PlayerInfo, SocketContext } from "./Context/VideoContext"
+import { useContext, useEffect, useState } from 'react'
+import { PlayerInfo, SocketContext } from './Context/VideoContext'
+import { Socket } from 'socket.io-client'
 
-
-export function AdminVideoPlayer(): JSX.Element {
-  const { userVideo, startScreensharing, socket, connectAdmin, playerInfo, callUser }:{
-    userVideo: any,
-    startScreensharing: any,
-    socket: any,
-    connectAdmin: any,
-    playerInfo: PlayerInfo[],
+/** Component that handles the video players for the admin */
+export function AdminVideoPlayer (): JSX.Element {
+  const { userVideo, startScreensharing, socket, connectAdmin, playerInfo, callUser }: {
+    userVideo: React.Ref<HTMLVideoElement>
+    startScreensharing: () => void
+    socket: Socket | undefined
+    connectAdmin: () => void
+    playerInfo: PlayerInfo[]
     callUser: (id: string) => void
-  } = useContext(SocketContext)  
+  } = useContext(SocketContext)
   const [isConnected, setIsConnected] = useState(false)
 
+  /** Connects admin when the socket is connected */
   useEffect(() => {
     if (socket !== undefined && !isConnected) {
       connectAdmin()
@@ -26,9 +28,9 @@ export function AdminVideoPlayer(): JSX.Element {
       <button onClick={startScreensharing}>SCREENSHARE</button>
       Hello videos!
       <div>
-        {playerInfo.map((player) => {
+        {playerInfo.map((player, i) => {
           return (
-            <div>
+            <div key={i}>
               {player.id}
               <button onClick={() => callUser(player.id)}>CALL THIS USER!!</button>
             </div>
@@ -38,7 +40,7 @@ export function AdminVideoPlayer(): JSX.Element {
       <div>
         USER VIDEO
         <video playsInline muted ref={userVideo} autoPlay />
-      </div>  
+      </div>
     </div>
   )
 }
