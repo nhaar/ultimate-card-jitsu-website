@@ -21,7 +21,7 @@ router.post('/login', asyncWrapper(async (req: Request, res: Response): Promise<
     if (await User.checkPassword(username, password)) {
       const user = await User.getUserByName(username) as User
       const token = await user.startSession()
-      res.json({ token })
+      res.json({ token, name: username })
     } else {
       res.status(401).json({ error: 'incorrect password' })
     }

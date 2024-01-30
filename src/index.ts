@@ -56,8 +56,8 @@ io.on('connection', (socket) => {
   })
 
   /** Frontend connects player's screen */
-  socket.on('screenshare', () => {
-    screenshare.addPlayer(socket.id)
+  socket.on('screenshare', ({ name }) => {
+    screenshare.addPlayer(socket.id, name)
     sendPlayersToAdmin()
   })
 

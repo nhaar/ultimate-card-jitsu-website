@@ -37,7 +37,7 @@ export default class User {
 
   static async getUserByName (username: string): Promise<User | null> {
     const db = new Database()
-    const res = await db.getQuery('SELECT * FROM players WHERE username = $1', [username])
+    const res = await db.getQuery('SELECT * FROM players WHERE LOWER(username) = $1', [username.toLowerCase()])
     if (res.rows.length === 0) return null
     return new User(res.rows[0].id)
   }

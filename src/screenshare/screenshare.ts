@@ -1,6 +1,7 @@
 /** Base interface for a player's info */
 interface Player {
   id: string
+  name: string
 }
 
 /** Class handles storing screen share information */
@@ -12,8 +13,8 @@ export default class ScreenShareManager {
     this.connectedPlayers = []
   }
 
-  addPlayer (id: string) {
-    this.connectedPlayers.push({ id })
+  addPlayer (id: string, name: string) {
+    this.connectedPlayers.push({ id, name })
   }
 
   getPlayers(): Player[] {
