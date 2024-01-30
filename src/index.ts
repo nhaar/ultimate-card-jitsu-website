@@ -37,18 +37,18 @@ const screenshare = new ScreenShareManager()
 /** Socket ID of connected admin, which is the target for receiving videos. Only one at a time. */
 let adminId: string
 
-
 io.on('connection', (socket) => {
   /** In this event, the frontend sends a blob object, and here we direct it to the admin's socket. */
   socket.on('message', (data) => {
     if (adminId !== undefined) {
-      io.to(adminId).emit('message', data)
+      const newData = Object.assign({}, data, { id: socket.id })
+      io.to(adminId).emit('message', newData)
     }
   })
 
   /** Frontend sends request to connect new admin, with authorization token in the body. */
   socket.on('connectAdmin', ({ token }) => {
-    const user = User.getUserByToken(token).then(user => {
+    User.getUserByToken(token).then(user => {
       if (user !== null) {
         user.isAdmin().then((isAdmin) => {
           if (isAdmin) {
