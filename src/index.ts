@@ -28,39 +28,32 @@ if (process.env.NODE_ENV === 'dev') {
 
 app.use('/api', api)
 
-app.use('*', (req: Request, res: Response) => {
+app.use('/*', (req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, '../public/index.html'))
 })
 
 const screenshare = new ScreenShareManager()
 
+/** Socket ID of connected admin, which is the target for receiving videos. Only one at a time. */
+let adminId: string
+
+
 io.on('connection', (socket) => {
-  socket.emit('me', socket.id)
-  socket.on('disconnect', () => {
-    socket.broadcast.emit('callEnded')
-    screenshare.removePlayer(socket.id)
+  /** In this event, the frontend sends a blob object, and here we direct it to the admin's socket. */
+  socket.on('message', (data) => {
+    if (adminId !== undefined) {
+      io.to(adminId).emit('message', data)
+    }
   })
-  socket.on('callUser', ({ userToCall, signalData, from, name}) => {
-    io.to(userToCall).emit('callUser', { signal: signalData, from: socket.id, name })
-  })
-  socket.on('answerCall', (data) => {
-    io.to(data.to).emit('callAccepted', data.signal)
-  })
-  socket.on('getCalled', ({ userToCall, from }) => {
-    io.to(userToCall).emit('receiveCallRequest', { from })
-  })
-  socket.on('requestToCall', ({ other }) => {
-    io.to(other).emit('receiveRequestToCall', { idToCall: socket.id })
-  })
-  socket.on('connectPlayer', () => {
-    screenshare.addPlayer({ id: socket.id })
-  })
+
+  /** Frontend sends request to connect new admin, with authorization token in the body. */
   socket.on('connectAdmin', ({ token }) => {
-    User.getUserByToken(token).then(user => {
+    const user = User.getUserByToken(token).then(user => {
       if (user !== null) {
-        user.isAdmin().then(isAdmin => {
-          screenshare.adminId = socket.id
-          io.to(socket.id).emit('getPlayers', { players: screenshare.getPlayers() })
+        user.isAdmin().then((isAdmin) => {
+          if (isAdmin) {
+            adminId = socket.id
+          }
         })
       }
     })
