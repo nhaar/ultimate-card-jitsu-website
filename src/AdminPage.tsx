@@ -6,11 +6,16 @@ import './styles/video-styles.css'
 import { formatCookies } from './utils'
 import VideoPlayer from './VideoPlayer'
 
+interface PlayerInfo {
+  id: string
+}
 
 /** Component that handles the admin page */
 export default function AdminPage (): JSX.Element {
   /** WebSocket connection */
   const [socket, setSocket] = useState<Socket | null>(null)
+  const [players, setPlayers] = useState<PlayerInfo[]>([])
+  const [selectedPlayer, setSelectedPlayer] = useState<string>('')
   
   // connect socket as an admin to receive video chunks
   useEffect(() => {
@@ -19,12 +24,23 @@ export default function AdminPage (): JSX.Element {
 
     const token = formatCookies(document.cookie).token
     socket.emit('connectAdmin', { token })
+    socket.on('getPlayers', ({players}) => {
+      setPlayers(players as PlayerInfo[])
+    })
   }, [])
 
-  // currently no way of knowing socket id
   return (
     <div>
-      <VideoPlayer socket={socket} socketId='' />
+      <div>
+        {players.map((player) => {
+          return (
+            <div key={player.id}>
+              <button onClick={() => setSelectedPlayer(player.id)}>{player.id}</button>
+            </div>
+          )
+        })}
+      </div>
+      <VideoPlayer key={selectedPlayer} socket={socket} socketId={selectedPlayer} />
     </div>
   )
 }

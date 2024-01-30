@@ -36,6 +36,7 @@ export default function UserPage (): JSX.Element {
     navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then((stream) => {
       createMediaRecorder(stream)
     })
+    socket?.emit('screenshare')
   }
 
   // connecting socket
