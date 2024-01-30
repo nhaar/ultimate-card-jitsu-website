@@ -12,8 +12,8 @@ export default class ScreenShareManager {
     this.connectedPlayers = []
   }
 
-  addPlayer (player: Player) {
-    this.connectedPlayers.push(player)
+  addPlayer (id: string) {
+    this.connectedPlayers.push({ id })
   }
 
   getPlayers(): Player[] {

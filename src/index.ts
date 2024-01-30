@@ -38,12 +38,27 @@ const screenshare = new ScreenShareManager()
 let adminId: string
 
 io.on('connection', (socket) => {
+  // currently there seems to be an unstability? Need to check if this is because of sockets in the same computer.
+  console.log('CONNECTING ', socket.id)
+
+  function sendPlayersToAdmin () {
+    if (adminId !== undefined) {
+      io.to(adminId).emit('getPlayers', { players: screenshare.getPlayers() })
+    }
+  }
+
   /** In this event, the frontend sends a blob object, and here we direct it to the admin's socket. */
   socket.on('message', (data) => {
     if (adminId !== undefined) {
       const newData = Object.assign({}, data, { id: socket.id })
       io.to(adminId).emit('message', newData)
     }
+  })
+
+  /** Frontend connects player's screen */
+  socket.on('screenshare', () => {
+    screenshare.addPlayer(socket.id)
+    sendPlayersToAdmin()
   })
 
   /** Frontend sends request to connect new admin, with authorization token in the body. */
@@ -53,10 +68,15 @@ io.on('connection', (socket) => {
         user.isAdmin().then((isAdmin) => {
           if (isAdmin) {
             adminId = socket.id
+            sendPlayersToAdmin()
           }
         })
       }
     })
+  })
+
+  socket.on('disconnect', () => {
+    screenshare.removePlayer(socket.id)
   })
 })
 
