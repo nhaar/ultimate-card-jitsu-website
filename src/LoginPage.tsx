@@ -15,9 +15,9 @@ export default function LoginPage (): JSX.Element {
       })
 
       if (response.status === 200) {
-        const data = await response.json()
-        const token = (data as { token: string }).token
-        document.cookie = `token=${token}`
+        const data = (await response.json()) as { token: string, name: string }
+        document.cookie = `token=${data.token}`
+        document.cookie = `name=${data.name}`
         window.alert('Logged in!')
         window.location.href = '/'
       } else {

@@ -8,6 +8,7 @@ import VideoPlayer from './VideoPlayer'
 
 interface PlayerInfo {
   id: string
+  name: string
 }
 
 /** Component that handles the admin page */
@@ -35,7 +36,7 @@ export default function AdminPage (): JSX.Element {
         {players.map((player) => {
           return (
             <div key={player.id}>
-              <button onClick={() => setSelectedPlayer(player.id)}>{player.id}</button>
+              <button onClick={() => setSelectedPlayer(player.id)}>WATCH {player.name}</button>
             </div>
           )
         })}

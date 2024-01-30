@@ -1,6 +1,7 @@
 import { io, Socket } from 'socket.io-client'
 import { useEffect, useState } from 'react'
 import { SERVER_URL } from './urls'
+import { formatCookies } from './utils'
 
 /**
  * Handles the page where non admin players can perform actions. Not to be confused with PlayerPage which handles all types of users
@@ -36,14 +37,15 @@ export default function UserPage (): JSX.Element {
     navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then((stream) => {
       createMediaRecorder(stream)
     })
-    socket?.emit('screenshare')
+    const name = formatCookies(document.cookie).name
+    socket?.emit('screenshare', { name })
   }
 
   // connecting socket
   useEffect(() => {
     const socket = io(SERVER_URL)
     setSocket(socket)
-  }, [])  
+  }, [])
   
   return (
     <div>
