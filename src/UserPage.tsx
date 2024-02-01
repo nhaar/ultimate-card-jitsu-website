@@ -10,6 +10,8 @@ import { formatCookies } from './utils'
 export default function UserPage (): JSX.Element {
   /** WebSocket connection as a player */
   const [socket, setSocket] = useState<Socket | null>(null)
+  /** WebSocket id that will be used to identify this player */
+  const [me, setMe] = useState<string>('')
 
   /**
    * Creates a media recorder that will send video chunks to the backend every 5 seconds
@@ -19,7 +21,7 @@ export default function UserPage (): JSX.Element {
     const mediaRecorder = new MediaRecorder(stream)
     mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0) {
-        socket?.emit('message', { blob: e.data, type: e.data.type })
+        socket?.emit('message', { blob: e.data, type: e.data.type, id: me })
       }
       mediaRecorder.stop()
       // because of how MediaRecorder works, the only way to have a readable video chunk is to record
@@ -38,12 +40,20 @@ export default function UserPage (): JSX.Element {
       createMediaRecorder(stream)
     })
     const name = formatCookies(document.cookie).name
-    socket?.emit('screenshare', { name })
+    socket?.emit('screenshare', { name, id: me })
   }
 
   // connecting socket
   useEffect(() => {
     const socket = io(SERVER_URL)
+
+    // this is for receiving the id from the backend
+    socket.on('me', ({ id }) => {
+      setMe(id)
+    })
+
+    // this is to signal that we are connecting and we want to get the ID (the socket will often reconnect and change ID so we only get it the first time)
+    socket.emit('me')
     setSocket(socket)
   }, [])
 
