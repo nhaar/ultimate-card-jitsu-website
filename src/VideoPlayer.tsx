@@ -34,19 +34,21 @@ function VideoElement ({ videoRef, className, width, height, cropInfo }: {
 }): JSX.Element {
   return (
     // parent div used to keep the size of the video
-    <div 
-    className={className}
-    style={{
-      overflow: 'hidden',
-      width: `${width}px`,
-      height: `${height}px`
-    }}>
+    <div
+      className={className}
+      style={{
+        overflow: 'hidden',
+        width: `${width}px`,
+        height: `${height}px`
+      }}
+    >
       {/* second div is used to stretch the video arbitrarily */}
       <div style={{
         // sizes are stretched to be bigger so that the parts that we want cropped out can be overflowed away and hidden
         width: `${100 * 100 / (100 - cropInfo.right - cropInfo.left)}%`,
         height: `${100 * 100 / (100 - cropInfo.bottom - cropInfo.top)}%`
-      }}>
+      }}
+      >
         <video
           playsInline
           ref={videoRef}
@@ -66,7 +68,7 @@ function VideoElement ({ videoRef, className, width, height, cropInfo }: {
 }
 
 /** Component for the video player that the admin sees */
-export default function VideoPlayer ({ socket, socketId, width, height, cropInfo = { left:0, right:0, top:0, bottom: 0 } }: {
+export default function VideoPlayer ({ socket, socketId, width, height, cropInfo = { left: 0, right: 0, top: 0, bottom: 0 } }: {
   /** Socket object for our socket */
   socket: Socket | null
   /** ID of the socket of the user that is sending video that we want to watch */

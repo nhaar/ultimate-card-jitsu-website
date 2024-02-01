@@ -27,7 +27,7 @@ export default function AdminPage (): JSX.Element {
 
   // related to crop mode (editting video size)
   const [cropMode, setCropMode] = useState(false)
-  const [currentCrop, setCurrentCrop] = useState({ left: 0, right: 0, top: 0, bottom: 0})
+  const [currentCrop, setCurrentCrop] = useState({ left: 0, right: 0, top: 0, bottom: 0 })
   const [playerCrops, setPlayerCrops] = useState<PlayerCrops>({})
 
   /**
@@ -38,8 +38,7 @@ export default function AdminPage (): JSX.Element {
   function updatePlayersInQueue (originalQueue: PlayerInfo[], removedPlayers: PlayerInfo[]): void {
     for (const player of removedPlayers) {
       const index = originalQueue.findIndex((p) => p.id === player.id)
-      if (index !== -1)
-      {
+      if (index !== -1) {
         originalQueue.splice(index, 1)
       }
     }
@@ -94,7 +93,7 @@ export default function AdminPage (): JSX.Element {
    */
   function enterCropMode (): void {
     setCropMode(true)
-    setCurrentCrop({ left: 0, right: 0, top: 0, bottom: 0})
+    setCurrentCrop({ left: 0, right: 0, top: 0, bottom: 0 })
   }
 
   /**
@@ -113,9 +112,11 @@ export default function AdminPage (): JSX.Element {
       cropComponents.push(
         <div>
           <span>{direction}</span>
-          <input type='number' value={currentCrop[direction as keyof CropInfo]} onChange={e => {
-            setCurrentCrop({ ...currentCrop, [direction]: Number(e.target.value) })
-          }} />
+          <input
+            type='number' value={currentCrop[direction as keyof CropInfo]} onChange={e => {
+              setCurrentCrop({ ...currentCrop, [direction]: Number(e.target.value) })
+            }}
+          />
         </div>
       )
     }
