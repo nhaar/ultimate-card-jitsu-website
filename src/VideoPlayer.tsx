@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { Socket } from "socket.io-client"
 
-
 /** What a video chunk response from the backend looks like */
 interface BlobResponse {
   /** Video binary data */

@@ -16,7 +16,16 @@ export default function AdminPage (): JSX.Element {
   /** WebSocket connection */
   const [socket, setSocket] = useState<Socket | null>(null)
   const [players, setPlayers] = useState<PlayerInfo[]>([])
-  const [selectedPlayer, setSelectedPlayer] = useState<string>('')
+  const [unqueuedPlayers, setUnqueuedPlayers] = useState<PlayerInfo[]>([])
+  const [queuedPlayers, setQueuedPlayerds] = useState<PlayerInfo[]>([])
+  const [selectedPlayer, setSelectedPlayer] = useState<PlayerInfo | null>(null)
+  
+  function updatePlayersInQueue(originalQueue: PlayerInfo[], removedPlayers: PlayerInfo[]) {
+    for (const player of removedPlayers) {
+      const index = originalQueue.findIndex((p) => p.id === player.id)
+      originalQueue.splice(index, 1)
+    }
+  }
   
   // connect socket as an admin to receive video chunks
   useEffect(() => {
@@ -25,23 +34,67 @@ export default function AdminPage (): JSX.Element {
 
     const token = formatCookies(document.cookie).token
     socket.emit('connectAdmin', { token })
-    socket.on('getPlayers', ({players}) => {
-      setPlayers(players as PlayerInfo[])
+    socket.on('getPlayers', ({players: incomingPlayers }: { players: PlayerInfo[] }) => {
+      const u = [...unqueuedPlayers]
+      const q = [...queuedPlayers]
+      
+      const removedPlayers:PlayerInfo[] = []
+      for (const player of incomingPlayers) {
+        if (!players.find((p) => p.id === player.id)) {
+          u.push(player)
+        }
+      }
+      for (const player of players) {
+        if (!incomingPlayers.find((p) => p.id === player.id)) {
+          removedPlayers.push(player)
+        }
+      }
+
+      updatePlayersInQueue(u, removedPlayers)
+      updatePlayersInQueue(q, removedPlayers)
+      setUnqueuedPlayers(u)
+      setQueuedPlayerds(q)
+
+      if (selectedPlayer !== null && removedPlayers.find((p) => p.id === selectedPlayer.id)) {
+        setSelectedPlayer(null)
+      }
+      setPlayers(incomingPlayers as PlayerInfo[])
     })
   }, [])
+
+  function addToQueue(id: string) {
+    const u = [...unqueuedPlayers]
+    const unqueueIndex = u.findIndex((p) => p.id === id)
+    const player = u[unqueueIndex]
+    u.splice(unqueueIndex, 1)
+    setQueuedPlayerds([...queuedPlayers, player])
+    setUnqueuedPlayers(u)
+  }
 
   return (
     <div>
       <div>
-        {players.map((player) => {
+        UNQUEUED PLAYERS
+        {unqueuedPlayers.map((player) => {
           return (
             <div key={player.id}>
-              <button onClick={() => setSelectedPlayer(player.id)}>WATCH {player.name}</button>
+              <button onClick={() => addToQueue(player.id)}>ADD: {player.name}</button>
             </div>
           )
         })}
       </div>
-      <VideoPlayer key={selectedPlayer} socket={socket} socketId={selectedPlayer} />
+      <div>
+        QUEUED PLAYERS
+        {queuedPlayers.map((player) => {
+          return (
+            <div key={player.id}>
+              <button onClick={() => setSelectedPlayer(player)}>SELECT: {player.name}</button>
+              <VideoPlayer key={player.id} socket={socket} socketId={player.id} />
+            </div>
+          )
+        })}
+      </div>
+      <VideoPlayer key={selectedPlayer?.id} socket={socket} socketId={selectedPlayer?.id ?? ''} />
     </div>
   )
 }
