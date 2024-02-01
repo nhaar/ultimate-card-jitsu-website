@@ -4,11 +4,16 @@ import { SERVER_URL } from './urls'
 
 import './styles/video-styles.css'
 import { formatCookies } from './utils'
-import VideoPlayer from './VideoPlayer'
+import VideoPlayer, { CropInfo } from './VideoPlayer'
 
 interface PlayerInfo {
   id: string
   name: string
+}
+
+/** A map of all players and their respective crop */
+interface PlayerCrops {
+  [id: string]: CropInfo
 }
 
 /** Component that handles the admin page */
@@ -20,10 +25,23 @@ export default function AdminPage (): JSX.Element {
   const [queuedPlayers, setQueuedPlayerds] = useState<PlayerInfo[]>([])
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerInfo | null>(null)
 
+  // related to crop mode (editting video size)
+  const [cropMode, setCropMode] = useState(false)
+  const [currentCrop, setCurrentCrop] = useState({ left: 0, right: 0, top: 0, bottom: 0})
+  const [playerCrops, setPlayerCrops] = useState<PlayerCrops>({})
+
+  /**
+   * Remove all players from a queue if they were in it, mutates the given array
+   * @param originalQueue Queue with the players
+   * @param removedPlayers List of players that were removed (and may be in the queue)
+   */
   function updatePlayersInQueue (originalQueue: PlayerInfo[], removedPlayers: PlayerInfo[]): void {
     for (const player of removedPlayers) {
       const index = originalQueue.findIndex((p) => p.id === player.id)
-      originalQueue.splice(index, 1)
+      if (index !== -1)
+      {
+        originalQueue.splice(index, 1)
+      }
     }
   }
 
@@ -71,6 +89,47 @@ export default function AdminPage (): JSX.Element {
     setUnqueuedPlayers(u)
   }
 
+  /**
+   * Initiates crop mode for the currently selected player
+   */
+  function enterCropMode (): void {
+    setCropMode(true)
+    setCurrentCrop({ left: 0, right: 0, top: 0, bottom: 0})
+  }
+
+  /**
+   * Exits crop mode and saves the crop info for the currently selected player
+   */
+  function exitCropMode (): void {
+    setCropMode(false)
+    setPlayerCrops({ ...playerCrops, [selectedPlayer?.id ?? '']: currentCrop })
+    console.log(playerCrops)
+  }
+
+  if (cropMode) {
+    // to dynamically create the crop inputs
+    const cropComponents = []
+    for (const direction in currentCrop) {
+      cropComponents.push(
+        <div>
+          <span>{direction}</span>
+          <input type='number' value={currentCrop[direction as keyof CropInfo]} onChange={e => {
+            setCurrentCrop({ ...currentCrop, [direction]: Number(e.target.value) })
+          }} />
+        </div>
+      )
+    }
+
+    return (
+      <div>
+        {cropComponents}
+        <button onClick={exitCropMode}>FINISH</button>
+        {/* using arbitrarily small 16:9 ratio for preview */}
+        <VideoPlayer key={selectedPlayer?.id} socket={socket} socketId={selectedPlayer?.id ?? ''} width={640} height={360} cropInfo={currentCrop} />
+      </div>
+    )
+  }
+
   return (
     <div>
       <div>
@@ -89,12 +148,13 @@ export default function AdminPage (): JSX.Element {
           return (
             <div key={player.id}>
               <button onClick={() => setSelectedPlayer(player)}>SELECT: {player.name}</button>
-              <VideoPlayer key={player.id} socket={socket} socketId={player.id} />
+              <VideoPlayer key={player.id} socket={socket} socketId={player.id} width={200} height={200} />
             </div>
           )
         })}
       </div>
-      <VideoPlayer key={selectedPlayer?.id} socket={socket} socketId={selectedPlayer?.id ?? ''} />
+      <button onClick={enterCropMode}>ENTER CROP MODE</button>
+      <VideoPlayer key={selectedPlayer?.id} socket={socket} socketId={selectedPlayer?.id ?? ''} width={900} height={562.5} cropInfo={selectedPlayer !== null ? playerCrops[selectedPlayer.id] : undefined} />
     </div>
   )
 }

@@ -11,12 +11,72 @@ interface BlobResponse {
   id: string
 }
 
+/** Information on how to crop a screen. The numbers are in percentages. Eg. 25 left means that 25% of the left side is left out */
+export interface CropInfo {
+  left: number
+  top: number
+  right: number
+  bottom: number
+}
+
+/** Component for what controls the video display. The video will always fit the given width and height (will distort for that) */
+function VideoElement ({ videoRef, className, width, height, cropInfo }: {
+  /** React ref to the video element */
+  videoRef: React.RefObject<HTMLVideoElement>
+  /** Initial CSS class to use */
+  className: string
+  /** Width of video */
+  width: number
+  /** Height of video */
+  height: number
+  /** Crop information that dictates how to crop this video */
+  cropInfo: CropInfo
+}): JSX.Element {
+  return (
+    // parent div used to keep the size of the video
+    <div 
+    className={className}
+    style={{
+      overflow: 'hidden',
+      width: `${width}px`,
+      height: `${height}px`
+    }}>
+      {/* second div is used to stretch the video arbitrarily */}
+      <div style={{
+        // sizes are stretched to be bigger so that the parts that we want cropped out can be overflowed away and hidden
+        width: `${100 * 100 / (100 - cropInfo.right - cropInfo.left)}%`,
+        height: `${100 * 100 / (100 - cropInfo.bottom - cropInfo.top)}%`
+      }}>
+        <video
+          playsInline
+          ref={videoRef}
+          autoPlay
+          muted
+          style={{
+            objectFit: 'fill',
+            width: '100%',
+            height: '100%',
+            marginLeft: `-${cropInfo.left}%`,
+            marginTop: `-${cropInfo.top}%`
+          }}
+        />
+      </div>
+    </div>
+  )
+}
+
 /** Component for the video player that the admin sees */
-export default function VideoPlayer ({ socket, socketId }: {
+export default function VideoPlayer ({ socket, socketId, width, height, cropInfo = { left:0, right:0, top:0, bottom: 0 } }: {
   /** Socket object for our socket */
   socket: Socket | null
   /** ID of the socket of the user that is sending video that we want to watch */
   socketId: string
+  /** Width of the video */
+  width: number
+  /** Height of the video */
+  height: number
+  /** Crop info of the video */
+  cropInfo?: CropInfo
 }): JSX.Element {
   useEffect(() => {
     if (socket !== null) {
@@ -42,9 +102,9 @@ export default function VideoPlayer ({ socket, socketId }: {
 
   function getVideoSwapper (thisRef: React.RefObject<HTMLVideoElement>, otherRef: React.RefObject<HTMLVideoElement>) {
     return () => {
-      if (thisRef.current !== null && otherRef.current !== null) {
-        thisRef.current.className = 'video-visible'
-        otherRef.current.className = 'video-hidden'
+      if (thisRef.current !== null && otherRef.current !== null && thisRef.current.parentElement !== null && otherRef.current.parentElement !== null && thisRef.current.parentElement.parentElement !== null && otherRef.current.parentElement.parentElement !== null) {
+        thisRef.current.parentElement.parentElement.className = 'video-visible'
+        otherRef.current.parentElement.parentElement.className = 'video-hidden'
       }
     }
   }
@@ -82,8 +142,8 @@ export default function VideoPlayer ({ socket, socketId }: {
 
   return (
     <div>
-      <video playsInline ref={video1Ref} autoPlay muted className='video-visible' />
-      <video playsInline ref={video2Ref} autoPlay muted className='video-hidden' />
+      <VideoElement videoRef={video1Ref} className='video-visible' width={width} height={height} cropInfo={cropInfo} />
+      <VideoElement videoRef={video2Ref} className='video-hidden' width={width} height={height} cropInfo={cropInfo} />
     </div>
   )
 }
