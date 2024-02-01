@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
 import { SERVER_URL } from './urls'
 
@@ -19,14 +19,14 @@ export default function AdminPage (): JSX.Element {
   const [unqueuedPlayers, setUnqueuedPlayers] = useState<PlayerInfo[]>([])
   const [queuedPlayers, setQueuedPlayerds] = useState<PlayerInfo[]>([])
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerInfo | null>(null)
-  
-  function updatePlayersInQueue(originalQueue: PlayerInfo[], removedPlayers: PlayerInfo[]) {
+
+  function updatePlayersInQueue (originalQueue: PlayerInfo[], removedPlayers: PlayerInfo[]): void {
     for (const player of removedPlayers) {
       const index = originalQueue.findIndex((p) => p.id === player.id)
       originalQueue.splice(index, 1)
     }
   }
-  
+
   // connect socket as an admin to receive video chunks
   useEffect(() => {
     const socket = io(SERVER_URL)
@@ -34,18 +34,18 @@ export default function AdminPage (): JSX.Element {
 
     const token = formatCookies(document.cookie).token
     socket.emit('connectAdmin', { token })
-    socket.on('getPlayers', ({players: incomingPlayers }: { players: PlayerInfo[] }) => {
+    socket.on('getPlayers', ({ players: incomingPlayers }: { players: PlayerInfo[] }) => {
       const u = [...unqueuedPlayers]
       const q = [...queuedPlayers]
-      
-      const removedPlayers:PlayerInfo[] = []
+
+      const removedPlayers: PlayerInfo[] = []
       for (const player of incomingPlayers) {
-        if (!players.find((p) => p.id === player.id)) {
+        if (players.find((p) => p.id === player.id) == null) {
           u.push(player)
         }
       }
       for (const player of players) {
-        if (!incomingPlayers.find((p) => p.id === player.id)) {
+        if (incomingPlayers.find((p) => p.id === player.id) == null) {
           removedPlayers.push(player)
         }
       }
@@ -55,14 +55,14 @@ export default function AdminPage (): JSX.Element {
       setUnqueuedPlayers(u)
       setQueuedPlayerds(q)
 
-      if (selectedPlayer !== null && removedPlayers.find((p) => p.id === selectedPlayer.id)) {
+      if (selectedPlayer !== null && (removedPlayers.find((p) => p.id === selectedPlayer.id) != null)) {
         setSelectedPlayer(null)
       }
-      setPlayers(incomingPlayers as PlayerInfo[])
+      setPlayers(incomingPlayers)
     })
   }, [])
 
-  function addToQueue(id: string) {
+  function addToQueue (id: string): void {
     const u = [...unqueuedPlayers]
     const unqueueIndex = u.findIndex((p) => p.id === id)
     const player = u[unqueueIndex]

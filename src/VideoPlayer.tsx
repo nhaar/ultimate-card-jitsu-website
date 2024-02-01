@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react"
-import { Socket } from "socket.io-client"
+import { useEffect, useRef, useState } from 'react'
+import { Socket } from 'socket.io-client'
 
 /** What a video chunk response from the backend looks like */
 interface BlobResponse {
@@ -18,7 +18,6 @@ export default function VideoPlayer ({ socket, socketId }: {
   /** ID of the socket of the user that is sending video that we want to watch */
   socketId: string
 }): JSX.Element {
-
   useEffect(() => {
     if (socket !== null) {
       // currently can only receive a single video at a time
@@ -41,7 +40,6 @@ export default function VideoPlayer ({ socket, socketId }: {
   /** Variable that keeps track of which video reference is visible and being watched */
   const [isUsingVideo1, setIsUsingVideo1] = useState(true)
 
-  
   function getVideoSwapper (thisRef: React.RefObject<HTMLVideoElement>, otherRef: React.RefObject<HTMLVideoElement>) {
     return () => {
       if (thisRef.current !== null && otherRef.current !== null) {
@@ -64,7 +62,7 @@ export default function VideoPlayer ({ socket, socketId }: {
     if (blob !== null) {
       // must free memory of old blob
       URL.revokeObjectURL(blobUrl ?? '')
-      
+
       const newBlobUrl = URL.createObjectURL(new Blob([blob.blob], { type: blob.type }))
       setBlobUrl(newBlobUrl)
 
@@ -81,7 +79,6 @@ export default function VideoPlayer ({ socket, socketId }: {
       }
     }
   }, [blob])
-
 
   return (
     <div>

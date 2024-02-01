@@ -13,9 +13,9 @@ export default function UserPage (): JSX.Element {
 
   /**
    * Creates a media recorder that will send video chunks to the backend every 5 seconds
-   * @param stream 
+   * @param stream
    */
-  function createMediaRecorder(stream: MediaStream) {
+  function createMediaRecorder (stream: MediaStream): void {
     const mediaRecorder = new MediaRecorder(stream)
     mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0) {
@@ -33,8 +33,8 @@ export default function UserPage (): JSX.Element {
   /**
    * Starts sharing screen to backend
    */
-  function startScreensharing() {
-    navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then((stream) => {
+  function startScreensharing (): void {
+    void navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then((stream) => {
       createMediaRecorder(stream)
     })
     const name = formatCookies(document.cookie).name
@@ -46,7 +46,7 @@ export default function UserPage (): JSX.Element {
     const socket = io(SERVER_URL)
     setSocket(socket)
   }, [])
-  
+
   return (
     <div>
       <button onClick={startScreensharing}>share</button>
