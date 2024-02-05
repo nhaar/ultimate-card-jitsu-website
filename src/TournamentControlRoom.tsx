@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { createTournament, getAllPlayers, isTournamentActive } from './api'
+import { TournamentMatch, createTournament, getAllPlayers, getTournamentMatches, isTournamentActive } from './api'
 
 /** Component responsible for the control room when a tournament is not active */
 function PretournamentControlRoom (): JSX.Element {
@@ -59,6 +59,30 @@ function PretournamentControlRoom (): JSX.Element {
   )
 }
 
+/** Component for the control room while the tournament is ongoing */
+function ActiveTournamentControlRoom (): JSX.Element {
+  const [matches, setMatches] = useState<TournamentMatch[]>([])
+
+  useEffect(() => {
+    void (async () => {
+      setMatches(await getTournamentMatches())
+    })()
+  }, [])
+
+  return (
+    <div>
+      Hello Tournamenters
+      {matches.map((match, i) => {
+        return (
+          <div key={i}>
+            {match.runners}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 /** Component for the control room of the tournament */
 export default function TournamentControlRoom (): JSX.Element {
   const [isActive, setIsActive] = useState(false)
@@ -71,7 +95,7 @@ export default function TournamentControlRoom (): JSX.Element {
 
   if (isActive) {
     return (
-      <div>Active!</div>
+      <ActiveTournamentControlRoom />
     )
   } else {
     return (

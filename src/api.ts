@@ -35,3 +35,17 @@ export async function createTournament (players: string[]): Promise<boolean> {
   const response = await postJSON('api/tournament/create', { players })
   return response.ok
 }
+
+/** Copy of the backend data */
+export interface TournamentMatch {
+  runners: number[]
+  standings: number[]
+}
+
+export async function getTournamentMatches (): Promise<TournamentMatch[]> {
+  const response = await getJSON('api/tournament/matches')
+  if (response === null) {
+    throw new Error('Failed to get tournament matches')
+  }
+  return response as TournamentMatch[]
+}
