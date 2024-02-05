@@ -7,7 +7,7 @@ import Tournament from '../database/tournament'
 const router = express.Router()
 
 router.post('/create', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
-  const { players }: { token: string, players: string[] } = req.body
+  const { players }: { players: string[] } = req.body
 
   if (!Array.isArray(players)) {
     res.status(400).json({ error: 'players must be an array' })
