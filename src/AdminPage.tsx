@@ -131,31 +131,58 @@ export default function AdminPage (): JSX.Element {
     )
   }
 
+  // keeping video 16:10 (roughyl Club Penguin's aspect ratio)
+  const videoWidth = 900
+  const videoHeight = videoWidth * 10 / 16
+
+  // element with the main video, is what should be placed on stream
+  // has to have fixed size for that reason
+  const mainVideo = selectedPlayer === null
+    ? (
+      <div style={{
+        width: `${videoWidth}px`,
+        height: `${videoHeight}px`
+      }}
+      >Player will be here!
+      </div>
+      )
+    : (
+      <VideoPlayer key={selectedPlayer?.id} socket={socket} socketId={selectedPlayer?.id ?? ''} width={videoWidth} height={videoHeight} cropInfo={selectedPlayer !== null ? playerCrops[selectedPlayer.id] : undefined} />
+      )
+
   return (
-    <div>
+    <div className='is-flex is-flex-direction-row'>
       <div>
-        UNQUEUED PLAYERS
-        {unqueuedPlayers.map((player) => {
-          return (
-            <div key={player.id}>
-              <button onClick={() => addToQueue(player.id)}>ADD: {player.name}</button>
-            </div>
-          )
-        })}
+        {mainVideo}
       </div>
-      <div>
-        QUEUED PLAYERS
-        {queuedPlayers.map((player) => {
-          return (
-            <div key={player.id}>
-              <button onClick={() => setSelectedPlayer(player)}>SELECT: {player.name}</button>
-              <VideoPlayer key={player.id} socket={socket} socketId={player.id} width={200} height={200} />
-            </div>
-          )
-        })}
+      <div
+        className='is-flex is-flex-direction-row' style={{
+          overflow: 'scroll'
+        }}
+      >
+        <div>
+          QUEUED PLAYERS
+          {queuedPlayers.map((player) => {
+            return (
+              <div key={player.id}>
+                <button onClick={() => setSelectedPlayer(player)}>SELECT: {player.name}</button>
+                <VideoPlayer key={player.id} socket={socket} socketId={player.id} width={200} height={200} />
+              </div>
+            )
+          })}
+        </div>
+        <div>
+          UNQUEUED PLAYERS
+          {unqueuedPlayers.map((player) => {
+            return (
+              <div key={player.id}>
+                <button onClick={() => addToQueue(player.id)}>ADD: {player.name}</button>
+              </div>
+            )
+          })}
+        </div>
+        <button onClick={enterCropMode}>ENTER CROP MODE</button>
       </div>
-      <button onClick={enterCropMode}>ENTER CROP MODE</button>
-      <VideoPlayer key={selectedPlayer?.id} socket={socket} socketId={selectedPlayer?.id ?? ''} width={900} height={562.5} cropInfo={selectedPlayer !== null ? playerCrops[selectedPlayer.id] : undefined} />
     </div>
   )
 }
