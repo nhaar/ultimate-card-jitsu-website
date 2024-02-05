@@ -60,7 +60,7 @@ router.post('/update-score', User.checkAdminMiddleware, asyncWrapper(async (req:
   }
 
   const tournament: Tournament = await Tournament.getTournament()
-  const updateResult = tournament.updateScore(matchIndex, standings)
+  const updateResult = await tournament.updateScore(matchIndex, standings)
   if (updateResult !== undefined) {
     res.status(400).json({ error: `invalid standings: ${updateResult}` })
     return

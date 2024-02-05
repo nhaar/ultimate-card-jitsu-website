@@ -202,14 +202,7 @@ class Tournament {
   static async createTournament (...runners: number[]): Promise<Tournament> {
     const tournament: Tournament = new Tournament(...runners)
 
-    const db = new Database()
-
-    const getQuery = await db.getQuery('SELECT * FROM tournament', [])
-    if (getQuery.rows.length === 0) {
-      await db.getQuery('INSERT INTO tournament (data) VALUES ($1)', [JSON.stringify(new Tournament(...runners))])
-    } else {
-      await db.getQuery('UPDATE tournament SET data = $1', [JSON.stringify(new Tournament(...runners))])
-    }
+    await tournament.save()
     return tournament
   }
 
@@ -227,7 +220,13 @@ class Tournament {
     return [...this.bracket.start.matches, ...this.bracket.final.matches]
   }
 
-  updateScore (matchIndex: number, standings: number[]): undefined | number {
+  /**
+   * Updates the score of a match
+   * @param matchIndex Index of the match in the array from getMatches
+   * @param standings Standings array for the match, which are the player IDs in the order they finished [1st, ..., 4th]
+   * @returns
+   */
+  async updateScore (matchIndex: number, standings: number[]): Promise<undefined | number> {
     if (standings.length !== 4) {
       return 1
     }
@@ -252,6 +251,7 @@ class Tournament {
       }
     }
 
+    await this.save()
     return undefined
   }
 
@@ -373,6 +373,20 @@ class Tournament {
   settleTies (tieStandings: TieStandings): void {
     this.tieStandings = tieStandings
     this.updateFinalists()
+  }
+
+  /**
+   * Saves the tournament to the database
+   */
+  async save (): Promise<void> {
+    const db = new Database()
+
+    const getQuery = await db.getQuery('SELECT * FROM tournament', [])
+    if (getQuery.rows.length === 0) {
+      await db.getQuery('INSERT INTO tournament (data) VALUES ($1)', [JSON.stringify(this)])
+    } else {
+      await db.getQuery('UPDATE tournament SET data = $1', [JSON.stringify(this)])
+    }
   }
 }
 
