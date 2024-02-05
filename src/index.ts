@@ -36,14 +36,13 @@ app.use('/*', (req: Request, res: Response) => {
 let adminId: string
 
 /** Sends all new players to the admin connected to the socket, if any */
-function sendPlayersToAdmin () {
+function sendPlayersToAdmin (): void {
   if (adminId !== undefined) {
     io.to(adminId).emit('getPlayers', { players: screenshare.getPlayers() })
   }
 }
 
 const screenshare = new ScreenShareManager(sendPlayersToAdmin)
-
 
 io.on('connection', (socket) => {
   // currently there seems to be an unstability? Need to check if this is because of sockets in the same computer.
@@ -53,7 +52,6 @@ io.on('connection', (socket) => {
   socket.on('me', () => {
     io.to(socket.id).emit('me', { id: socket.id })
   })
-
 
   /** In this event, the frontend sends a blob object, and here we direct it to the admin's socket. */
   socket.on('message', (data) => {
@@ -71,9 +69,9 @@ io.on('connection', (socket) => {
 
   /** Frontend sends request to connect new admin, with authorization token in the body. */
   socket.on('connectAdmin', ({ token }) => {
-    User.getUserByToken(token).then(user => {
+    void User.getUserByToken(token).then(user => {
       if (user !== null) {
-        user.isAdmin().then((isAdmin) => {
+        void user.isAdmin().then((isAdmin) => {
           if (isAdmin) {
             adminId = socket.id
             sendPlayersToAdmin()

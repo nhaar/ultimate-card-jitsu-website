@@ -98,7 +98,7 @@ export default class User {
 
   /**
    * Get a list of all username of users in the database
-   * @returns 
+   * @returns
    */
   static async getAllUsers (): Promise<string[]> {
     const db = new Database()

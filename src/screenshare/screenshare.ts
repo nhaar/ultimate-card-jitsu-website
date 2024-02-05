@@ -12,7 +12,7 @@ export default class ScreenShareManager {
   activityData: { [id: string]: Date } = {}
   /** Interval that periodically checks if any players should be removed from the queue */
   purgeInterval: NodeJS.Timeout
-  
+
   constructor (sendPlayersToAdmin: () => void) {
     this.connectedPlayers = []
     this.purgeInterval = setInterval(() => {
@@ -22,19 +22,19 @@ export default class ScreenShareManager {
     }, 10000)
   }
 
-  addPlayer (id: string, name: string) {
+  addPlayer (id: string, name: string): void {
     this.connectedPlayers.push({ id, name })
   }
 
-  getPlayers(): Player[] {
+  getPlayers (): Player[] {
     return this.connectedPlayers
   }
 
-  removePlayer(id: string) {
+  removePlayer (id: string): void {
     this.connectedPlayers = this.connectedPlayers.filter(player => player.id !== id)
   }
 
-  updatePlayerActivity(id: string) {
+  updatePlayerActivity (id: string): void {
     this.activityData[id] = new Date()
   }
 
@@ -42,7 +42,7 @@ export default class ScreenShareManager {
    * Removes all inactive players
    * @returns `true` if any players were removed
    */
-  removeInactivePlayers(): boolean {
+  removeInactivePlayers (): boolean {
     const now = new Date()
     const inactivePlayers = Object.keys(this.activityData).filter(id => {
       const lastActivity = this.activityData[id]
@@ -52,7 +52,6 @@ export default class ScreenShareManager {
     const playerCount = this.connectedPlayers.length
     inactivePlayers.forEach(id => {
       this.removePlayer(id)
-      delete this.activityData[id]
     })
 
     return playerCount !== this.connectedPlayers.length
