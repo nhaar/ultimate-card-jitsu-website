@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getJSON } from './utils'
 import { WIDGET_ID } from './discord-widget'
 import { STREAM_CHANNEL } from './stream-channel'
+import { isTournamentActive } from './api'
 
 /** Stage of the tournament */
 enum TournamentState {
@@ -87,15 +88,8 @@ export default function MainPage (): JSX.Element {
 
   useEffect(() => {
     void (async () => {
-      const response = await getJSON('api/tournament/active')
-      if (response !== null) {
-        const isActive = (response as { active: boolean }).active
-        if (isActive) {
-          setTournamentState(TournamentState.InProgress)
-        } else {
-          setTournamentState(TournamentState.NotStarted)
-        }
-      }
+      const isActive = await isTournamentActive()
+      setTournamentState(isActive ? TournamentState.InProgress : TournamentState.NotStarted)
     })()
   }, [])
 
