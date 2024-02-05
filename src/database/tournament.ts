@@ -49,8 +49,8 @@ class Tournament {
     if (args.length === 0) {
       throw new Error('no arguments provided')
     }
-    if (args.length === 1 && Tournament.isBracket(args[0])) {
-      this.bracket = args[0]
+    if (args.length === 1 && Tournament.isBracket(args[0].bracket)) {
+      this.bracket = args[0].bracket
     } else {
       const start: PlayerStandings[] = []
       for (const runner of args) {
@@ -151,11 +151,8 @@ class Tournament {
       return false
     }
 
-    const numbers = ['runner1', 'runner2', 'runner3', 'runner4']
-    for (const number of numbers) {
-      if (obj[number] === undefined || typeof (obj[number]) !== 'number') {
-        return false
-      }
+    if (!Array.isArray(obj.runners) || obj.runners.every((x: any) => typeof (x) === 'number') === false || obj.runners.length !== 4) {
+      return false
     }
     if (!Array.isArray(obj.standings) || obj.standings.every((x: any) => typeof (x) === 'number') === false || (obj.standings.length !== 4 && obj.standings.length !== 0)) {
       return false
