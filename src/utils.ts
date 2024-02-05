@@ -42,7 +42,12 @@ export async function postAndGetJSON (route: string, object: object): Promise<ob
  * @returns Null if the response is not a JSON object, otherwise the JSON object
  */
 export async function getJSON (route: string): Promise<object | null> {
-  const response = await fetch(SERVER_URL + '/' + route)
+  const response = await fetch(SERVER_URL + '/' + route, {
+    method: 'GET',
+    headers: {
+      cookies: document.cookie
+    }
+  })
 
   let data: object | null = null
   try {
