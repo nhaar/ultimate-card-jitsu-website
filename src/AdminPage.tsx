@@ -13,7 +13,7 @@ interface PlayerInfo {
 
 /** A map of all players and their respective crop */
 interface PlayerCrops {
-  [id: string]: CropInfo
+  [name: string]: CropInfo
 }
 
 /** Component that handles the admin page */
@@ -111,7 +111,7 @@ export default function AdminPage (): JSX.Element {
     }
 
     // to be able to edit the selected player's crop
-    setCurrentCrop(playerCrops[player.id] ?? { left: 0, right: 0, top: 0, bottom: 0 })
+    setCurrentCrop(playerCrops[player.name] ?? { left: 0, right: 0, top: 0, bottom: 0 })
   
     setSelectedPlayer(player)
     setQueuedPlayers(q)
@@ -139,7 +139,7 @@ export default function AdminPage (): JSX.Element {
   // saving the crop for selected player when changing
   useEffect(() => {
     if (selectedPlayer !== null && currentCrop !== null) {
-      setPlayerCrops({ ...playerCrops, [selectedPlayer.id]: currentCrop })
+      setPlayerCrops({ ...playerCrops, [selectedPlayer.name]: currentCrop })
     }
   }, [currentCrop])
 
@@ -159,7 +159,7 @@ export default function AdminPage (): JSX.Element {
       </div>
       )
     : (
-      <VideoPlayer key={selectedPlayer?.id} socket={socket} socketId={selectedPlayer?.id ?? ''} width={videoWidth} height={videoHeight} cropInfo={selectedPlayer !== null ? playerCrops[selectedPlayer.id] : undefined} videoCache={videoCache} setVideoCache={setVideoCache} />
+      <VideoPlayer key={selectedPlayer?.id} socket={socket} socketId={selectedPlayer?.id ?? ''} width={videoWidth} height={videoHeight} cropInfo={selectedPlayer !== null ? playerCrops[selectedPlayer.name] : undefined} videoCache={videoCache} setVideoCache={setVideoCache} />
       )
 
   return (
