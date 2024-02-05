@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getAllPlayers, isTournamentActive } from './api'
+import { createTournament, getAllPlayers, isTournamentActive } from './api'
 
 /** Component responsible for the control room when a tournament is not active */
 function PretournamentControlRoom (): JSX.Element {
@@ -13,21 +13,48 @@ function PretournamentControlRoom (): JSX.Element {
     })()
   }, [])
 
+  /**
+   * Moves a player from unselected to selected
+   * @param player 
+   */
+  function selectPlayer (player: string): void {
+    const u = [ ...unselectedPlayers].filter((p) => p !== player)
+    setUnselectedPlayers(u)
+    setSelectedPlayers([...selectedPlayers, player])
+  }
+
+  /**
+   * Moves a player from selected to unselected
+   * @param player 
+   */
+  function unselectPlayer (player: string): void {
+    const s = [ ...selectedPlayers].filter((p) => p !== player)
+    setSelectedPlayers(s)
+    setUnselectedPlayers([...unselectedPlayers, player])
+  }
+
+  /** Handles clicking for creating a tournament */
+  async function handleCreateTournament (): Promise<void> {
+    const ok = await createTournament(selectedPlayers)
+    window.alert(ok ? 'Tournament created!' : 'Failed to create tournament')
+  }
+
   return (
     <div>
       INACTIVE
       <div>
         UNSELECTED
         {unselectedPlayers.map((player) => (
-          <div key={player}>{player}</div>
+          <button key={player} onClick={() => selectPlayer(player)}>{player}</button>
         ))}
       </div>
       <div>
         SELECTED
         {selectedPlayers.map((player) => (
-          <div key={player}>{player}</div>
+          <button key={player} onClick={() => unselectPlayer(player)}>{player}</button>
         ))}
       </div>
+      <button onClick={() => { void handleCreateTournament() }}>CREATE TOURNAMENT</button>
     </div>
   )
 }

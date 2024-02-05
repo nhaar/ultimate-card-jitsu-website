@@ -1,4 +1,4 @@
-import { getJSON } from './utils'
+import { getJSON, postJSON } from './utils'
 
 /**
  * Checks if a tournament is active
@@ -24,4 +24,14 @@ export async function getAllPlayers (): Promise<string[]> {
   } else {
     return (response as string[])
   }
+}
+
+/**
+ * Creates a tournament with the given player names
+ * @param players 
+ * @returns `true` if the tournament was created successfully, `false` otherwise
+ */
+export async function createTournament (players: string[]): Promise<boolean> {
+  const response = await postJSON('api/tournament/create', { players })
+  return response.ok
 }
