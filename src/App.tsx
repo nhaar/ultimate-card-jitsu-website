@@ -6,6 +6,7 @@ import './styles/candombe.css'
 import Logo from './images/logo.png'
 import MainPage from './MainPage'
 import PlayerPage from './PlayerPage'
+import PlayerWatchPage from './PlayerWatchPage'
 
 /** Component for the website's whole navbar */
 function Navbar (): JSX.Element {
@@ -52,6 +53,10 @@ export default function App (): JSX.Element {
     }
     case '/player': {
       Page = <PlayerPage />
+      break
+    }
+    case '/admin-watch': {
+      Page = <PlayerWatchPage />
       break
     }
     default: {
