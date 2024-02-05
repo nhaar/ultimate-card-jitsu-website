@@ -22,7 +22,7 @@ export default function AdminPage (): JSX.Element {
   const [socket, setSocket] = useState<Socket | null>(null)
   const [players, setPlayers] = useState<PlayerInfo[]>([])
   const [unqueuedPlayers, setUnqueuedPlayers] = useState<PlayerInfo[]>([])
-  const [queuedPlayers, setQueuedPlayerds] = useState<PlayerInfo[]>([])
+  const [queuedPlayers, setQueuedPlayers] = useState<PlayerInfo[]>([])
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerInfo | null>(null)
 
   // related to crop mode (editting video size)
@@ -70,7 +70,7 @@ export default function AdminPage (): JSX.Element {
       updatePlayersInQueue(u, removedPlayers)
       updatePlayersInQueue(q, removedPlayers)
       setUnqueuedPlayers(u)
-      setQueuedPlayerds(q)
+      setQueuedPlayers(q)
 
       if (selectedPlayer !== null && (removedPlayers.find((p) => p.id === selectedPlayer.id) != null)) {
         setSelectedPlayer(null)
@@ -84,8 +84,30 @@ export default function AdminPage (): JSX.Element {
     const unqueueIndex = u.findIndex((p) => p.id === id)
     const player = u[unqueueIndex]
     u.splice(unqueueIndex, 1)
-    setQueuedPlayerds([...queuedPlayers, player])
+    setQueuedPlayers([...queuedPlayers, player])
     setUnqueuedPlayers(u)
+  }
+
+  /**
+   * Makes a player selected in the main screen
+   * @param player Player to select
+   */
+  function selectPlayer (player: PlayerInfo): void {
+    // to remove from queue
+    const q = [...queuedPlayers]
+    const queuedIndex = q.findIndex((p) => p.id === player.id)
+    if (queuedIndex !== -1) {
+      q.splice(queuedIndex, 1)
+    }
+
+    // to requeue previous selected
+    const previousPlayer = selectedPlayer
+    if (previousPlayer !== null) {
+      q.push(previousPlayer)
+    }
+    
+    setSelectedPlayer(player)
+    setQueuedPlayers(q)
   }
 
   /**
@@ -165,7 +187,7 @@ export default function AdminPage (): JSX.Element {
           {queuedPlayers.map((player) => {
             return (
               <div key={player.id}>
-                <button onClick={() => setSelectedPlayer(player)}>SELECT: {player.name}</button>
+                <button onClick={() => selectPlayer(player)}>SELECT: {player.name}</button>
                 <VideoPlayer key={player.id} socket={socket} socketId={player.id} width={200} height={200} />
               </div>
             )
