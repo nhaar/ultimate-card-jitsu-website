@@ -4,7 +4,7 @@ import { SERVER_URL } from './urls'
 
 import './styles/video-styles.css'
 import { formatCookies } from './utils'
-import VideoPlayer, { CropInfo } from './VideoPlayer'
+import VideoPlayer, { CropInfo, VideoCache } from './VideoPlayer'
 
 interface PlayerInfo {
   id: string
@@ -24,6 +24,9 @@ export default function AdminPage (): JSX.Element {
   const [unqueuedPlayers, setUnqueuedPlayers] = useState<PlayerInfo[]>([])
   const [queuedPlayers, setQueuedPlayers] = useState<PlayerInfo[]>([])
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerInfo | null>(null)
+
+  // saving blob cache
+  const [videoCache, setVideoCache] = useState<VideoCache>({})
 
   // related to crop mode (editting video size)
   const [cropMode, setCropMode] = useState(false)
@@ -105,7 +108,7 @@ export default function AdminPage (): JSX.Element {
     if (previousPlayer !== null) {
       q.push(previousPlayer)
     }
-    
+
     setSelectedPlayer(player)
     setQueuedPlayers(q)
   }
@@ -148,7 +151,7 @@ export default function AdminPage (): JSX.Element {
         {cropComponents}
         <button onClick={exitCropMode}>FINISH</button>
         {/* using arbitrarily small 16:9 ratio for preview */}
-        <VideoPlayer key={selectedPlayer?.id} socket={socket} socketId={selectedPlayer?.id ?? ''} width={640} height={360} cropInfo={currentCrop} />
+        <VideoPlayer key={selectedPlayer?.id} socket={socket} socketId={selectedPlayer?.id ?? ''} width={640} height={360} cropInfo={currentCrop} videoCache={videoCache} setVideoCache={setVideoCache} />
       </div>
     )
   }
@@ -169,7 +172,7 @@ export default function AdminPage (): JSX.Element {
       </div>
       )
     : (
-      <VideoPlayer key={selectedPlayer?.id} socket={socket} socketId={selectedPlayer?.id ?? ''} width={videoWidth} height={videoHeight} cropInfo={selectedPlayer !== null ? playerCrops[selectedPlayer.id] : undefined} />
+      <VideoPlayer key={selectedPlayer?.id} socket={socket} socketId={selectedPlayer?.id ?? ''} width={videoWidth} height={videoHeight} cropInfo={selectedPlayer !== null ? playerCrops[selectedPlayer.id] : undefined} videoCache={videoCache} setVideoCache={setVideoCache} />
       )
 
   return (
@@ -188,7 +191,7 @@ export default function AdminPage (): JSX.Element {
             return (
               <div key={player.id}>
                 <button onClick={() => selectPlayer(player)}>SELECT: {player.name}</button>
-                <VideoPlayer key={player.id} socket={socket} socketId={player.id} width={200} height={200} />
+                <VideoPlayer key={player.id} socket={socket} socketId={player.id} width={200} height={200} videoCache={videoCache} setVideoCache={setVideoCache} />
               </div>
             )
           })}
