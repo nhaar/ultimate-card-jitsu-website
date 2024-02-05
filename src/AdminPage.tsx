@@ -28,9 +28,10 @@ export default function AdminPage (): JSX.Element {
   // saving blob cache
   const [videoCache, setVideoCache] = useState<VideoCache>({})
 
-  // related to crop mode (editting video size)
-  const [cropMode, setCropMode] = useState(false)
-  const [currentCrop, setCurrentCrop] = useState({ left: 0, right: 0, top: 0, bottom: 0 })
+  // related to cropping player videos (editting video size)
+  /** Keeps crop of current selected player while being editted */
+  const [currentCrop, setCurrentCrop] = useState<CropInfo | null>(null)
+  /** To store all player crops locally */
   const [playerCrops, setPlayerCrops] = useState<PlayerCrops>({})
 
   /**
@@ -109,30 +110,18 @@ export default function AdminPage (): JSX.Element {
       q.push(previousPlayer)
     }
 
+    // to be able to edit the selected player's crop
+    setCurrentCrop(playerCrops[player.id] ?? { left: 0, right: 0, top: 0, bottom: 0 })
+  
     setSelectedPlayer(player)
     setQueuedPlayers(q)
   }
 
-  /**
-   * Initiates crop mode for the currently selected player
-   */
-  function enterCropMode (): void {
-    setCropMode(true)
-    setCurrentCrop({ left: 0, right: 0, top: 0, bottom: 0 })
-  }
+  /** The components that are responsible for changing the crop values (for the selected player) */
+  const cropComponents = []
 
-  /**
-   * Exits crop mode and saves the crop info for the currently selected player
-   */
-  function exitCropMode (): void {
-    setCropMode(false)
-    setPlayerCrops({ ...playerCrops, [selectedPlayer?.id ?? '']: currentCrop })
-    console.log(playerCrops)
-  }
-
-  if (cropMode) {
-    // to dynamically create the crop inputs
-    const cropComponents = []
+  // to dynamically create the crop inputs
+  if (currentCrop !== null) {
     for (const direction in currentCrop) {
       cropComponents.push(
         <div>
@@ -145,16 +134,14 @@ export default function AdminPage (): JSX.Element {
         </div>
       )
     }
-
-    return (
-      <div>
-        {cropComponents}
-        <button onClick={exitCropMode}>FINISH</button>
-        {/* using arbitrarily small 16:9 ratio for preview */}
-        <VideoPlayer key={selectedPlayer?.id} socket={socket} socketId={selectedPlayer?.id ?? ''} width={640} height={360} cropInfo={currentCrop} videoCache={videoCache} setVideoCache={setVideoCache} />
-      </div>
-    )
   }
+
+  // saving the crop for selected player when changing
+  useEffect(() => {
+    if (selectedPlayer !== null && currentCrop !== null) {
+      setPlayerCrops({ ...playerCrops, [selectedPlayer.id]: currentCrop })
+    }
+  }, [currentCrop])
 
   // keeping video 16:10 (roughyl Club Penguin's aspect ratio)
   const videoWidth = 900
@@ -206,7 +193,9 @@ export default function AdminPage (): JSX.Element {
             )
           })}
         </div>
-        <button onClick={enterCropMode}>ENTER CROP MODE</button>
+        <div>
+          {cropComponents}
+        </div>
       </div>
     </div>
   )
