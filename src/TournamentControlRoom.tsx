@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react"
-import { getAllPlayers, isTournamentActive } from "./api"
+import { useEffect, useState } from 'react'
+import { getAllPlayers, isTournamentActive } from './api'
 
 /** Component responsible for the control room when a tournament is not active */
 function PretournamentControlRoom (): JSX.Element {
@@ -19,15 +19,15 @@ function PretournamentControlRoom (): JSX.Element {
       <div>
         UNSELECTED
         {unselectedPlayers.map((player) => (
-          <div>{player}</div>
-        ))}        
+          <div key={player}>{player}</div>
+        ))}
       </div>
       <div>
         SELECTED
         {selectedPlayers.map((player) => (
-          <div>{player}</div>
+          <div key={player}>{player}</div>
         ))}
-    </div>
+      </div>
     </div>
   )
 }
