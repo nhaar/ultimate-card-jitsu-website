@@ -37,6 +37,19 @@ function VideoElement ({ videoRef, className, width, height, cropInfo }: {
   /** Crop information that dictates how to crop this video */
   cropInfo: CropInfo
 }): JSX.Element {
+  // the cropping method used aims for the video to have the same exact size as the given width and height, and cuts out the percentages as indicated
+  // the approach is to stretch up the video to be bigger than the given width and height, and then overflow the parts that we want to cut out
+  // for top and left, we need to set marging accordingly.
+  
+  /** Helper function that gives a scale based on the percentage to cut from one edge and to the opposite edge */
+  const scale = (edge:number, other:number) => 1 / (1 - (edge + other) / 100)
+
+  const horizontalScale = scale(cropInfo.left, cropInfo.right)
+  const verticalScale = scale(cropInfo.top, cropInfo.bottom)
+
+  const newHeight = height * verticalScale
+  const newWidth = width * horizontalScale
+
   return (
     // parent div used to keep the size of the video
     <div
@@ -50,8 +63,8 @@ function VideoElement ({ videoRef, className, width, height, cropInfo }: {
       {/* second div is used to stretch the video arbitrarily */}
       <div style={{
         // sizes are stretched to be bigger so that the parts that we want cropped out can be overflowed away and hidden
-        width: `${100 * 100 / (100 - cropInfo.right - cropInfo.left)}%`,
-        height: `${100 * 100 / (100 - cropInfo.bottom - cropInfo.top)}%`
+        width: `${horizontalScale * 100}%`,
+        height: `${verticalScale * 100}%`
       }}
       >
         <video
@@ -63,8 +76,8 @@ function VideoElement ({ videoRef, className, width, height, cropInfo }: {
             objectFit: 'fill',
             width: '100%',
             height: '100%',
-            marginLeft: `-${cropInfo.left}%`,
-            marginTop: `-${cropInfo.top}%`
+            marginLeft: `-${newWidth * cropInfo.left / 100}px`,
+            marginTop: `-${newHeight * cropInfo.top / 100}px`
           }}
         />
       </div>
