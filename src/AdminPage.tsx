@@ -21,8 +21,17 @@ export default function AdminPage (): JSX.Element {
   /** WebSocket connection */
   const [socket, setSocket] = useState<Socket | null>(null)
   const [players, setPlayers] = useState<PlayerInfo[]>([])
+
+  /** To keep track of the players sent by backend */
+  const [incomingPlayers, setIncomingPlayers] = useState<PlayerInfo[]>([])
+
+  /** Players that are not queued for video preview */
   const [unqueuedPlayers, setUnqueuedPlayers] = useState<PlayerInfo[]>([])
+
+  /** Players queued for video preview */
   const [queuedPlayers, setQueuedPlayers] = useState<PlayerInfo[]>([])
+
+  /** Player that has the main video preview occupied */
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerInfo | null>(null)
 
   // saving blob cache
@@ -55,33 +64,44 @@ export default function AdminPage (): JSX.Element {
 
     const token = formatCookies(document.cookie).token
     socket.emit('connectAdmin', { token })
+
+    // set the new players, used so we can handle the actual updating with react properly
     socket.on('getPlayers', ({ players: incomingPlayers }: { players: PlayerInfo[] }) => {
-      const u = [...unqueuedPlayers]
-      const q = [...queuedPlayers]
-
-      const removedPlayers: PlayerInfo[] = []
-      for (const player of incomingPlayers) {
-        if (players.find((p) => p.id === player.id) == null) {
-          u.push(player)
-        }
-      }
-      for (const player of players) {
-        if (incomingPlayers.find((p) => p.id === player.id) == null) {
-          removedPlayers.push(player)
-        }
-      }
-
-      updatePlayersInQueue(u, removedPlayers)
-      updatePlayersInQueue(q, removedPlayers)
-      setUnqueuedPlayers(u)
-      setQueuedPlayers(q)
-
-      if (selectedPlayer !== null && (removedPlayers.find((p) => p.id === selectedPlayer.id) != null)) {
-        setSelectedPlayer(null)
-      }
-      setPlayers(incomingPlayers)
+      setIncomingPlayers(incomingPlayers)
     })
   }, [])
+
+  // update players when new ones are received
+  useEffect(() => {
+    const u = [...unqueuedPlayers]
+    const q = [...queuedPlayers]
+
+    const removedPlayers: PlayerInfo[] = []
+
+    // add new players to unqueued
+    for (const player of incomingPlayers) {
+      if (players.find((p) => p.id === player.id) == null) {
+        u.push(player)
+      }
+    }
+    // find players that have been removed
+    for (const player of players) {
+      if (incomingPlayers.find((p) => p.id === player.id) == null) {
+        removedPlayers.push(player)
+      }
+    }
+
+    updatePlayersInQueue(u, removedPlayers)
+    updatePlayersInQueue(q, removedPlayers)
+    setUnqueuedPlayers(u)
+    setQueuedPlayers(q)
+
+    // unselecting player if it was removed
+    if (selectedPlayer !== null && (removedPlayers.find((p) => p.id === selectedPlayer.id) !== undefined)) {
+      unselectPlayer()
+    }
+    setPlayers(incomingPlayers)
+  }, [incomingPlayers])
 
   function addToQueue (id: string): void {
     const u = [...unqueuedPlayers]
@@ -112,9 +132,14 @@ export default function AdminPage (): JSX.Element {
 
     // to be able to edit the selected player's crop
     setCurrentCrop(playerCrops[player.name] ?? { left: 0, right: 0, top: 0, bottom: 0 })
-  
+
     setSelectedPlayer(player)
     setQueuedPlayers(q)
+  }
+
+  /** Unselects the main video preview */
+  function unselectPlayer (): void {
+    setSelectedPlayer(null)
   }
 
   /** The components that are responsible for changing the crop values (for the selected player) */
