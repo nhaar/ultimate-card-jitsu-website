@@ -5,6 +5,7 @@ import bcrypt = require('bcrypt')
 
 import Database from './database'
 import { config } from '../config'
+import { formatCookies } from '../utils/utils'
 
 export default class User {
   db: Database
@@ -72,7 +73,12 @@ export default class User {
 
   static checkAdminMiddleware (req: Request, res: Response, next: NextFunction): void {
     void (async (req: Request, res: Response, next: NextFunction) => {
-      const { token } = req.body
+      const cookies = req.headers.cookies
+      if (typeof (cookies) !== 'string') {
+        res.status(401).json({ error: 'missing session token' })
+        return
+      }
+      const { token } = formatCookies(cookies)
       if (typeof (token) !== 'string') {
         res.status(400).json({ error: 'session token must be a string' })
         return
