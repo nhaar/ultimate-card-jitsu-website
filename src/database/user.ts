@@ -95,4 +95,14 @@ export default class User {
       next()
     })(req, res, next)
   }
+
+  /**
+   * Get a list of all username of users in the database
+   * @returns 
+   */
+  static async getAllUsers (): Promise<string[]> {
+    const db = new Database()
+    const res = await db.getQuery('SELECT username FROM players', [])
+    return res.rows.map((row: { username: string }) => row.username)
+  }
 }

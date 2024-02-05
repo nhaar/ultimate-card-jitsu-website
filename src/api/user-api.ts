@@ -124,4 +124,9 @@ router.post('/user-role', asyncWrapper(async (req: Request, res: Response): Prom
   res.status(200).json({ role: 'user' })
 }))
 
+router.get('/all-players', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+  const users = await User.getAllUsers()
+  res.json(users).status(200)
+}))
+
 export default router
