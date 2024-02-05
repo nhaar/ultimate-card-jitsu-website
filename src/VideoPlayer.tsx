@@ -40,9 +40,9 @@ function VideoElement ({ videoRef, className, width, height, cropInfo }: {
   // the cropping method used aims for the video to have the same exact size as the given width and height, and cuts out the percentages as indicated
   // the approach is to stretch up the video to be bigger than the given width and height, and then overflow the parts that we want to cut out
   // for top and left, we need to set marging accordingly.
-  
+
   /** Helper function that gives a scale based on the percentage to cut from one edge and to the opposite edge */
-  const scale = (edge:number, other:number) => 1 / (1 - (edge + other) / 100)
+  const scale = (edge: number, other: number): number => 1 / (1 - (edge + other) / 100)
 
   const horizontalScale = scale(cropInfo.left, cropInfo.right)
   const verticalScale = scale(cropInfo.top, cropInfo.bottom)
