@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { TournamentMatch, createTournament, getAllPlayers, getTournamentMatches, isTournamentActive } from './api'
+import { TournamentMatch, createTournament, getAllPlayers, getTournamentMatches, isTournamentActive, updateMatchScore } from './api'
 
 /** Component responsible for the control room when a tournament is not active */
 function PretournamentControlRoom (): JSX.Element {
@@ -15,20 +15,20 @@ function PretournamentControlRoom (): JSX.Element {
 
   /**
    * Moves a player from unselected to selected
-   * @param player 
+   * @param player
    */
   function selectPlayer (player: string): void {
-    const u = [ ...unselectedPlayers].filter((p) => p !== player)
+    const u = [...unselectedPlayers].filter((p) => p !== player)
     setUnselectedPlayers(u)
     setSelectedPlayers([...selectedPlayers, player])
   }
 
   /**
    * Moves a player from selected to unselected
-   * @param player 
+   * @param player
    */
   function unselectPlayer (player: string): void {
-    const s = [ ...selectedPlayers].filter((p) => p !== player)
+    const s = [...selectedPlayers].filter((p) => p !== player)
     setSelectedPlayers(s)
     setUnselectedPlayers([...unselectedPlayers, player])
   }
@@ -59,6 +59,78 @@ function PretournamentControlRoom (): JSX.Element {
   )
 }
 
+/** Component that controls a match */
+function TournamentMatchController ({ match, index }: {
+  /** Object of match */
+  match: TournamentMatch
+  /** Index of match (in tournament matches array) */
+  index: number
+}): JSX.Element {
+  /**
+   * If not decided, will be used to parse the standings
+   *
+   * The string is expected to be a list of numbers separated by newlines, with all numbers being the runner IDs
+   * */
+  const [standingDecider, setStandingDecider] = useState('')
+
+  /**
+   * Takes the given players in string and parses and updates the match standings based on it
+   * @param matchIndex
+   * @returns
+   */
+  function decideStandings (): void {
+    const players = standingDecider.split('\n').filter((p) => p.trim() !== '')
+    if (players.length !== 4) {
+      window.alert('Need 4 players')
+      return
+    }
+    for (const player of players) {
+      if (player.match(/^\d+$/) === null) {
+        window.alert('Player names must be numbers')
+        return
+      }
+      if (match.runners.find(r => r === Number(player)) === undefined) {
+        window.alert('Found player not in match: ' + player)
+        return
+      }
+    }
+    const standings = players.map(p => Number(p))
+    void (async () => {
+      const response = await updateMatchScore(index, standings)
+      if (response) {
+        window.alert('Standings updated')
+        window.location.reload()
+      } else {
+        window.alert('Failed to update standings')
+      }
+    })()
+  }
+
+  let matchElement: JSX.Element
+  if (match.standings.length === 0) {
+    matchElement = (
+      <div>
+        <div>
+          NOT STARTED, BETWEEN {match.runners}
+        </div>
+        <textarea value={standingDecider} onChange={(e) => setStandingDecider(e.target.value)} />
+        <button onClick={decideStandings}>DECIDE</button>
+      </div>
+    )
+  } else {
+    matchElement = <div>FINISHED</div>
+  }
+
+  return (
+    <div>
+      <div>
+        MATCH {index}
+      </div>
+      {matchElement}
+    </div>
+  )
+}
+
 /** Component for the control room while the tournament is ongoing */
 function ActiveTournamentControlRoom (): JSX.Element {
   const [matches, setMatches] = useState<TournamentMatch[]>([])
@@ -74,9 +146,7 @@ function ActiveTournamentControlRoom (): JSX.Element {
       Hello Tournamenters
       {matches.map((match, i) => {
         return (
-          <div key={i}>
-            {match.runners}
-          </div>
+          <TournamentMatchController key={i} match={match} index={i} />
         )
       })}
     </div>
