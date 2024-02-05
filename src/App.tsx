@@ -7,6 +7,7 @@ import Logo from './images/logo.png'
 import MainPage from './MainPage'
 import PlayerPage from './PlayerPage'
 import PlayerWatchPage from './PlayerWatchPage'
+import TournamentControlRoom from './TournamentControlRoom'
 
 /** Component for the website's whole navbar */
 function Navbar (): JSX.Element {
@@ -57,6 +58,10 @@ export default function App (): JSX.Element {
     }
     case '/admin-watch': {
       Page = <PlayerWatchPage />
+      break
+    }
+    case '/tournament-control': {
+      Page = <TournamentControlRoom />
       break
     }
     default: {
