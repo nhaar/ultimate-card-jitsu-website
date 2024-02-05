@@ -178,9 +178,14 @@ export default function AdminPage (): JSX.Element {
     ? (
       <div style={{
         width: `${videoWidth}px`,
-        height: `${videoHeight}px`
+        height: `${videoHeight}px`,
+        backgroundColor: '#169cf7',
+        color: 'black',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
       }}
-      >Player will be here!
+      >Waiting for streams...
       </div>
       )
     : (
