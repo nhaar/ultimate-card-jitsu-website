@@ -118,4 +118,10 @@ router.get('/players-info', User.checkAdminMiddleware, asyncWrapper(async (req: 
   res.json(tournament.getPlayerInfo()).status(200)
 }))
 
+router.post('/rollback', User.checkAdminMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
+  const tournament = await Tournament.getTournament()
+  await tournament.rollback()
+  res.sendStatus(200)
+}))
+
 export default router

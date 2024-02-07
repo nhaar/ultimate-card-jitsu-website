@@ -41,6 +41,8 @@ interface TournamentObject {
   isFirstPhaseFinished: boolean
   isFinished: boolean
   tieStandings: TieStandings
+  // left optional because when this is stored as a backup it doesn't have this property, to avoid circular backup and exponential growth of memory
+  backups?: string[]
 }
 
 /** Maps points to all players with the same points. Used for ties. */
@@ -81,6 +83,9 @@ class Tournament {
     final: {}
   }
 
+  /** Contains multiple backups of the tournament as serialized JSON, with the first element being the most recent one */
+  backups: string[] = []
+
   /** Whether or not the first phase of the tournament is fully done, including tie settling */
   isFirstPhaseFinished: boolean = false
   /** Whether or not this tournament is finished */
@@ -104,6 +109,7 @@ class Tournament {
       this.isFirstPhaseFinished = object.isFirstPhaseFinished
       this.isFinished = object.isFinished
       this.tieStandings = object.tieStandings
+      this.backups = object.backups ?? []
     } else {
       const players: PlayerInfo[] = []
       for (const runner of args) {
@@ -523,10 +529,48 @@ class Tournament {
     await this.save()
   }
 
+  /** Rollback the tournament to the last backup in the database */
+  async rollback (): Promise<void> {
+    // last backup should be the current state, so discard it, and use the next one
+    this.backups.shift()
+    const backuptoUse = this.backups[0]
+
+    // no backups, don't do anything
+    if (backuptoUse === undefined) {
+      return
+    }
+  
+    const backedupTournament = JSON.parse(backuptoUse)
+    if (!Tournament.isTournamentObject(backedupTournament)) {
+      throw new Error('invalid backup')
+    }
+    backedupTournament.backups = [...this.backups]
+    const newTournament = new Tournament(backedupTournament)
+    
+    // skip backup because it would be the same as the latest snapshot
+    await newTournament.save(false)
+  }
+
+  /**
+   * Get a serialized JSON of the tournament without the backups
+   */
+  serializeWithoutBackup (): string {
+    return JSON.stringify({
+      bracket: this.bracket,
+      isFirstPhaseFinished: this.isFirstPhaseFinished,
+      isFinished: this.isFinished,
+      tieStandings: this.tieStandings
+    })
+  }
+
   /**
    * Saves the tournament to the database
+   * @param createBackup Whether or not to create a backup of the tournament before saving it
    */
-  async save (): Promise<void> {
+  async save (createBackup: boolean = true): Promise<void> {
+    if (createBackup) {
+      this.backups.splice(0, 0, this.serializeWithoutBackup())
+    }
     const db = new Database()
 
     const getQuery = await db.getQuery('SELECT * FROM tournament', [])
