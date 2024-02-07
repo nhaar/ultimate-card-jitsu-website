@@ -68,6 +68,8 @@ class Tournament {
     final: {}
   }
 
+  /** Whether or not the first phase of the tournament is fully done, including tie settling */
+  isFirstPhaseFinished: boolean = false
   /** Whether or not this tournament is finished */
   isFinished: boolean = false
 
@@ -324,7 +326,10 @@ class Tournament {
     return playerPoints
   }
 
-  isFirstPhaseComplete (): boolean {
+  /**
+   * Checks whether the first phase matches have been completed, without tie settling
+   */
+  areFirstPhaseMatchesComplete (): boolean {
     for (const match of this.bracket.start.matches) {
       if (match.standings.length === 0) {
         return false
@@ -366,10 +371,7 @@ class Tournament {
 
   /** Get the current phase of the tournament */
   getCurrentPhase (): TournamentPhase {
-    if (this.isFirstPhaseComplete()) {
-      return TournamentPhase.Final
-    }
-    return TournamentPhase.Start
+    return this.isFirstPhaseFinished ? TournamentPhase.Final : TournamentPhase.Start
   }
 
   /** Get the tie point mapping for the current phase */
@@ -382,7 +384,7 @@ class Tournament {
   containsTie (): boolean {
     const ties = this.getTies()
     const phasePointMapping = this.getTiePointMapping()
-    
+
     for (const pointValue in ties) {
       // found more than one player tied, check if it has been resolved
       if (ties[Number(pointValue)].length > 1) {
@@ -451,7 +453,8 @@ class Tournament {
   }
 
   endFirstPhaseIfComplete (): void {
-    if (this.isFirstPhaseComplete() && !this.containsTie()) {
+    if (this.areFirstPhaseMatchesComplete() && !this.containsTie()) {
+      this.isFirstPhaseFinished = true
       this.updateFinalists()
     }
   }
@@ -509,7 +512,7 @@ class Tournament {
   isWaitingToSettleTies (): boolean {
     const phase = this.getCurrentPhase()
     if (phase === TournamentPhase.Start) {
-      return this.isFirstPhaseComplete() && this.containsTie() && !this.hasFinalStarted()
+      return this.areFirstPhaseMatchesComplete() && this.containsTie() && !this.hasFinalStarted()
     } else {
       return this.hasFinalEnded() && this.containsTie()
     }
