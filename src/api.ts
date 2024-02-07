@@ -60,3 +60,21 @@ export async function updateMatchScore (matchIndex: number, standings: number[])
   const response = await postJSON('api/tournament/update-score', { matchIndex, standings })
   return response.ok
 }
+
+export interface TournamentTies {
+  exists: boolean
+  ties: { [points: number]: number[] }
+}
+
+export async function getTies (): Promise<TournamentTies> {
+  const response = await getJSON('api/tournament/tie')
+  if (response === null) {
+    throw new Error('Failed to get tournament ties')
+  }
+  return response as TournamentTies
+}
+
+export async function settleTie (points: number, winners: number[]): Promise<boolean> {
+  const response = await postJSON('api/tournament/settle-tie', { points, winners })
+  return response.ok
+}
