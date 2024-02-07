@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
-import { TournamentMatch, TournamentTies, createTournament, getAllPlayers, getTies, getTournamentMatches, isTournamentActive, settleTie, updateMatchScore } from './api'
+import { useContext, useEffect, useState } from 'react'
+import { TournamentMatch, TournamentTies, createTournament, getAllPlayers, getPlayerInfo, getTies, getTournamentMatches, isTournamentActive, settleTie, updateMatchScore } from './api'
+import { PlayerInfoContext } from './context/PlayerInfoContext'
 
 /** Component responsible for the control room when a tournament is not active */
 function PretournamentControlRoom (): JSX.Element {
@@ -131,6 +132,16 @@ function ControllerWithDecider<T> ({ Child, childProps, playerCount, runners, up
   )
 }
 
+/**
+ * Helper function used to list all players in a "decision" such that it is easier to read and understand
+ * @param players Array with player IDs
+ * @param playerInfo Player info object from the context
+ */
+function listAllPlayers (players: number[], playerInfo: { [id: number]: string }): string {
+  const labeledPlayers = players.map(p => `${p} - ${playerInfo[p]}`)
+  return labeledPlayers.join('||||')
+}
+
 /** Base component that controls a match's results, to be used with `ControllerWithDecider` */
 function TournamentMatchController ({ match, index, decider }: {
   /** Object of match */
@@ -139,12 +150,14 @@ function TournamentMatchController ({ match, index, decider }: {
   index: number
   decider: JSX.Element
 }): JSX.Element {
+  const playerInfo = useContext(PlayerInfoContext)
+
   let matchElement: JSX.Element
   if (match.standings.length === 0) {
     matchElement = (
       <div>
         <div>
-          NOT STARTED, BETWEEN {match.runners}
+          NOT STARTED, BETWEEN {listAllPlayers(match.runners, playerInfo)}
         </div>
         {decider}
       </div>
@@ -172,10 +185,12 @@ function TournamentTieController ({ points, players, decider }: {
   /** See `ControllerWithDecider` */
   decider: JSX.Element
 }): JSX.Element {
+  const playerInfo = useContext(PlayerInfoContext)
+
   return (
     <div>
       <div>
-        TIE AT {points} POINTS BETWEEN {players}
+        TIE AT {points} POINTS BETWEEN {listAllPlayers(players, playerInfo)}
       </div>
       {decider}
     </div>
@@ -186,12 +201,14 @@ function TournamentTieController ({ points, players, decider }: {
 function ActiveTournamentControlRoom (): JSX.Element {
   const [matches, setMatches] = useState<TournamentMatch[]>([])
   const [ties, setTies] = useState<TournamentTies | null>(null)
+  const [playerInfo, setPlayerInfo] = useState<{ [id: number]: string}>({})
 
   // to fetch things, means that needs to restart page to see changes
   useEffect(() => {
     void (async () => {
       setMatches(await getTournamentMatches())
       setTies(await getTies())
+      setPlayerInfo(await getPlayerInfo())
     })()
   }, [])
 
@@ -210,18 +227,20 @@ function ActiveTournamentControlRoom (): JSX.Element {
 
   return (
     <div>
-      {matches.map((match, i) => {
-        return (
-          <ControllerWithDecider<{ match: TournamentMatch, index: number }>
-            key={i} Child={TournamentMatchController} childProps={{ match, index: i }} playerCount={4} runners={match.runners} updateCallback={async (standings) => {
-              return await updateMatchScore(i, standings)
-            }}
-          />
-        )
-      })}
-      <div>
-        {tieComponents}
-      </div>
+      <PlayerInfoContext.Provider value={playerInfo}>
+        {matches.map((match, i) => {
+          return (
+            <ControllerWithDecider<{ match: TournamentMatch, index: number }>
+              key={i} Child={TournamentMatchController} childProps={{ match, index: i }} playerCount={4} runners={match.runners} updateCallback={async (standings) => {
+                return await updateMatchScore(i, standings)
+              }}
+            />
+          )
+        })}
+        <div>
+          {tieComponents}
+        </div>
+      </PlayerInfoContext.Provider>
     </div>
   )
 }

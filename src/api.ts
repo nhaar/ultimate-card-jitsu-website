@@ -78,3 +78,12 @@ export async function settleTie (points: number, winners: number[]): Promise<boo
   const response = await postJSON('api/tournament/settle-tie', { points, winners })
   return response.ok
 }
+
+/** Get info of players participating in the tournament */
+export async function getPlayerInfo (): Promise<{ [id: number]: string }> {
+  const response = await getJSON('api/tournament/players-info')
+  if (response === null) {
+    throw new Error('Failed to get player info')
+  }
+  return response as { [id: number]: string }
+}
