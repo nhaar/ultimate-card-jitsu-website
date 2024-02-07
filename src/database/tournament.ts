@@ -403,8 +403,9 @@ class Tournament {
     const playerPoints = this.getPlayerPoints(phase)
     const tieStandings = phase === TournamentPhase.Start ? this.tieStandings.first : this.tieStandings.final
 
-    const sortedPlayers = Object.keys(playerPoints).sort((a, b) => {
-      const pointDiff = playerPoints[Number(a)] - playerPoints[Number(b)]
+    const players = Object.keys(playerPoints).map(player => Number(player))
+    const sortedPlayers = players.sort((a, b) => {
+      const pointDiff = playerPoints[Number(b)] - playerPoints[Number(a)]
       if (pointDiff === 0) {
         const pointTieStandings = tieStandings[playerPoints[Number(a)]]
         // arbitrary ordering if tie hasn't been settled yet
@@ -419,7 +420,7 @@ class Tournament {
       }
     })
 
-    return sortedPlayers.map(player => Number(player))
+    return sortedPlayers
   }
 
   /** Updates the matches in the final */
