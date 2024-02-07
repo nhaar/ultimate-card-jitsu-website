@@ -75,39 +75,39 @@ class Tournament {
     }
   }
 
+  /**
+   * Generates all the matches for the first phase of the tournament
+   */
   static generateMatches (runners: number[]): Match[] {
     const matches: Match[] = []
 
-    let untakenPlayers: { [key: number]: boolean } = {}
-    let takenPlayers: { [key: number]: boolean } = {}
+    // use these sets so that we generate the matches using every player and then once it's done we restart, creating a loop
+    // the loop is done enough times so that it's guaranteed to generate the matches we watned
+    let untakenPlayers = new Set<number>()
+    let takenPlayers = new Set<number>()
 
     const resetTakenPlayers = (): void => {
-      untakenPlayers = {}
-      takenPlayers = {}
-      for (const runner of runners) {
-        untakenPlayers[runner] = true
-        takenPlayers[runner] = false
-      }
+      untakenPlayers = new Set(runners)
+      takenPlayers = new Set<number>()
     }
 
-    const getRandomPlayer = (): number => {
-      const keys = Object.keys(untakenPlayers)
-      const randomIndex = Math.floor(Math.random() * keys.length)
-
-      if (untakenPlayers[Number(keys[randomIndex])]) {
-        return Number(keys[randomIndex])
-      } else {
-        // search for closest untaken
-        for (let i = 0; i < keys.length; i++) {
-          const searchIndex = (randomIndex + i) % keys.length
-          if (untakenPlayers[Number(keys[searchIndex])]) {
-            return Number(keys[searchIndex])
-          }
-        }
-        // if no player is found, we need to reset and go again because all players are taken
+    // forbidden players are ones in the same match, must be used to avoid duplicates in same match
+    const getRandomPlayer = (forbiddenPlayers: Set<number>): number => {
+      // to act as a "looping" mechanism while generating matches, meaning we are readding players to the poll
+      if (untakenPlayers.size === 0) {
         resetTakenPlayers()
-        return getRandomPlayer()
       }
+
+      // allowed is the difference of untaken and forbidden
+      const allowed = new Set<number>()
+      for (const player of untakenPlayers) {
+        if (!forbiddenPlayers.has(player)) {
+          allowed.add(player)
+        }
+      }
+      const randomIndex = Math.floor(Math.random() * allowed.size)
+
+      return Array.from(allowed)[randomIndex]
     }
 
     resetTakenPlayers()
@@ -120,11 +120,13 @@ class Tournament {
         runners: [],
         standings: []
       }
+      const playersInMatch = new Set<number>()
       while (newMatch.runners.length < 4) {
-        const player = getRandomPlayer()
+        const player = getRandomPlayer(playersInMatch)
         newMatch.runners.push(player)
-        untakenPlayers[player] = false
-        takenPlayers[player] = true
+        untakenPlayers.delete(player)
+        takenPlayers.add(player)
+        playersInMatch.add(player)
       }
       matches.push(newMatch)
     }
