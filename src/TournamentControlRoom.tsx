@@ -210,7 +210,6 @@ function ActiveTournamentControlRoom (): JSX.Element {
 
   return (
     <div>
-      Hello Tournamenters
       {matches.map((match, i) => {
         return (
           <ControllerWithDecider<{ match: TournamentMatch, index: number }>
@@ -237,13 +236,13 @@ export default function TournamentControlRoom (): JSX.Element {
     })()
   }, [])
 
-  if (isActive) {
-    return (
-      <ActiveTournamentControlRoom />
-    )
-  } else {
-    return (
-      <PretournamentControlRoom />
-    )
-  }
+  let controlRoomElement = isActive ? <ActiveTournamentControlRoom /> : <PretournamentControlRoom />
+  return (
+    <div>
+      <div>
+        Control room intentionally left not user friendly due to time constraints, good luck!
+      </div>
+      {controlRoomElement}
+    </div>
+  )
 }
