@@ -295,10 +295,11 @@ class Tournament {
 
     for (const match of this.getPhaseMatches(phase)) {
       for (let i = 0; i < match.standings.length; i++) {
-        const runner = match.runners[match.standings[i]]
+        const runner = match.standings[i]
         if (playerPoints[runner] === undefined) {
           playerPoints[runner] = 0
         }
+        // index represents ranking in the match, so that's why we add points based on it
         switch (i) {
           case 0:
             playerPoints[runner] += Tournament.FIRST_PLACE_POINTS
