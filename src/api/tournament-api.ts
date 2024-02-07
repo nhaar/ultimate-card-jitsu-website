@@ -2,7 +2,7 @@ import express = require('express')
 import { Request, Response } from 'express'
 import { asyncWrapper } from '../utils/utils'
 import User from '../database/user'
-import Tournament from '../database/tournament'
+import Tournament, { TournamentPhase } from '../database/tournament'
 
 const router = express.Router()
 
@@ -68,9 +68,9 @@ router.post('/update-score', User.checkAdminMiddleware, asyncWrapper(async (req:
   res.sendStatus(200)
 }))
 
-router.get('/standings', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+router.get('/first-phase-standings', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   const tournament: Tournament = await Tournament.getTournament()
-  res.json(tournament.getPlayerPoints()).status(200)
+  res.json(tournament.getPlayerPoints(TournamentPhase.Start)).status(200)
 }))
 
 router.get('/tie', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
