@@ -68,6 +68,9 @@ class Tournament {
     final: {}
   }
 
+  /** Whether or not this tournament is finished */
+  isFinished: boolean = false
+
   constructor (...args: any[]) {
     if (args.length === 0) {
       throw new Error('no arguments provided')
@@ -279,10 +282,11 @@ class Tournament {
     }
     targetMatches[matchIndex].standings = standings
 
+    // these checks are for ending phases
     if (isFirstPhase) {
-      if (this.isFirstPhaseComplete() && !this.containsTie()) {
-        this.updateFinalists()
-      }
+      this.endFirstPhaseIfComplete()
+    } else {
+      this.endTournamentIfComplete()
     }
 
     await this.save()
@@ -368,30 +372,59 @@ class Tournament {
     return TournamentPhase.Start
   }
 
+  /** Get the tie point mapping for the current phase */
+  getTiePointMapping (): PointMapping {
+    const phase = this.getCurrentPhase()
+    return phase === TournamentPhase.Start ? this.tieStandings.first : this.tieStandings.final
+  }
+
+  /** Check if there is a pending tie in the current phase */
   containsTie (): boolean {
     const ties = this.getTies()
+    const phasePointMapping = this.getTiePointMapping()
+    
     for (const pointValue in ties) {
+      // found more than one player tied, check if it has been resolved
       if (ties[Number(pointValue)].length > 1) {
-        return true
+        // if it's undefined, it hasn't been resolved yet
+        if (phasePointMapping[Number(pointValue)] === undefined) {
+          return true
+        }
       }
     }
     return false
   }
 
-  updateFinalists (): void {
-    const playerPoints = this.getPlayerPoints(TournamentPhase.Start)
+  /**
+   * Get a ranking of the players in a given phase
+   * @returns An array with all the runner IDs, with the first element representin the top spot, and so forth
+   */
+  getRankings (phase: TournamentPhase): number[] {
+    const playerPoints = this.getPlayerPoints(phase)
+    const tieStandings = phase === TournamentPhase.Start ? this.tieStandings.first : this.tieStandings.final
 
     const sortedPlayers = Object.keys(playerPoints).sort((a, b) => {
       const pointDiff = playerPoints[Number(a)] - playerPoints[Number(b)]
       if (pointDiff === 0) {
-        const tieStandings = this.tieStandings.first[playerPoints[Number(a)]]
-        const aIndex = tieStandings.indexOf(Number(a))
-        const bIndex = tieStandings.indexOf(Number(b))
+        const pointTieStandings = tieStandings[playerPoints[Number(a)]]
+        // arbitrary ordering if tie hasn't been settled yet
+        if (pointTieStandings === undefined) {
+          return 1
+        }
+        const aIndex = pointTieStandings.indexOf(Number(a))
+        const bIndex = pointTieStandings.indexOf(Number(b))
         return aIndex - bIndex
       } else {
         return pointDiff
       }
     })
+
+    return sortedPlayers.map(player => Number(player))
+  }
+
+  /** Updates the matches in the final */
+  updateFinalists (): void {
+    const sortedPlayers = this.getRankings(TournamentPhase.Start)
 
     const finalists: PlayerStandings[] = []
     for (let i = 0; i < 4; i++) {
@@ -416,6 +449,18 @@ class Tournament {
     }
   }
 
+  endFirstPhaseIfComplete (): void {
+    if (this.isFirstPhaseComplete() && !this.containsTie()) {
+      this.updateFinalists()
+    }
+  }
+
+  endTournamentIfComplete (): void {
+    if (this.hasFinalEnded() && !this.containsTie()) {
+      this.isFinished = true
+    }
+  }
+
   /**
    * Settle ties in the tournament for all the given point values in the given object
    */
@@ -423,9 +468,10 @@ class Tournament {
     const phase = this.getCurrentPhase()
     if (phase === TournamentPhase.Start) {
       this.tieStandings.first = Object.assign(this.tieStandings.first, pointMapping)
-      this.updateFinalists()
+      this.endFirstPhaseIfComplete()
     } else {
       this.tieStandings.final = Object.assign(this.tieStandings.final, pointMapping)
+      this.endTournamentIfComplete()
     }
     await this.save()
   }
