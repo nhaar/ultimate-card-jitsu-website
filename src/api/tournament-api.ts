@@ -76,7 +76,7 @@ router.get('/standings', asyncWrapper(async (req: Request, res: Response): Promi
 router.get('/tie', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   const tournament: Tournament = await Tournament.getTournament()
   const ties = tournament.getTies()
-  const containsTie = tournament.containsTie()
+  const containsTie = tournament.isWaitingToSettleTies()
   res.json({ exists: containsTie, ties }).status(200)
 }))
 
@@ -88,6 +88,26 @@ router.get('/active', asyncWrapper(async (req: Request, res: Response): Promise<
 router.get('/date', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   const date = await Tournament.getTournamentDate()
   res.json({ date }).status(200)
+}))
+
+router.post('/settle-tie', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+  const { points, winners }: { points: number, winners: number[] } = req.body
+  if (typeof (points) !== 'number') {
+    res.status(400).json({ error: 'points must be a number' })
+    return
+  }
+  if (!Array.isArray(winners)) {
+    res.status(400).json({ error: 'winners must be an array' })
+    return
+  }
+  if (!winners.every((winner) => typeof (winner) === 'number')) {
+    res.status(400).json({ error: 'winners must be an array of numbers' })
+    return
+  }
+
+  const tournament: Tournament = await Tournament.getTournament()
+  await tournament.settleTies({ [points]: winners })
+  res.sendStatus(200)
 }))
 
 export default router

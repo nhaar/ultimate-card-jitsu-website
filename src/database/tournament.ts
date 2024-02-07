@@ -293,7 +293,9 @@ class Tournament {
     return true
   }
 
-  getTies (): { [key: number]: number[] } {
+  /** Get the ties occurring at each point number and all the players that have it */
+  // for the future, this will need to be changed to accomodate first phase and second phase ties separatedly
+  getTies (): { [points: number]: number[] } {
     const playerPoints = this.getPlayerPoints()
 
     const pointMap: { [key: number]: number } = {}
@@ -370,9 +372,13 @@ class Tournament {
     }
   }
 
-  settleTies (tieStandings: TieStandings): void {
-    this.tieStandings = tieStandings
+  /**
+   * Settle ties in the tournament for all the given point values in the given object
+   */
+  async settleTies (tieStandings: TieStandings): Promise<void> {
+    this.tieStandings = Object.assign(this.tieStandings, tieStandings)
     this.updateFinalists()
+    await this.save()
   }
 
   /**
@@ -387,6 +393,20 @@ class Tournament {
     } else {
       await db.getQuery('UPDATE tournament SET data = $1', [JSON.stringify(this)])
     }
+  }
+
+  /**
+   * Check if the final phase (second phase) of the tournament has started
+   */
+  hasFinalStarted(): boolean {
+    return this.bracket.final.matches.length > 0
+  }
+
+  /**
+   * Check if the tournament has finished first phase and is waiting to settle ties before starting the final phase
+   */
+  isWaitingToSettleTies(): boolean {
+    return this.isFirstPhaseComplete() && this.containsTie() && !this.hasFinalStarted()
   }
 }
 
