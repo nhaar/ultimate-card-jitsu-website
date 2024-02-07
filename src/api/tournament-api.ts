@@ -2,7 +2,7 @@ import express = require('express')
 import { Request, Response } from 'express'
 import { asyncWrapper } from '../utils/utils'
 import User from '../database/user'
-import Tournament, { TournamentPhase } from '../database/tournament'
+import Tournament, { PlayerInfo, TournamentPhase } from '../database/tournament'
 
 const router = express.Router()
 
@@ -22,17 +22,20 @@ router.post('/create', User.checkAdminMiddleware, asyncWrapper(async (req: Reque
     return
   }
 
-  const playerIds = []
+  const playerInfo: PlayerInfo[] = []
   for (const player of players) {
     const user = await User.getUserByName(player)
     if (user === null) {
       res.status(400).json({ error: `user ${player} does not exist` })
       return
     }
-    playerIds.push(user.id)
+    playerInfo.push({
+      name: player,
+      id: user.id
+    })
   }
 
-  await Tournament.createTournament(...playerIds)
+  await Tournament.createTournament(...playerInfo)
 
   res.sendStatus(200)
 }))

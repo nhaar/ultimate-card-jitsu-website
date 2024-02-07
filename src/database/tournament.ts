@@ -4,12 +4,12 @@ interface PlayerPoints {
   [key: number]: number
 }
 
-interface PlayerStandings {
-  runnerId: number
-  firsts: number
-  seconds: number
-  thirds: number
-  fourths: number
+/** All player data */
+export interface PlayerInfo {
+  /** Id as in the database */
+  id: number
+  /** Name for readability only */
+  name: string
 }
 
 interface Match {
@@ -21,13 +21,25 @@ interface Match {
 }
 
 interface TournamentPhaseData {
-  players: PlayerStandings[]
   matches: Match[]
 }
 
+/** Object storing the bracket, which will handles all matches */
 interface Bracket {
+  /** Matches in the first phase */
   start: TournamentPhaseData
+  /** Matches of the final */
   final: TournamentPhaseData
+  /** Info from all players in the tournament */
+  players: PlayerInfo[]
+}
+
+/** Object in the template of the Tournament objects serialized into JSON, and used for storing in the database */
+interface TournamentObject {
+  bracket: Bracket
+  isFirstPhaseFinished: boolean
+  isFinished: boolean
+  tieStandings: TieStandings
 }
 
 /** Maps points to all players with the same points. Used for ties. */
@@ -73,32 +85,40 @@ class Tournament {
   /** Whether or not this tournament is finished */
   isFinished: boolean = false
 
+  /** Creates the tournament from the JSON object in the database (that is, already parsed here as an object) */
+  constructor (tournamentObject: TournamentObject)
+
+  /** Creates the tournament from scratch by giving in all the players that will play */
+  constructor (...runners: PlayerInfo[])
+
   constructor (...args: any[]) {
     if (args.length === 0) {
       throw new Error('no arguments provided')
     }
     if (args.length === 1 && Tournament.isBracket(args[0].bracket)) {
-      this.bracket = args[0].bracket
+      const object = args[0] as TournamentObject
+
+      // need to do all properties so they can be initialized properly in typescript
+      this.bracket = object.bracket
+      this.isFirstPhaseFinished = object.isFirstPhaseFinished
+      this.isFinished = object.isFinished
+      this.tieStandings = object.tieStandings
     } else {
-      const start: PlayerStandings[] = []
+      const players: PlayerInfo[] = []
       for (const runner of args) {
-        start.push({
-          runnerId: runner,
-          firsts: 0,
-          seconds: 0,
-          thirds: 0,
-          fourths: 0
-        })
+        if (!Tournament.isPlayerInfo(runner)) {
+          throw new Error(`invalid player info: ${String(runner)}`)
+        }
+        players.push(runner)
       }
       this.bracket = {
         start: {
-          players: start,
           matches: Tournament.generateMatches(args)
         },
         final: {
-          players: [],
           matches: []
-        }
+        },
+        players
       }
     }
   }
@@ -162,17 +182,15 @@ class Tournament {
     return matches
   }
 
-  static isPlayerStandings (obj: any): obj is PlayerStandings {
+  static isPlayerInfo (obj: any): obj is PlayerInfo {
     if (typeof (obj) !== 'object' || obj === null || Array.isArray(obj)) {
       return false
     }
 
-    const numbers = ['runnerId', 'firsts', 'seconds', 'thirds', 'fourths']
-    for (const number of numbers) {
-      if (obj[number] === undefined || typeof (obj[number]) !== 'number') {
-        return false
-      }
+    if (typeof (obj.id) !== 'number' || typeof (obj.name) !== 'string') {
+      return false
     }
+
     return true
   }
 
@@ -194,9 +212,6 @@ class Tournament {
     if (typeof (obj) !== 'object' || obj === null || Array.isArray(obj)) {
       return false
     }
-    if (!Array.isArray(obj.players) || obj.players.every(Tournament.isPlayerStandings) === false) {
-      return false
-    }
     if (!Array.isArray(obj.matches) || obj.matches.every(Tournament.isMatch) === false) {
       return false
     }
@@ -208,6 +223,9 @@ class Tournament {
       return false
     }
     if (!Tournament.isTournamentPhase(obj.start) || !Tournament.isTournamentPhase(obj.final)) {
+      return false
+    }
+    if (!Array.isArray(obj.players) || obj.players.every(Tournament.isPlayerInfo) === false) {
       return false
     }
     return true
@@ -229,7 +247,7 @@ class Tournament {
     return query.rows.length > 0
   }
 
-  static async createTournament (...runners: number[]): Promise<Tournament> {
+  static async createTournament (...runners: PlayerInfo[]): Promise<Tournament> {
     const tournament: Tournament = new Tournament(...runners)
 
     await tournament.save()
@@ -428,25 +446,11 @@ class Tournament {
   /** Updates the matches in the final */
   updateFinalists (): void {
     const sortedPlayers = this.getRankings(TournamentPhase.Start)
+    const finalists = sortedPlayers.slice(0, 4)
 
-    const finalists: PlayerStandings[] = []
-    for (let i = 0; i < 4; i++) {
-      finalists.push({
-        runnerId: Number(sortedPlayers[i]),
-        firsts: 0,
-        seconds: 0,
-        thirds: 0,
-        fourths: 0
-      })
-    }
-
-    this.bracket.final.players = finalists
     for (let i = 0; i < Tournament.FINAL_MATCHES; i++) {
-      const runners = finalists.map(finalist => {
-        return finalist.runnerId
-      })
       this.bracket.final.matches.push({
-        runners,
+        runners: [...finalists],
         standings: []
       })
     }
