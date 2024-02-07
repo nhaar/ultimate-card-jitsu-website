@@ -21,3 +21,13 @@ export function formatCookies (str: string): { [key: string]: string } {
 
   return cookies
 }
+
+/** Check if a value is a JavaScript object */
+export function isObject (obj: any): boolean {
+  return typeof (obj) === 'object' && obj !== null && !Array.isArray(obj)
+}
+
+/** Check if a string has a number */
+export function isStringNumber (str: string): boolean {
+  return !isNaN(Number(str))
+}

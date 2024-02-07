@@ -113,4 +113,9 @@ router.post('/settle-tie', User.checkAdminMiddleware, asyncWrapper(async (req: R
   res.sendStatus(200)
 }))
 
+router.get('/players-info', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+  const tournament: Tournament = await Tournament.getTournament()
+  res.json(tournament.getPlayerInfo()).status(200)
+}))
+
 export default router

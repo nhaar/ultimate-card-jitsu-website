@@ -1,3 +1,4 @@
+import { isObject, isStringNumber } from '../utils/utils'
 import Database from './database'
 
 interface PlayerPoints {
@@ -95,7 +96,7 @@ class Tournament {
     if (args.length === 0) {
       throw new Error('no arguments provided')
     }
-    if (args.length === 1 && Tournament.isBracket(args[0].bracket)) {
+    if (args.length === 1 && Tournament.isTournamentObject(args[0])) {
       const object = args[0] as TournamentObject
 
       // need to do all properties so they can be initialized properly in typescript
@@ -113,7 +114,7 @@ class Tournament {
       }
       this.bracket = {
         start: {
-          matches: Tournament.generateMatches(args)
+          matches: Tournament.generateMatches(players.map(player => player.id))
         },
         final: {
           matches: []
@@ -218,6 +219,22 @@ class Tournament {
     return true
   }
 
+  static isTournamentObject (obj: any): obj is TournamentObject {
+    if (isObject(obj) === false) {
+      return false
+    }
+    if (!Tournament.isBracket(obj.bracket)) {
+      return false
+    }
+    if (typeof (obj.isFirstPhaseFinished) !== 'boolean' || typeof (obj.isFinished) !== 'boolean') {
+      return false
+    }
+    if (!Tournament.isTieStandings(obj.tieStandings)) {
+      return false
+    }
+    return true
+  }
+
   static isBracket (obj: any): obj is Bracket {
     if (typeof (obj) !== 'object' || obj === null || Array.isArray(obj)) {
       return false
@@ -227,6 +244,28 @@ class Tournament {
     }
     if (!Array.isArray(obj.players) || obj.players.every(Tournament.isPlayerInfo) === false) {
       return false
+    }
+    return true
+  }
+
+  static isTieStandings (obj: any): obj is TieStandings {
+    if (isObject(obj) === false) {
+      return false
+    }
+    if (!Tournament.isPointMapping(obj.first) || !Tournament.isPointMapping(obj.final)) {
+      return false
+    }
+    return true
+  }
+
+  static isPointMapping (obj: any): obj is PointMapping {
+    if (isObject(obj) === false) {
+      return false
+    }
+    for (const key in obj) {
+      if (!isStringNumber(key) || !Array.isArray(obj[key]) || obj[key].every((x: any) => typeof (x) === 'number') === false) {
+        return false
+      }
     }
     return true
   }
@@ -520,6 +559,15 @@ class Tournament {
     } else {
       return this.hasFinalEnded() && this.containsTie()
     }
+  }
+
+  /** Returns a map of all players in the tournament from their IDs to their name */
+  getPlayerInfo (): { [id: number]: string } {
+    const playerInfo: { [id: number]: string } = {}
+    for (const player of this.bracket.players) {
+      playerInfo[player.id] = player.name
+    }
+    return playerInfo
   }
 }
 
