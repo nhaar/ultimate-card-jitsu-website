@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react'
-import { TournamentMatch, TournamentTies, createTournament, getAllPlayers, getPlayerInfo, getTies, getTournamentMatches, isTournamentActive, settleTie, updateMatchScore } from './api'
+import { TournamentMatch, TournamentTies, createTournament, getAllPlayers, getPlayerInfo, getTies, getTournamentMatches, isTournamentActive, rollbackTournament, settleTie, updateMatchScore } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 
 /** Component responsible for the control room when a tournament is not active */
@@ -201,7 +201,7 @@ function TournamentTieController ({ points, players, decider }: {
 function ActiveTournamentControlRoom (): JSX.Element {
   const [matches, setMatches] = useState<TournamentMatch[]>([])
   const [ties, setTies] = useState<TournamentTies | null>(null)
-  const [playerInfo, setPlayerInfo] = useState<{ [id: number]: string}>({})
+  const [playerInfo, setPlayerInfo] = useState<{ [id: number]: string }>({})
 
   // to fetch things, means that needs to restart page to see changes
   useEffect(() => {
@@ -225,9 +225,24 @@ function ActiveTournamentControlRoom (): JSX.Element {
     }
   }
 
+  /** Handle clicking to rollback the tournament */
+  function clickRollbackTournament (): void {
+    void (async () => {
+      const ok = await rollbackTournament()
+      if (ok) {
+        window.location.reload()
+      } else {
+        window.alert('Failed to roll back tournament')
+      }
+    })()
+  }
+
   return (
     <div>
       <PlayerInfoContext.Provider value={playerInfo}>
+        <button onClick={clickRollbackTournament}>
+          UNDO (rollback tournament)
+        </button>
         {matches.map((match, i) => {
           return (
             <ControllerWithDecider<{ match: TournamentMatch, index: number }>
@@ -255,7 +270,7 @@ export default function TournamentControlRoom (): JSX.Element {
     })()
   }, [])
 
-  let controlRoomElement = isActive ? <ActiveTournamentControlRoom /> : <PretournamentControlRoom />
+  const controlRoomElement = isActive ? <ActiveTournamentControlRoom /> : <PretournamentControlRoom />
   return (
     <div>
       <div>

@@ -87,3 +87,9 @@ export async function getPlayerInfo (): Promise<{ [id: number]: string }> {
   }
   return response as { [id: number]: string }
 }
+
+/** Rolls back the tournament to its latest version */
+export async function rollbackTournament (): Promise<boolean> {
+  const response = await postJSON('api/tournament/rollback', {})
+  return response.ok
+}
