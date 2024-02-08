@@ -93,3 +93,34 @@ export async function rollbackTournament (): Promise<boolean> {
   const response = await postJSON('api/tournament/rollback', {})
   return response.ok
 }
+
+// from backend
+export enum TournamentPhase {
+  Start,
+  Final
+}
+
+// from backend
+export interface RankingInfo {
+  player: number
+  points: number
+  firstPlace: number
+  secondPlace: number
+  thirdPlace: number
+  fourthPlace: number
+}
+
+// from backend
+export type Ranking = RankingInfo[][]
+
+/**
+ * Get the ranking object for a phase
+ */
+export async function getRankings (phase: TournamentPhase): Promise<Ranking> {
+  const route = phase === TournamentPhase.Start ? 'api/tournament/start-rankings' : 'api/tournament/final-rankings'
+  const response = await getJSON(route)
+  if (response === null) {
+    throw new Error('Failed to get rankings')
+  }
+  return response as Ranking
+}

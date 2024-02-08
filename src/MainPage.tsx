@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { getJSON } from './utils'
 import { WIDGET_ID } from './discord-widget'
 import { STREAM_CHANNEL } from './stream-channel'
-import { isTournamentActive } from './api'
+import { Ranking, TournamentPhase, getPlayerInfo, getRankings, isTournamentActive } from './api'
+import { PlayerInfoContext } from './context/PlayerInfoContext'
 
 /** Stage of the tournament */
 enum TournamentState {
@@ -13,6 +14,22 @@ enum TournamentState {
   InProgress,
   /** Just finished, wrapping up */
   Finished
+}
+
+/**
+ * Adds a twitch embed with an element that has the given HTML id
+ */
+function addTwitchEmbed (elementId: string): void {
+  // loaded from script
+  const Twitch = (window as any).Twitch;
+  // can't do anything about this warning since using new is how the Twitch docs tell you to do it
+  /* eslint-disable no-new */
+  new Twitch.Embed(elementId, {
+    width: 854,
+    height: 480,
+    channel: STREAM_CHANNEL
+  })
+  /* eslint-disable no-new */
 }
 
 /** Component for the page before the tournament starts */
@@ -42,18 +59,7 @@ function PreTournamentPage (): JSX.Element {
 
   useEffect(() => {
     if (tournamentDate !== null && tournamentDate !== undefined) {
-      const Twitch = (window as any).Twitch;
-      // need to remove it because react adds it twice
-      (document.querySelector('#twitch-embed') as HTMLElement).innerHTML = ''
-
-      // can't do anything about this warning since using new is how the Twitch docs tell you to do it
-      /* eslint-disable no-new */
-      new Twitch.Embed('twitch-embed', {
-        width: 854,
-        height: 480,
-        channel: STREAM_CHANNEL
-      })
-      /* eslint-disable no-new */
+      addTwitchEmbed('twitch-embed')
     }
   }, [tournamentDate])
 
@@ -82,6 +88,72 @@ function PreTournamentPage (): JSX.Element {
   )
 }
 
+/** Component that handles rendering a table with rankings from an input ranking object from the backend */
+function TournamentRanking ({ ranking }: { ranking: Ranking }): JSX.Element {
+  const playerInfo = useContext(PlayerInfoContext)
+
+  const tableRows = []
+  let rank = 1
+  for (const pointRanking of ranking) {
+    // "freezing" the rank will give the effect of having the same rank for players with the same points, and then incrementing the rank for the next player, as is desired
+    const thisRank = rank
+    for (const player of pointRanking) {
+      tableRows.push(
+        <tr key={player.player}>
+          <th>{thisRank}</th>
+          <td>{playerInfo[player.player]}</td>
+          <td>{player.points}</td>
+          <td>{player.firstPlace}</td>
+          <td>{player.secondPlace}</td>
+          <td>{player.thirdPlace}</td>
+          <td>{player.fourthPlace}</td>
+        </tr>
+      )
+      rank++
+    }
+  }
+  
+  return (
+    <table className='table is-bordered is-striped is-narrow is-hoverable'>
+      <thead>
+        <tr>
+          <th></th>
+          <th>Ninja</th>
+          <th>Points</th>
+          <th>1st Places</th>
+          <th>2nd Places</th>
+          <th>3rd Places</th>
+          <th>4th Places</th>
+        </tr>
+      </thead>
+      <tbody>
+        {tableRows}
+      </tbody>
+    </table>
+  )
+}
+
+/** Component that handles rendering the page when the tournament is on-going */
+function InTournamentPage (): JSX.Element {
+  const [ranking, setRanking] = useState<Ranking>([])
+  const [playerInfo, setPlayerInfo] = useState<{ [id: number]: string }>({})
+
+  useEffect(() => {
+    void (async () => {
+      setRanking(await getRankings(TournamentPhase.Start))
+      setPlayerInfo(await getPlayerInfo())
+    })()
+  }, [])
+
+  return (
+    <PlayerInfoContext.Provider value={playerInfo}>
+      <div>
+        <TournamentRanking ranking={ranking} />
+      </div>
+    </PlayerInfoContext.Provider>
+  )
+}
+
 /** Component for the main page */
 export default function MainPage (): JSX.Element {
   const [tournamentState, setTournamentState] = useState<TournamentState>(TournamentState.Unknown)
@@ -102,6 +174,11 @@ export default function MainPage (): JSX.Element {
     case TournamentState.NotStarted: {
       return (
         <PreTournamentPage />
+      )
+    }
+    case TournamentState.InProgress: {
+      return (
+        <InTournamentPage />
       )
     }
   }
