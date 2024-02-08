@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react'
 import { getJSON } from './utils'
 import { WIDGET_ID } from './discord-widget'
 import { STREAM_CHANNEL } from './stream-channel'
-import { Ranking, TournamentMatch, TournamentPhase, getPlayerInfo, getRankings, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive } from './api'
+import { Ranking, TournamentMatch, TournamentPhase, getPlayerInfo, getRankings, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 
 /** Stage of the tournament */
@@ -30,6 +30,13 @@ function addTwitchEmbed (elementId: string): void {
     channel: STREAM_CHANNEL
   })
   /* eslint-disable no-new */
+}
+
+/** Component that creates the widget for the Discord server */
+function DiscordWidget (): JSX.Element {
+  return (
+    <iframe src={`https://discord.com/widget?id=${WIDGET_ID}&theme=dark`} width='350' height='500' allowTransparency sandbox='allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts' />
+  )
 }
 
 /** Component for the page before the tournament starts */
@@ -77,7 +84,7 @@ function PreTournamentPage (): JSX.Element {
           And receive updates about the tournament.
           Friendship is a strong element.
         </div>
-        <iframe src={`https://discord.com/widget?id=${WIDGET_ID}&theme=dark`} width='350' height='500' allowTransparency sandbox='allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts' />
+        <DiscordWidget />
 
         <div>
           {isDateDecided && <div>Keep your eyes peeled in case the tournament is starting!</div>}
@@ -236,6 +243,17 @@ function InTournamentPage (): JSX.Element {
   )
 }
 
+/** Component that renders the page post tournament */
+function PostTournamentPage (): JSX.Element {
+  return (
+    <div>
+      <h1>The Tournament Has Finished!</h1>
+      <p>You can join the discord for more</p>
+      <DiscordWidget />
+    </div>
+  )
+}
+
 /** Component for the main page */
 export default function MainPage (): JSX.Element {
   const [tournamentState, setTournamentState] = useState<TournamentState>(TournamentState.Unknown)
@@ -243,16 +261,16 @@ export default function MainPage (): JSX.Element {
   useEffect(() => {
     void (async () => {
       const isActive = await isTournamentActive()
-      setTournamentState(isActive ? TournamentState.InProgress : TournamentState.NotStarted)
+      if (isActive) {
+        const isFinished = await isTournamentFinished()
+        setTournamentState(isFinished ? TournamentState.Finished : TournamentState.InProgress)
+      } else {
+        setTournamentState(TournamentState.NotStarted)
+      }
     })()
   }, [])
 
   switch (tournamentState) {
-    case TournamentState.Unknown: {
-      return (
-        <div />
-      )
-    }
     case TournamentState.NotStarted: {
       return (
         <PreTournamentPage />
@@ -263,11 +281,14 @@ export default function MainPage (): JSX.Element {
         <InTournamentPage />
       )
     }
+    case TournamentState.Finished: {
+      return (
+        <PostTournamentPage />
+      )
+    }
   }
 
   return (
-    <div>
-      HUh?
-    </div>
+    <div />
   )
 }

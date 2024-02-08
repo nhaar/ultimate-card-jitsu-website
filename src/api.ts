@@ -136,3 +136,12 @@ export async function isCurrentPhaseFirstPhase (): Promise<boolean> {
   // 0 corresponds to first phase
   return phase === 0
 }
+
+/** Check if the tournament is finished */
+export async function isTournamentFinished (): Promise<boolean> {
+  const response = await getJSON('api/tournament/is-finished')
+  if (response === null) {
+    throw new Error('Failed to get finish status')
+  }
+  return (response as { finished: boolean }).finished
+}
