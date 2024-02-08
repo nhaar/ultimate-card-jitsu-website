@@ -35,6 +35,22 @@ interface Bracket {
   players: PlayerInfo[]
 }
 
+/** Object that stores a singular player's stats within a phase */
+interface RankingInfo {
+  player: number
+  points: number
+  firstPlace: number
+  secondPlace: number
+  thirdPlace: number
+  fourthPlace: number
+}
+
+/**
+ * Object that stores all of the rankings of all players. It should be sorted such that the first level in the array
+ * corresponds to all the players tied to that rank, and the second level in the array contains the ranking info for all players in the tie. If there is no tie, the second level array will only contain one element.
+ */
+type Ranking = RankingInfo[][]
+
 /** Object in the template of the Tournament objects serialized into JSON, and used for storing in the database */
 interface TournamentObject {
   bracket: Bracket
@@ -358,35 +374,94 @@ class Tournament {
     return undefined
   }
 
+  /**
+   * Get how many points is awarded for finishing a match in a given positon/rank
+   * @param position The position of the player in the match, starting from 1, eg 1st place is 1. Has to be between 1 and 4 including.
+   * */
+  static getPositionPoints (position: number): number {
+    switch (position) {
+      case 1:
+        return Tournament.FIRST_PLACE_POINTS
+      case 2:
+        return Tournament.SECOND_PLACE_POINTS
+      case 3:
+        return Tournament.THIRD_PLACE_POINTS
+      case 4:
+        return Tournament.FOURTH_PLACE_POINTS
+      default:
+        throw new Error('invalid position')
+    }
+  }
+
+  /**
+   * Iterates through every match and every standing in the match in a given phase, calling the callback for each standing
+   * @param callback Function that takes the match object and the index of the standing in the match and returns nothing
+   */
+  iterateEveryMatchStanding (phase: TournamentPhase, callback: (match: Match, standingIndex: number) => void): void {
+    const matches = this.getPhaseMatches(phase)
+    for (const match of matches) {
+      for (let i = 0; i < match.standings.length; i++) {
+        callback(match, i)
+      }
+    }
+  }
+
   /** Get all the player points in a phase of the tournament */
   getPlayerPoints (phase: TournamentPhase): PlayerPoints {
     const playerPoints: PlayerPoints = {}
-
-    for (const match of this.getPhaseMatches(phase)) {
-      for (let i = 0; i < match.standings.length; i++) {
-        const runner = match.standings[i]
-        if (playerPoints[runner] === undefined) {
-          playerPoints[runner] = 0
-        }
-        // index represents ranking in the match, so that's why we add points based on it
-        switch (i) {
-          case 0:
-            playerPoints[runner] += Tournament.FIRST_PLACE_POINTS
-            break
-          case 1:
-            playerPoints[runner] += Tournament.SECOND_PLACE_POINTS
-            break
-          case 2:
-            playerPoints[runner] += Tournament.THIRD_PLACE_POINTS
-            break
-          case 3:
-            playerPoints[runner] += Tournament.FOURTH_PLACE_POINTS
-            break
-        }
-      }
+    const players = this.getPlayerIds()
+    for (const player of players) {
+      playerPoints[player] = 0
     }
 
+    this.iterateEveryMatchStanding(phase, (match, standingIndex) => {
+      const runner = match.standings[standingIndex]
+      playerPoints[runner] += Tournament.getPositionPoints(standingIndex + 1)
+    })
+
     return playerPoints
+  }
+
+  /** Get an array containing all ID of all players in the tournament */
+  getPlayerIds (): number[] {
+    return this.bracket.players.map(player => player.id)
+  }
+
+  /** Get the rankings of all players in the tournament, mapped without any specific order */
+  getPlayerRankings (phase: TournamentPhase): { [id:number]: RankingInfo } {
+    const playerRankings:{ [id:number]: RankingInfo } = {}
+    const players = this.getPlayerIds()
+    for (const player of players) {
+      playerRankings[player] = {
+        player,
+        points: 0,
+        firstPlace: 0,
+        secondPlace: 0,
+        thirdPlace: 0,
+        fourthPlace: 0
+      }
+    }
+  
+    this.iterateEveryMatchStanding(phase, (match, standingIndex) => {
+      const runner = match.standings[standingIndex]
+      playerRankings[runner].points += Tournament.getPositionPoints(standingIndex + 1)
+      switch (standingIndex) {
+        case 0:
+          playerRankings[runner].firstPlace++
+          break
+        case 1:
+          playerRankings[runner].secondPlace++
+          break
+        case 2:
+          playerRankings[runner].thirdPlace++
+          break
+        case 3:
+          playerRankings[runner].fourthPlace++
+          break
+      }
+    })
+
+    return playerRankings
   }
 
   /**
@@ -461,18 +536,17 @@ class Tournament {
   }
 
   /**
-   * Get a ranking of the players in a given phase
-   * @returns An array with all the runner IDs, with the first element representin the top spot, and so forth
+   * Get the ranking object of the players in a given phase
    */
-  getRankings (phase: TournamentPhase): number[] {
-    const playerPoints = this.getPlayerPoints(phase)
+  getRankings (phase: TournamentPhase): Ranking {
+    const playerRankings = this.getPlayerRankings(phase)
     const tieStandings = phase === TournamentPhase.Start ? this.tieStandings.first : this.tieStandings.final
 
-    const players = Object.keys(playerPoints).map(player => Number(player))
+    const players = Object.keys(playerRankings).map(player => Number(player))
     const sortedPlayers = players.sort((a, b) => {
-      const pointDiff = playerPoints[Number(b)] - playerPoints[Number(a)]
+      const pointDiff = playerRankings[b].points - playerRankings[a].points
       if (pointDiff === 0) {
-        const pointTieStandings = tieStandings[playerPoints[Number(a)]]
+        const pointTieStandings = tieStandings[playerRankings[a].points]
         // arbitrary ordering if tie hasn't been settled yet
         if (pointTieStandings === undefined) {
           return 1
@@ -485,13 +559,37 @@ class Tournament {
       }
     })
 
-    return sortedPlayers
+    const ties = this.getTies()
+    const ranking = []
+    for (let i = 0; i < sortedPlayers.length; i++) {
+      const player = sortedPlayers[i]
+      const playerRanking = playerRankings[player]
+      const settledTieStandings = tieStandings[playerRanking.points]
+
+      // coalesce to empty because it can also be empty, so we are unifying the cases
+      const tiePlayers = ties[playerRanking.points] ?? []
+      
+      // first being empty means isn't in a tie, second not being undefined means it's been settled (and this is sorted already)
+      if (tiePlayers.length === 0 || settledTieStandings !== undefined) {
+        ranking.push([playerRanking])
+      } else {
+        const currentRanking = []
+        i--
+        for (const tiedPlayer of ties[playerRanking.points]) {
+          currentRanking.push(playerRankings[tiedPlayer])
+          i++
+        }
+        ranking.push(currentRanking)
+      }
+    }
+
+    return ranking
   }
 
   /** Updates the matches in the final */
   updateFinalists (): void {
     const sortedPlayers = this.getRankings(TournamentPhase.Start)
-    const finalists = sortedPlayers.slice(0, 4)
+    const finalists = sortedPlayers.slice(0, 4).map(player => player[0].player)
 
     for (let i = 0; i < Tournament.FINAL_MATCHES; i++) {
       this.bracket.final.matches.push({

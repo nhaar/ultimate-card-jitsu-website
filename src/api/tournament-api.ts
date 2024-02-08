@@ -71,11 +71,6 @@ router.post('/update-score', User.checkAdminMiddleware, asyncWrapper(async (req:
   res.sendStatus(200)
 }))
 
-router.get('/first-phase-standings', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
-  const tournament: Tournament = await Tournament.getTournament()
-  res.json(tournament.getPlayerPoints(TournamentPhase.Start)).status(200)
-}))
-
 router.get('/tie', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   const tournament: Tournament = await Tournament.getTournament()
   const ties = tournament.getTies()
@@ -113,7 +108,7 @@ router.post('/settle-tie', User.checkAdminMiddleware, asyncWrapper(async (req: R
   res.sendStatus(200)
 }))
 
-router.get('/players-info', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+router.get('/players-info', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   const tournament: Tournament = await Tournament.getTournament()
   res.json(tournament.getPlayerInfo()).status(200)
 }))
@@ -123,5 +118,18 @@ router.post('/rollback', User.checkAdminMiddleware, asyncWrapper(async (_: Reque
   await tournament.rollback()
   res.sendStatus(200)
 }))
+
+/** Helper function to create the response to asking for rankings of a phase */
+const rankingResponse = (phase: TournamentPhase): ((req: Request, res: Response) => void) => {
+  return asyncWrapper(async (_: Request, res: Response): Promise<void> => {
+    const tournament = await Tournament.getTournament()
+    const ranking = tournament.getRankings(phase)
+    res.json(ranking).status(200)
+  })
+}
+
+router.get('/start-rankings', rankingResponse(TournamentPhase.Start))
+
+router.get('/final-rankings', rankingResponse(TournamentPhase.Final))
 
 export default router
