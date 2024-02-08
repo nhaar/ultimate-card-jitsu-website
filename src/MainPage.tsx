@@ -188,11 +188,24 @@ function TournamentMatchElement ({ match }: { match: TournamentMatch }): JSX.Ele
 
 /** Component that renders the upcoming matches */
 function UpcomingMatches ({ matches }: { matches: TournamentMatch[] }): JSX.Element {
+  const matchComponents: JSX.Element[] = []
+  matches.forEach((match, index) => {
+    // only include matches that haven't been played (i.e. have no standings)
+    if (match.standings.length === 0) {
+      matchComponents.push((
+        <div>
+          <h2>Match {index + 1}</h2>
+          <TournamentMatchElement match={match} />
+        </div>
+      ))
+    }
+  })
+  
   return (
     <div>
       <h1>Upcoming Matches</h1>
       <div>
-        {matches.map((match, index) => <TournamentMatchElement key={index} match={match} />)}
+        {matchComponents}
       </div>
     </div>
   )
