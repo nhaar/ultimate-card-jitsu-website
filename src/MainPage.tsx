@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react'
 import { getJSON } from './utils'
 import { WIDGET_ID } from './discord-widget'
 import { STREAM_CHANNEL } from './stream-channel'
-import { Ranking, TournamentPhase, getPlayerInfo, getRankings, isCurrentPhaseFirstPhase, isTournamentActive } from './api'
+import { Ranking, TournamentMatch, TournamentPhase, getPlayerInfo, getRankings, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 
 /** Stage of the tournament */
@@ -153,17 +153,57 @@ function FinalPhaseRankings ({ ranking }: { ranking: Ranking }): JSX.Element {
   )
 }
 
+/** Component that renders a match's players */
+function TournamentMatchElement ({ match }: { match: TournamentMatch }): JSX.Element {
+  const playerInfo = useContext(PlayerInfoContext)
+  const players = match.runners.map((runner) => playerInfo[runner])
+
+
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(3, 1fr)',
+      width: '200px',
+      textAlign: 'center'
+    }}>
+      <div />
+      <div>{players[0]}</div>
+      <div />
+      <div>{players[1]}</div>
+      <div className='candombe'>VS</div>
+      <div>{players[2]}</div>
+      <div />
+      <div>{players[3]}</div>
+      <div />
+    </div>
+  )
+}
+
+/** Component that renders the upcoming matches */
+function UpcomingMatches ({ matches }: { matches: TournamentMatch[] }): JSX.Element {
+  return (
+    <div>
+      <h1>Upcoming Matches</h1>
+      <div>
+        {matches.map((match, index) => <TournamentMatchElement key={index} match={match} />)}
+      </div>
+    </div>
+  )
+}
+
 /** Component that handles rendering the page when the tournament is on-going */
 function InTournamentPage (): JSX.Element {
   const [ranking, setRanking] = useState<Ranking>([])
   const [playerInfo, setPlayerInfo] = useState<{ [id: number]: string }>({})
   const [isFirstPhase, setIsFirstPhase] = useState<boolean>(true)
+  const [upcomingMatches, setUpcomingMatches] = useState<TournamentMatch[]>([])
 
   useEffect(() => {
     void (async () => {
       const phase = await isCurrentPhaseFirstPhase()
       setRanking(await getRankings(phase ? TournamentPhase.Start : TournamentPhase.Final))
       setPlayerInfo(await getPlayerInfo())
+      setUpcomingMatches(await getTournamentMatches())
       setIsFirstPhase(phase)
     })()
     addTwitchEmbed('twitch-embed')
@@ -190,6 +230,7 @@ function InTournamentPage (): JSX.Element {
         <div>
           {rankingElement}
         </div>
+        <UpcomingMatches matches={upcomingMatches} />
       </div>
     </PlayerInfoContext.Provider>
   )
