@@ -124,3 +124,15 @@ export async function getRankings (phase: TournamentPhase): Promise<Ranking> {
   }
   return response as Ranking
 }
+
+/** Check if tournament is in the first phase */
+export async function isCurrentPhaseFirstPhase (): Promise<boolean> {
+  const response = await getJSON('api/tournament/current-phase')
+  if (response === null) {
+    throw new Error('Failed to get phase')
+  }
+  const phase = (response as { phase: number }).phase
+
+  // 0 corresponds to first phase
+  return phase === 0
+}

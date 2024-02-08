@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react'
 import { getJSON } from './utils'
 import { WIDGET_ID } from './discord-widget'
 import { STREAM_CHANNEL } from './stream-channel'
-import { Ranking, TournamentPhase, getPlayerInfo, getRankings, isTournamentActive } from './api'
+import { Ranking, TournamentPhase, getPlayerInfo, getRankings, isCurrentPhaseFirstPhase, isTournamentActive } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 
 /** Stage of the tournament */
@@ -133,22 +133,63 @@ function TournamentRanking ({ ranking }: { ranking: Ranking }): JSX.Element {
   )
 }
 
+/** Component for the rankings in the first phase */
+function FirstPhaseRankings ({ ranking }: { ranking: Ranking }): JSX.Element {
+  return (
+    <div>
+      <h1>Tournament is currently in the first phase.</h1>
+      <TournamentRanking ranking={ranking} />
+    </div>
+  )
+}
+
+/** Component for the rankings in the second phase */
+function FinalPhaseRankings ({ ranking }: { ranking: Ranking }): JSX.Element {
+  return (
+    <div>
+      <h1>Tournament is currently in the final group stage.</h1>
+      <TournamentRanking ranking={ranking} />
+    </div>
+  )
+}
+
 /** Component that handles rendering the page when the tournament is on-going */
 function InTournamentPage (): JSX.Element {
   const [ranking, setRanking] = useState<Ranking>([])
   const [playerInfo, setPlayerInfo] = useState<{ [id: number]: string }>({})
+  const [isFirstPhase, setIsFirstPhase] = useState<boolean>(true)
 
   useEffect(() => {
     void (async () => {
-      setRanking(await getRankings(TournamentPhase.Start))
+      const phase = await isCurrentPhaseFirstPhase()
+      setRanking(await getRankings(phase ? TournamentPhase.Start : TournamentPhase.Final))
       setPlayerInfo(await getPlayerInfo())
+      setIsFirstPhase(phase)
     })()
+    addTwitchEmbed('twitch-embed')
   }, [])
+
+  const rankingElement = isFirstPhase ? <FirstPhaseRankings ranking={ranking} /> : <FinalPhaseRankings ranking={ranking} />
 
   return (
     <PlayerInfoContext.Provider value={playerInfo}>
-      <div>
-        <TournamentRanking ranking={ranking} />
+      <div
+        className='is-flex is-flex-direction-column is-justify-content-center' style={{
+          width: '100%'
+        }}
+      >
+        <div>
+          <div
+            className='p-4 is-flex is-justify-content-center candombe' style={{
+              fontSize: '72px'
+            }}
+          >THE TOURNAMENT HAS STARTED!
+          </div>
+          <div className='is-flex is-justify-content-center' id='twitch-embed' />
+        </div>
+        <div>
+          {rankingElement}
+        </div>
       </div>
     </PlayerInfoContext.Provider>
   )
