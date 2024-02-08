@@ -137,4 +137,9 @@ router.get('/current-phase', asyncWrapper(async (_: Request, res: Response): Pro
   res.json({ phase: tournament.getCurrentPhase() }).status(200)
 }))
 
+router.get('/is-finished', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
+  const tournament = await Tournament.getTournament()
+  res.json({ finished: tournament.isFinished }).status(200)
+}))
+
 export default router
