@@ -165,14 +165,14 @@ function TournamentMatchElement ({ match }: { match: TournamentMatch }): JSX.Ele
   const playerInfo = useContext(PlayerInfoContext)
   const players = match.runners.map((runner) => playerInfo[runner])
 
-
   return (
     <div style={{
       display: 'grid',
       gridTemplateColumns: 'repeat(3, 1fr)',
       width: '200px',
       textAlign: 'center'
-    }}>
+    }}
+    >
       <div />
       <div>{players[0]}</div>
       <div />
