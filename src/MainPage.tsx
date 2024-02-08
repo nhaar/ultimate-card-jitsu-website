@@ -21,7 +21,7 @@ enum TournamentState {
  */
 function addTwitchEmbed (elementId: string): void {
   // loaded from script
-  const Twitch = (window as any).Twitch;
+  const Twitch = (window as any).Twitch
   // can't do anything about this warning since using new is how the Twitch docs tell you to do it
   /* eslint-disable no-new */
   new Twitch.Embed(elementId, {
@@ -112,12 +112,12 @@ function TournamentRanking ({ ranking }: { ranking: Ranking }): JSX.Element {
       rank++
     }
   }
-  
+
   return (
     <table className='table is-bordered is-striped is-narrow is-hoverable'>
       <thead>
         <tr>
-          <th></th>
+          <th />
           <th>Ninja</th>
           <th>Points</th>
           <th>1st Places</th>
