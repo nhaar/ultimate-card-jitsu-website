@@ -132,4 +132,9 @@ router.get('/start-rankings', rankingResponse(TournamentPhase.Start))
 
 router.get('/final-rankings', rankingResponse(TournamentPhase.Final))
 
+router.get('/current-phase', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
+  const tournament = await Tournament.getTournament()
+  res.json({ phase: tournament.getCurrentPhase() }).status(200)
+}))
+
 export default router
