@@ -118,7 +118,7 @@ class Tournament {
       throw new Error('no arguments provided')
     }
     if (args.length === 1 && Tournament.isTournamentObject(args[0])) {
-      const object = args[0] as TournamentObject
+      const object = args[0]
 
       // need to do all properties so they can be initialized properly in typescript
       this.bracket = object.bracket
@@ -242,7 +242,7 @@ class Tournament {
   }
 
   static isTournamentObject (obj: any): obj is TournamentObject {
-    if (isObject(obj) === false) {
+    if (!isObject(obj)) {
       return false
     }
     if (!Tournament.isBracket(obj.bracket)) {
@@ -271,7 +271,7 @@ class Tournament {
   }
 
   static isTieStandings (obj: any): obj is TieStandings {
-    if (isObject(obj) === false) {
+    if (!isObject(obj)) {
       return false
     }
     if (!Tournament.isPointMapping(obj.first) || !Tournament.isPointMapping(obj.final)) {
@@ -281,7 +281,7 @@ class Tournament {
   }
 
   static isPointMapping (obj: any): obj is PointMapping {
-    if (isObject(obj) === false) {
+    if (!isObject(obj)) {
       return false
     }
     for (const key in obj) {
@@ -428,8 +428,8 @@ class Tournament {
   }
 
   /** Get the rankings of all players in the tournament, mapped without any specific order */
-  getPlayerRankings (phase: TournamentPhase): { [id:number]: RankingInfo } {
-    const playerRankings:{ [id:number]: RankingInfo } = {}
+  getPlayerRankings (phase: TournamentPhase): { [id: number]: RankingInfo } {
+    const playerRankings: { [id: number]: RankingInfo } = {}
     const players = this.getPlayerIds()
     for (const player of players) {
       playerRankings[player] = {
@@ -441,7 +441,7 @@ class Tournament {
         fourthPlace: 0
       }
     }
-  
+
     this.iterateEveryMatchStanding(phase, (match, standingIndex) => {
       const runner = match.standings[standingIndex]
       playerRankings[runner].points += Tournament.getPositionPoints(standingIndex + 1)
@@ -568,7 +568,7 @@ class Tournament {
 
       // coalesce to empty because it can also be empty, so we are unifying the cases
       const tiePlayers = ties[playerRanking.points] ?? []
-      
+
       // first being empty means isn't in a tie, second not being undefined means it's been settled (and this is sorted already)
       if (tiePlayers.length === 0 || settledTieStandings !== undefined) {
         ranking.push([playerRanking])
@@ -637,14 +637,14 @@ class Tournament {
     if (backuptoUse === undefined) {
       return
     }
-  
+
     const backedupTournament = JSON.parse(backuptoUse)
     if (!Tournament.isTournamentObject(backedupTournament)) {
       throw new Error('invalid backup')
     }
     backedupTournament.backups = [...this.backups]
     const newTournament = new Tournament(backedupTournament)
-    
+
     // skip backup because it would be the same as the latest snapshot
     await newTournament.save(false)
   }
