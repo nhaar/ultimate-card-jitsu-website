@@ -409,7 +409,7 @@ class Tournament {
   /** Get all the player points in a phase of the tournament */
   getPlayerPoints (phase: TournamentPhase): PlayerPoints {
     const playerPoints: PlayerPoints = {}
-    const players = this.getPlayerIds()
+    const players = this.getPlayerIds(phase)
     for (const player of players) {
       playerPoints[player] = 0
     }
@@ -422,15 +422,20 @@ class Tournament {
     return playerPoints
   }
 
-  /** Get an array containing all ID of all players in the tournament */
-  getPlayerIds (): number[] {
-    return this.bracket.players.map(player => player.id)
+  /** Get an array containing all ID of all players in a phase of the tournament */
+  getPlayerIds (phase: TournamentPhase): number[] {
+    if (phase === TournamentPhase.Start) {
+      return this.bracket.players.map(player => player.id)
+    } else {
+      // all finalists should be in any of the matches of the final
+      return this.bracket.final.matches[0].runners
+    }
   }
 
   /** Get the rankings of all players in the tournament, mapped without any specific order */
   getPlayerRankings (phase: TournamentPhase): { [id: number]: RankingInfo } {
     const playerRankings: { [id: number]: RankingInfo } = {}
-    const players = this.getPlayerIds()
+    const players = this.getPlayerIds(phase)
     for (const player of players) {
       playerRankings[player] = {
         player,
@@ -601,8 +606,8 @@ class Tournament {
 
   endFirstPhaseIfComplete (): void {
     if (this.areFirstPhaseMatchesComplete() && !this.containsTie()) {
-      this.isFirstPhaseFinished = true
       this.updateFinalists()
+      this.isFirstPhaseFinished = true
     }
   }
 
