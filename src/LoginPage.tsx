@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { postJSON } from './utils'
+import Haiku from './Haiku'
 
 /** Component for the login page */
 export default function LoginPage (): JSX.Element {
@@ -27,12 +28,37 @@ export default function LoginPage (): JSX.Element {
   }
 
   return (
-    <div>
-      <input type='text' value={username} onChange={e => setUsername(e.target.value)} placeholder='Username' />
+    <div className='has-text-primary burbank'>
+      <div style={{
+        fontSize: '24px'
+      }}
+      >
+        <Haiku first='Ninjas are required' second='To give to Sensei their data' third='Are you a ninja?' />
+      </div>
+      <div className='is-flex is-justify-content-center'>
+        <div style={{
+          width: '300px'
+        }}
+        >
+          <input className='input mb-3' type='text' value={username} onChange={e => setUsername(e.target.value)} placeholder='Username' />
 
-      <input type='password' value={password} onChange={e => setPassword(e.target.value)} placeholder='Password' />
+          <input className='input mb-3' type='password' value={password} onChange={e => setPassword(e.target.value)} placeholder='Password' />
 
-      <button onClick={handleClickLogin}>LOG IN</button>
+          <button
+            className='button mb-4' onClick={handleClickLogin} style={{
+              width: '100%'
+            }}
+          >LOG IN
+          </button>
+        </div>
+      </div>
+      <div style={{
+        fontSize: '24px'
+      }}
+      >
+        <Haiku first={'Can\'t create account'} second='Sensei must give it to you' third='If ninja you are' />
+      </div>
+
     </div>
   )
 }

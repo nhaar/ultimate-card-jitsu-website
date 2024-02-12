@@ -1,9 +1,9 @@
 import { useContext, useEffect, useState } from 'react'
-import { getJSON } from './utils'
 import { WIDGET_ID } from './discord-widget'
 import { STREAM_CHANNEL } from './stream-channel'
 import { Ranking, TournamentMatch, TournamentPhase, getPlayerInfo, getRankings, getTournamentDate, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
+import Haiku from './Haiku'
 
 /** Stage of the tournament */
 enum TournamentState {
@@ -36,26 +36,6 @@ function addTwitchEmbed (elementId: string): void {
 function DiscordWidget (): JSX.Element {
   return (
     <iframe src={`https://discord.com/widget?id=${WIDGET_ID}&theme=dark`} width='350' height='500' allowTransparency sandbox='allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts' />
-  )
-}
-
-/** Component that displays a "haiku", three centered lines, with an optional fourth one, meant for a date in the website. */
-function Haiku ({ first, second, third, date = '' }: {
-  first: string
-  second: string
-  third: string
-  date?: string
-}): JSX.Element {
-  return (
-    <div style={{
-      textAlign: 'center'
-    }}
-    >
-      <div>{first}</div>
-      <div>{second}</div>
-      <div>{third}</div>
-      <div>{date}</div>
-    </div>
   )
 }
 
