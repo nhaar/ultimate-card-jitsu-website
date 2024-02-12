@@ -39,6 +39,26 @@ function DiscordWidget (): JSX.Element {
   )
 }
 
+/** Component that displays a "haiku", three centered lines, with an optional fourth one, meant for a date in the website. */
+function Haiku ({ first, second, third, date = '' }: {
+  first: string
+  second: string
+  third: string
+  date?: string
+}): JSX.Element {
+  return (
+    <div style={{
+      textAlign: 'center'
+    }}
+    >
+      <div>{first}</div>
+      <div>{second}</div>
+      <div>{third}</div>
+      <div>{date}</div>
+    </div>
+  )
+}
+
 /** Component for the page before the tournament starts */
 function PreTournamentPage (): JSX.Element {
   const [tournamentDate, setTournamentDate] = useState<Date | null | undefined>(undefined)
@@ -53,13 +73,14 @@ function PreTournamentPage (): JSX.Element {
     })()
   }, [])
 
-  let dateString: string
+  let dateAnnouncement: JSX.Element
+  const firstHaikuLine = 'The elements sleep...'
   if (tournamentDate === undefined) {
-    dateString = ''
+    dateAnnouncement = <Haiku first={firstHaikuLine} second='And asking for the server...' third='No results are found!' />
   } else if (tournamentDate === null) {
-    dateString = 'And they will continue sleeping...'
+    dateAnnouncement = <Haiku first={firstHaikuLine} second='The future is foggy now,' third='Unknown is the date.' />
   } else {
-    dateString = tournamentDate.toLocaleDateString()
+    dateAnnouncement = <Haiku first={firstHaikuLine} second='But now awaking they are,' third='The battle begins...' date={tournamentDate.toLocaleTimeString()} />
   }
 
   const isDateDecided = tournamentDate !== undefined && tournamentDate !== null
@@ -71,20 +92,21 @@ function PreTournamentPage (): JSX.Element {
   }, [tournamentDate])
 
   return (
-    <div>
-      <div>
-        The elements are sleeping...
+    <div
+      className='has-text-primary burbank' style={{
+        fontFamily: '',
+        width: '100%',
+        fontSize: '42px'
+      }}
+    >
+      <div className='is-flex is-justify-content-center my-3'>
+        {dateAnnouncement}
       </div>
-      <div>
-        {dateString}
-      </div>
-      <div>
-        <div>
-          Connect with the other ninjas.
-          And receive updates about the tournament.
-          Friendship is a strong element.
+      <div className='is-flex is-justify-content-center is-flex-direction-column mt-6'>
+        <Haiku first='Place to go exists,' second='with power ninjas must know:' third='Power of friendship' />
+        <div className='is-flex is-justify-content-center mt-3 mb-6'>
+          <DiscordWidget />
         </div>
-        <DiscordWidget />
 
         <div>
           {isDateDecided && <div>Keep your eyes peeled in case the tournament is starting!</div>}

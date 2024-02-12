@@ -1,0 +1,16 @@
+@font-face {
+  font-family: 'Burbank Big Rg Bd';
+  src: url('BurbankBigRegular-Bold.eot');
+  src: url('BurbankBigRegular-Bold.eot?#iefix') format('embedded-opentype'),
+      url('BurbankBigRegular-Bold.woff2') format('woff2'),
+      url('BurbankBigRegular-Bold.woff') format('woff'),
+      url('BurbankBigRegular-Bold.ttf') format('truetype'),
+      url('BurbankBigRegular-Bold.svg#BurbankBigRegular-Bold') format('svg');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+.burbank {
+  font-family: 'Burbank Big Rg Bd', sans-serif;
+}
