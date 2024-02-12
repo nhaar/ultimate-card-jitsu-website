@@ -315,7 +315,11 @@ class Tournament {
     return tournament
   }
 
-  static async getTournamentDate (): Promise<Date | null> {
+  /**
+   * Get the scheduled date for the tournament
+   * @returns Timestamp of the date in string format and in miliseconds since start of unix, or null if it hasn't been set
+   */
+  static async getTournamentDate (): Promise<string | null> {
     const db = new Database()
     const query = await db.getQuery('SELECT * FROM tournament_date', [])
     if (query.rows.length === 0) {

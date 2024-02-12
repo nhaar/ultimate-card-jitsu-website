@@ -83,7 +83,7 @@ router.get('/active', asyncWrapper(async (req: Request, res: Response): Promise<
   res.json({ active: exists }).status(200)
 }))
 
-router.get('/date', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+router.get('/date', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
   const date = await Tournament.getTournamentDate()
   res.json({ date }).status(200)
 }))

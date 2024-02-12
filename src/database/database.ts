@@ -37,7 +37,7 @@ export default class Database {
 
     void this.pool.query(`
       CREATE TABLE IF NOT EXISTS tournament_date (
-        date DATE
+        date TEXT
       );
     `)
   }
