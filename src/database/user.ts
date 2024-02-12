@@ -105,4 +105,42 @@ export default class User {
     const res = await db.getQuery('SELECT username FROM players', [])
     return res.rows.map((row: { username: string }) => row.username)
   }
+
+  /**
+   * Get an object with credentials of the CP Imagined account associated
+   */
+  async getCPImaginedCredentials (): Promise<{ username: string, password: string }> {
+    const res = await this.db.getQuery('SELECT cpimagined_user, cpimagined_pass FROM players WHERE id = $1', [this.id])
+    console.log(res)
+    return { username: res.rows[0].cpimagined_user, password: res.rows[0].cpimagined_pass }
+  }
+
+  /** Get the profile picture, which is stored as a URL source. */
+  async getPFP (): Promise<string> {
+    const res = await this.db.getQuery('SELECT pfp FROM players WHERE id = $1', [this.id])
+    return res.rows[0].pfp
+  }
+
+  /** Get the username */
+  async getUserName (): Promise<string> {
+    const res = await this.db.getQuery('SELECT username FROM players WHERE id = $1', [this.id])
+    return res.rows[0].username
+  }
+
+  /** Get the pronouns */
+  async getPronouns (): Promise<string> {
+    const res = await this.db.getQuery('SELECT pronouns FROM players WHERE id = $1', [this.id])
+    return res.rows[0].pronouns
+  }
+
+  /** Check if the given name is being used by another player, case insensitive */
+  async isNameAvailable (username: string): Promise<boolean> {
+    const currentName = await this.getUserName()
+
+    // allowing users to change case
+    if (username.toLowerCase() === currentName.toLowerCase()) return true
+
+    const res = await this.db.getQuery('SELECT * FROM players WHERE LOWER(username) = LOWER($1)', [username])
+    return res.rows.length === 0
+  }
 }

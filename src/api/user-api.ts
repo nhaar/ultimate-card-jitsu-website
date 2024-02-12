@@ -3,6 +3,7 @@ import { Request, Response } from 'express'
 
 import User from '../database/user'
 import { asyncWrapper, formatCookies } from '../utils/utils'
+import Tournament from '../database/tournament'
 
 const router = express.Router()
 
@@ -69,39 +70,6 @@ router.post('/register', asyncWrapper(async (req: Request, res: Response): Promi
   res.sendStatus(200)
 }))
 
-router.post('/edit', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
-  const { token, username, cpimaginedUser, cpimaginedPass, pronouns, pfp } = req.body
-
-  if (typeof (token) !== 'string') {
-    res.status(400).json({ error: 'token must be a string' })
-    return
-  }
-
-  const user: User | null = await User.getUserByToken(token)
-  if (user === null) {
-    res.status(401).json({ error: 'invalid session token' })
-    return
-  }
-
-  if (typeof (username) === 'string') {
-    await user.updateColumn('username', username)
-  }
-  if (typeof (cpimaginedUser) === 'string') {
-    await user.updateColumn('cpimagined_user', cpimaginedUser)
-  }
-  if (typeof (cpimaginedPass) === 'string') {
-    await user.updateColumn('cpimagined_pass', cpimaginedPass)
-  }
-  if (typeof (pronouns) === 'string') {
-    await user.updateColumn('pronouns', pronouns)
-  }
-  if (typeof (pfp) === 'string') {
-    await user.updateColumn('pfp', pfp)
-  }
-
-  res.sendStatus(200)
-}))
-
 router.post('/user-role', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   if (req.headers.cookies === undefined) {
     res.status(400).json({ error: 'no cookies' })
@@ -127,6 +95,72 @@ router.post('/user-role', asyncWrapper(async (req: Request, res: Response): Prom
 router.get('/all-players', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   const users = await User.getAllUsers()
   res.json(users).status(200)
+}))
+
+/**
+ * Get a function that can be used to respond to a user request that wants to do something to the users account.
+ * @param callback The function that will do something with the user's account. The first argument is the object of the user, the second is the response object, and the third is the request object (optional).
+ * @returns Function that should be used in a route.
+ */
+function replyWithUser (callback: (user: User, res: Response, req: Request) => Promise<void>): (req: Request, res: Response) => void {
+  const replyFunction = (req: Request, res: Response): void => {
+    void (async () => {
+      if (typeof (req.headers.cookies) !== 'string') {
+        res.status(400).json({ error: 'no cookies' })
+        return
+      }
+      const { token } = formatCookies(req.headers.cookies)
+      if (typeof (token) !== 'string') {
+        res.status(401).json({ error: 'invalid session token' })
+        return
+      }
+      const user = await User.getUserByToken(token)
+      if (user === null) {
+        res.status(401).json({ error: 'invalid session token' })
+        return
+      }
+      void callback(user, res, req)
+    })()
+  }
+  return replyFunction
+}
+
+router.get('/cpimagined-credentials', replyWithUser(async (user: User, res: Response): Promise<void> => {
+  const credentials = await user.getCPImaginedCredentials()
+  res.json(credentials).status(200)
+}))
+
+router.get('/account-info', replyWithUser(async (user: User, res: Response): Promise<void> => {
+  res.json({
+    pronouns: await user.getPronouns(),
+    pfp: await user.getPFP()
+  }).status(200)
+}))
+
+router.post('/edit', replyWithUser(async (user: User, res: Response, req: Request): Promise<void> => {
+  const { username, pronouns, pfp } = req.body
+
+  if (typeof (username) === 'string') {
+    const previousName = await user.getUserName()
+    if (username !== previousName) {
+      if (await Tournament.tournamentExists()) {
+        res.status(418).json({ error: 'tournament in progress' })
+        return
+      } else if (await user.isNameAvailable(username)) {
+        await user.updateColumn('username', username)
+      } else {
+        res.status(409).json({ error: 'taken' })
+        return
+      }
+    }
+  }
+  if (typeof (pronouns) === 'string') {
+    await user.updateColumn('pronouns', pronouns)
+  }
+  if (typeof (pfp) === 'string') {
+    await user.updateColumn('pfp', pfp)
+  }
+  res.sendStatus(200)
 }))
 
 export default router

@@ -21,7 +21,7 @@ export default class Database {
         username TEXT NOT NULL,
         password TEXT NOT NULL,
         cpimagined_user TEXT,
-        cpimaginer_pass TEXT,
+        cpimagined_pass TEXT,
         pronouns TEXT,
         pfp TEXT,
         is_admin INTEGER NOT NULL DEFAULT 0,
