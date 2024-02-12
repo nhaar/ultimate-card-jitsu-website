@@ -200,7 +200,7 @@ function UpcomingMatches ({ matches }: { matches: TournamentMatch[] }): JSX.Elem
       ))
     }
   })
-  
+
   return (
     <div>
       <h1>Upcoming Matches</h1>
