@@ -2,6 +2,7 @@ import { io, Socket } from 'socket.io-client'
 import { useEffect, useState } from 'react'
 import { SERVER_URL } from './urls'
 import { formatCookies, getCookie } from './utils'
+import { editUserInfo, EditUserResponse, getAccountInfo } from './api'
 
 /** Page where the players can share screen */
 function ScreensharePage (): JSX.Element {
@@ -63,8 +64,75 @@ function ScreensharePage (): JSX.Element {
 
 /** Page where users can edit their profile */
 function EditProfilePage (): JSX.Element {
+  const [username, setUsername] = useState<string>(() => {
+    return getCookie('name') ?? ''
+  })
+  const [pronouns, setPronouns] = useState<string>('')
+  const [pfp, setPfp] = useState<string>('')
+
+  useEffect(() => {
+    void (async () => {
+      const info = await getAccountInfo()
+      setPronouns(info.pronouns)
+      setPfp(info.pfp)
+    })()
+  }, [])
+
+  /**
+   * Event listener for changing the file input that handles the profile picture
+   */
+  function receiveFile (e: React.ChangeEvent<HTMLInputElement>): void {
+    const file = e.target.files !== null ? e.target.files[0] : null
+    if (file !== null) {
+      const reader = new FileReader()
+      reader.onloadend = (e) => {
+        const result = e.target?.result
+        if (typeof result === 'string') {
+          setPfp(result)
+        }
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  /** Saves changes to an user */
+  function saveEdit (): void {
+    void (async () => {
+      const editResponse = await editUserInfo(username, pronouns, pfp)
+      switch (editResponse) {
+        case EditUserResponse.Success:
+          document.cookie = `name=${username}`
+          alert('Profile updated!')
+          window.location.reload()
+          break
+        case EditUserResponse.UsernameTaken:
+          alert('Username taken')
+          break
+        case EditUserResponse.TemporarilyUnavailable:
+          alert('Cannot change username while tournament is running')
+          break
+        case EditUserResponse.ServerFailure:
+          alert('Failed to update profile')
+          break
+        case EditUserResponse.ImageTooBig:
+          alert('Image too big! Try not to use images over 100 mb.')
+          break
+      }
+    })()
+  }
+
   return (
-    <div>Hello Profile</div>
+    <div>
+      <div>Edit your profile</div>
+      <div>Display Name (change this before the tournament starts)</div>
+      <input type='text' value={username} onChange={(e) => setUsername(e.target.value)} />
+      <div>(OPTIONAL) Pronouns to refer to you, if you want to specify</div>
+      <input type='text' value={pronouns} onChange={(e) => setPronouns(e.target.value)} />
+      <div>(OPTIONAL) Profile picture</div>
+      <input type='file' accept='image/*' onChange={receiveFile} />
+      <img src={pfp} />
+      <button onClick={saveEdit}>SAVE CHANGES</button>
+    </div>
   )
 }
 

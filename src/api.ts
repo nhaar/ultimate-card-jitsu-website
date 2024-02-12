@@ -145,3 +145,61 @@ export async function isTournamentFinished (): Promise<boolean> {
   }
   return (response as { finished: boolean }).finished
 }
+
+/** Get the CPImagined credentials associated with the account */
+export async function getCPImaginedCredentials (): Promise<{ username: string, password: string }> {
+  const response = await getJSON('api/user/cpimagined-credentials')
+  if (response === null) {
+    throw new Error('Failed to get CP Imagined credentials')
+  }
+  return response as { username: string, password: string }
+}
+
+/** Object representing mutable account data */
+interface AccountInfo {
+  pfp: string
+  pronouns: string
+}
+
+/** Get the current user's info */
+export async function getAccountInfo (): Promise<AccountInfo> {
+  const response = await getJSON('api/user/account-info')
+  if (response === null) {
+    throw new Error('Failed to get account info')
+  }
+  return response as AccountInfo
+}
+
+/** Possible response from attempting to edit an user's information */
+export enum EditUserResponse {
+  /** Information updated */
+  Success,
+  /** Someone else has the username that the user tried to use */
+  UsernameTaken,
+  /** Can't change the username during tournaments */
+  TemporarilyUnavailable,
+  /** Sending an image too big */
+  ImageTooBig,
+  /** Unexpected error from server */
+  ServerFailure
+}
+
+/**
+ * Update the user's information
+ */
+export async function editUserInfo (username: string, pronouns: string, pfp: string): Promise<EditUserResponse> {
+  const response = await postJSON('api/user/edit', { username, pronouns, pfp })
+  if (response.status === 200) {
+    return EditUserResponse.Success
+  } else {
+    if (response.status === 409) {
+      return EditUserResponse.UsernameTaken
+    } else if (response.status === 413) {
+      return EditUserResponse.ImageTooBig
+    } else if (response.status === 418) {
+      return EditUserResponse.TemporarilyUnavailable
+    } else {
+      return EditUserResponse.ServerFailure
+    }
+  }
+}
