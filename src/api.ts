@@ -204,3 +204,17 @@ export async function editUserInfo (username: string, pronouns: string, pfp: str
     }
   }
 }
+
+/**
+ * Gets the date the tournament will begin
+ * @returns Date object, if the date is decided, `null` if it isn't
+ */
+export async function getTournamentDate (): Promise<Date | null> {
+  const response = await getJSON('api/tournament/date')
+  if (response === null) {
+    throw new Error('Failed to get tournament date')
+  }
+  const date = (response as { date: string | null }).date
+  if (date === null) return null
+  return new Date(Number(date))
+}

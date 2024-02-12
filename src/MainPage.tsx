@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react'
 import { getJSON } from './utils'
 import { WIDGET_ID } from './discord-widget'
 import { STREAM_CHANNEL } from './stream-channel'
-import { Ranking, TournamentMatch, TournamentPhase, getPlayerInfo, getRankings, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
+import { Ranking, TournamentMatch, TournamentPhase, getPlayerInfo, getRankings, getTournamentDate, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 
 /** Stage of the tournament */
@@ -65,11 +65,8 @@ function PreTournamentPage (): JSX.Element {
 
   useEffect(() => {
     void (async () => {
-      const response = await getJSON('api/tournament/date')
-      if (response !== null) {
-        const date = (response as { date: Date | null }).date
-        setTournamentDate(date)
-      }
+      const date = await getTournamentDate()
+      setTournamentDate(date)
     })()
   }, [])
 
@@ -80,8 +77,21 @@ function PreTournamentPage (): JSX.Element {
   } else if (tournamentDate === null) {
     dateAnnouncement = <Haiku first={firstHaikuLine} second='The future is foggy now,' third='Unknown is the date.' />
   } else {
-    dateAnnouncement = <Haiku first={firstHaikuLine} second='But now awaking they are,' third='The battle begins...' date={tournamentDate.toLocaleTimeString()} />
+    dateAnnouncement = <Haiku first={firstHaikuLine} second='But now awaking they are,' third='Soon it will begin...' />
   }
+
+  const dateValueElement = tournamentDate === null
+    ? <div />
+    : (
+      <div
+        className='mt-3' style={{
+          textAlign: 'center',
+          color: '#c35617',
+          fontSize: '72px'
+        }}
+      >{tournamentDate?.toLocaleString()}
+      </div>
+      )
 
   const isDateDecided = tournamentDate !== undefined && tournamentDate !== null
 
@@ -99,8 +109,9 @@ function PreTournamentPage (): JSX.Element {
         fontSize: '42px'
       }}
     >
-      <div className='is-flex is-justify-content-center my-3'>
+      <div className='is-flex is-justify-content-center my-3 is-flex-direction-column'>
         {dateAnnouncement}
+        {dateValueElement}
       </div>
       <div className='is-flex is-justify-content-center is-flex-direction-column mt-6'>
         <Haiku first='Place to go exists,' second='with power ninjas must know:' third='Power of friendship' />
@@ -109,8 +120,10 @@ function PreTournamentPage (): JSX.Element {
         </div>
 
         <div>
-          {isDateDecided && <div>Keep your eyes peeled in case the tournament is starting!</div>}
-          <div id='twitch-embed' />
+          {isDateDecided && <Haiku first='Attention is key' second='Maybe already started' third='This will reveal it' />}
+          <div className='is-flex is-justify-content-center'>
+            <div id='twitch-embed' />
+          </div>
         </div>
       </div>
     </div>
