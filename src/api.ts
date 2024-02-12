@@ -147,11 +147,12 @@ export async function isTournamentFinished (): Promise<boolean> {
 }
 
 /** Get the CPImagined credentials associated with the account */
-export async function getCPImaginedCredentials (): Promise<{ username: string, password: string }> {
+export async function getCPImaginedCredentials (): Promise<{ username: string, password: string } | null> {
   const response = await getJSON('api/user/cpimagined-credentials')
   if (response === null) {
     throw new Error('Failed to get CP Imagined credentials')
   }
+  if ((response as { username: any }).username === null) return null
   return response as { username: string, password: string }
 }
 

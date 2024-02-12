@@ -2,7 +2,7 @@ import { io, Socket } from 'socket.io-client'
 import { useEffect, useState } from 'react'
 import { SERVER_URL } from './urls'
 import { formatCookies, getCookie } from './utils'
-import { editUserInfo, EditUserResponse, getAccountInfo } from './api'
+import { editUserInfo, EditUserResponse, getAccountInfo, getCPImaginedCredentials } from './api'
 
 /** Page where the players can share screen */
 function ScreensharePage (): JSX.Element {
@@ -140,6 +140,14 @@ function EditProfilePage (): JSX.Element {
  * Handles the page where non admin players can perform actions. Not to be confused with PlayerPage which handles all types of users
  */
 export default function UserPage (): JSX.Element {
+  const [cpImaginedCredentials, setCPImaginedCredentials] = useState<{ username: string, password: string } | null>(null)
+  useEffect(() => {
+    void (async () => {
+      const credentials = await getCPImaginedCredentials()
+      setCPImaginedCredentials(credentials)
+    })()
+  }, [])
+
   const username = getCookie('name') ?? 'Player'
   const urlParams = new URLSearchParams(window.location.search)
   const pageType = urlParams.get('p')
@@ -150,6 +158,17 @@ export default function UserPage (): JSX.Element {
       return <ScreensharePage />
   }
 
+  const cpImaginedElement = cpImaginedCredentials === null
+    ? (
+      <div>You haven't received your CPImagined account for the tournament yet. One will be given to you before the tournament starts.</div>
+      )
+    : (
+      <div>
+        <input type='text' readOnly value={cpImaginedCredentials.username} />
+        <input type='text' readOnly value={cpImaginedCredentials.password} />
+      </div>
+      )
+
   return (
     <div>
       <div>
@@ -157,6 +176,13 @@ export default function UserPage (): JSX.Element {
       </div>
       <div><a href='/player?p=e'>Edit your profile</a></div>
       <div><a href='/player?p=s'>Go screenshare, so that you can be on stream</a></div>
+      <div>
+        {cpImaginedElement}
+        <div>
+          Refresh this page if you are told you have received a new account.
+        </div>
+      </div>
+      <div />
     </div>
   )
 }
