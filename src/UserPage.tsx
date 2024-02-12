@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { SERVER_URL } from './urls'
 import { formatCookies, getCookie } from './utils'
 import { editUserInfo, EditUserResponse, getAccountInfo, getCPImaginedCredentials } from './api'
+import Haiku from './Haiku'
 
 /** Page where the players can share screen */
 function ScreensharePage (): JSX.Element {
@@ -160,25 +161,87 @@ export default function UserPage (): JSX.Element {
 
   const cpImaginedElement = cpImaginedCredentials === null
     ? (
-      <div>You haven't received your CPImagined account for the tournament yet. One will be given to you before the tournament starts.</div>
+      <div
+        className='is-flex is-justify-content-center mt-3' style={{
+          color: 'orange'
+        }}
+      >You haven't received your CPImagined account for the tournament yet. One will be given to you before the tournament starts.
+      </div>
       )
     : (
-      <div>
-        <input type='text' readOnly value={cpImaginedCredentials.username} />
-        <input type='text' readOnly value={cpImaginedCredentials.password} />
+      <div className='is-flex is-justify-content-center mt-3'>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '100px 200px',
+          rowGap: '5px'
+        }}
+        >
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
+          >Username:
+          </div>
+          <input className='input' type='text' readOnly value={cpImaginedCredentials.username} />
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
+          >Password:
+          </div>
+          <input className='input' type='text' readOnly value={cpImaginedCredentials.password} />
+        </div>
       </div>
+
       )
 
   return (
-    <div>
-      <div>
-        Welcome, {username}! This is your page, here's what you can do:
+    <div className='has-text-primary burbank'>
+      <div style={{
+        fontSize: '72px',
+        textAlign: 'center'
+      }}
+      >"{username}"
       </div>
-      <div><a href='/player?p=e'>Edit your profile</a></div>
-      <div><a href='/player?p=s'>Go screenshare, so that you can be on stream</a></div>
-      <div>
+      <div
+        className='my-3' style={{
+          fontSize: '24px'
+        }}
+      >
+        <Haiku first='Welcome grasshoper' second={'In here there\'s much you can do'} third='Take a look below' />
+      </div>
+      <div className='box'>
+        <Haiku first='Personality' second='Is important for ninjas' third='You may edit it here' />
+        <div className='is-flex is-justify-content-center mt-2'>
+          <button
+            className='button' onClick={() => { window.location.href = '/player?p=e' }} style={{
+              width: '200px'
+            }}
+          >EDIT PROFILE
+          </button>
+        </div>
+      </div>
+      <div className='box is-flex is-justify-content-center is-flex-direction-column'>
+        <Haiku first='If now you compete' second='Please share your screen to the stream' third='Else I cannot see!' />
+        <div className='is-flex is-justify-content-center mt-2'>
+          <button
+            className='button' onClick={() => { window.location.href = '/player?p=s' }} style={{
+              width: '200px'
+            }}
+          >SCREENSHARE
+          </button>
+        </div>
+      </div>
+      <div className='box'>
+        <Haiku first='CP Imagined' second='Is how you must play, but look!' third='Must use this account:' />
         {cpImaginedElement}
-        <div>
+        <div
+          className='mt-2' style={{
+            textAlign: 'center'
+          }}
+        >
           Refresh this page if you are told you have received a new account.
         </div>
       </div>
