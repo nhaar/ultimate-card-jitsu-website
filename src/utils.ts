@@ -75,3 +75,12 @@ export function formatCookies (str: string): { [key: string]: string } {
 
   return cookies
 }
+
+/**
+ * Get a cookie's value with its name
+ * @returns The cookie value or `null` if it doesn't exist
+ */
+export function getCookie (cookieName: string): string | null {
+  const cookies = formatCookies(document.cookie)
+  return cookies[cookieName] ?? null
+}
