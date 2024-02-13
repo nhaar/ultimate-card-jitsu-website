@@ -272,7 +272,7 @@ export default function TournamentControlRoom (): JSX.Element {
 
   const controlRoomElement = isActive ? <ActiveTournamentControlRoom /> : <PretournamentControlRoom />
   return (
-    <div>
+    <div className='has-text-primary'>
       <div>
         Control room intentionally left not user friendly due to time constraints, good luck!
       </div>

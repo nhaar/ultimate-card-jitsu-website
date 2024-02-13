@@ -198,7 +198,7 @@ export default function PlayerWatchPage (): JSX.Element {
         {mainVideo}
       </div>
       <div
-        className='is-flex is-flex-direction-row' style={{
+        className='is-flex is-flex-direction-row has-text-primary' style={{
           overflow: 'scroll'
         }}
       >

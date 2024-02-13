@@ -22,7 +22,7 @@ export default function PlayerPage (): JSX.Element {
 
   switch (userRole) {
     case undefined: {
-      return <div>Loading...</div>
+      return <div />
     }
     case 'none': {
       return <LoginPage />
