@@ -202,7 +202,13 @@ function FinalPhaseRankings ({ ranking }: { ranking: Ranking }): JSX.Element {
 /** Component that renders a match's players */
 function TournamentMatchElement ({ match }: { match: TournamentMatch }): JSX.Element {
   const playerInfo = useContext(PlayerInfoContext)
-  const players = match.runners.map((runner) => playerInfo[runner])
+  const players = match.runners.map((runner) => {
+    if (runner === null) {
+      return '??????'
+    } else {
+      return playerInfo[runner]
+    }
+  })
 
   return (
     <div style={{

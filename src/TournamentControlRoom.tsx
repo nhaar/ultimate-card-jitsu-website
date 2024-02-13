@@ -152,12 +152,26 @@ function TournamentMatchController ({ match, index, decider }: {
 }): JSX.Element {
   const playerInfo = useContext(PlayerInfoContext)
 
+  const players = []
+  let hasNull = false
+  for (const player of match.runners) {
+    if (player === null) {
+      hasNull = true
+      break
+    } else {
+      players.push(player)
+    }
+  }
+
   let matchElement: JSX.Element
+  if (hasNull) {
+    throw new Error('Match has null player, should have been filtered')
+  }
   if (match.standings.length === 0) {
     matchElement = (
       <div>
         <div>
-          NOT STARTED, BETWEEN {listAllPlayers(match.runners, playerInfo)}
+          NOT STARTED, BETWEEN {listAllPlayers(players, playerInfo)}
         </div>
         {decider}
       </div>
@@ -244,9 +258,24 @@ function ActiveTournamentControlRoom (): JSX.Element {
           UNDO (rollback tournament)
         </button>
         {matches.map((match, i) => {
+          const players = []
+          let hasNull = false
+          for (const player of match.runners) {
+            if (player === null) {
+              hasNull = true
+              break
+            } else {
+              players.push(player)
+            }
+          }
+
+          if (hasNull) {
+            return undefined
+          }
+
           return (
             <ControllerWithDecider<{ match: TournamentMatch, index: number }>
-              key={i} Child={TournamentMatchController} childProps={{ match, index: i }} playerCount={4} runners={match.runners} updateCallback={async (standings) => {
+              key={i} Child={TournamentMatchController} childProps={{ match, index: i }} playerCount={4} runners={players} updateCallback={async (standings) => {
                 return await updateMatchScore(i, standings)
               }}
             />

@@ -38,7 +38,7 @@ export async function createTournament (players: string[]): Promise<boolean> {
 
 /** Copy of the backend data */
 export interface TournamentMatch {
-  runners: number[]
+  runners: Array<number | null>
   standings: number[]
 }
 
