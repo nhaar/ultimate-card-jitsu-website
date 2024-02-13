@@ -9,6 +9,7 @@ import MainPage from './MainPage'
 import PlayerPage from './PlayerPage'
 import PlayerWatchPage from './PlayerWatchPage'
 import TournamentControlRoom from './TournamentControlRoom'
+import TournamentRules from './TournamentRules'
 
 /** Component for the website's whole navbar */
 function Navbar (): JSX.Element {
@@ -32,11 +33,14 @@ function Navbar (): JSX.Element {
       <div id='fireNavbar' className='navbar-menu'>
         <div className='navbar-start'>
           <a className='navbar-item' href='/'>
-            Bracket
+            Tournament
           </a>
 
           <a className='navbar-item' href='/player'>
             Player Page
+          </a>
+          <a className='navbar-item' href='/rules'>
+            Rules
           </a>
         </div>
       </div>
@@ -63,6 +67,10 @@ export default function App (): JSX.Element {
     }
     case '/tournament-control': {
       Page = <TournamentControlRoom />
+      break
+    }
+    case '/rules': {
+      Page = <TournamentRules />
       break
     }
     default: {

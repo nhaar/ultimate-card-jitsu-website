@@ -160,13 +160,15 @@ function TournamentRanking ({ ranking }: { ranking: Ranking }): JSX.Element {
 }
 
 /** Component that displays rankings for a phase */
-function PhaseRankings ({ ranking, third, title }: {
+function PhaseRankings ({ ranking, third, title, subtitle }: {
   /** Ranking object, from the backend */
   ranking: Ranking
   /** The ranking was built to have a haiku with the first two lines set, this defines the third one */
   third: string
   /** Title to display for the phase */
   title: string
+  /** Smaller message to display */
+  subtitle: string
 }): JSX.Element {
   return (
     <div>
@@ -184,6 +186,14 @@ function PhaseRankings ({ ranking, third, title }: {
       >
         {title}
       </div>
+      <div
+        className='mb-1' style={{
+          textAlign: 'center',
+          fontSize: '18px'
+        }}
+      >
+        {subtitle}
+      </div>
       <TournamentRanking ranking={ranking} />
     </div>
   )
@@ -191,12 +201,12 @@ function PhaseRankings ({ ranking, third, title }: {
 
 /** Component for the rankings in the first phase */
 function FirstPhaseRankings ({ ranking }: { ranking: Ranking }): JSX.Element {
-  return <PhaseRankings ranking={ranking} third='But now it begins.' title='Start Phase' />
+  return <PhaseRankings ranking={ranking} third='But now it begins.' title='Start Phase' subtitle='This is the first phase. The top 4 ninjas will proceed to the finals.' />
 }
 
 /** Component for the rankings in the second phase */
 function FinalPhaseRankings ({ ranking }: { ranking: Ranking }): JSX.Element {
-  return <PhaseRankings ranking={ranking} third='And now is the end.' title='Finals' />
+  return <PhaseRankings ranking={ranking} third='And now is the end.' title='Finals' subtitle='In the finals, only the number one ranked ninja will be victorious.' />
 }
 
 /** Component that renders a match's players */
