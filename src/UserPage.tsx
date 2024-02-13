@@ -123,16 +123,21 @@ function EditProfilePage (): JSX.Element {
   }
 
   return (
-    <div>
-      <div>Edit your profile</div>
-      <div>Display Name (change this before the tournament starts)</div>
-      <input type='text' value={username} onChange={(e) => setUsername(e.target.value)} />
-      <div>(OPTIONAL) Pronouns to refer to you, if you want to specify</div>
-      <input type='text' value={pronouns} onChange={(e) => setPronouns(e.target.value)} />
-      <div>(OPTIONAL) Profile picture</div>
-      <input type='file' accept='image/*' onChange={receiveFile} />
-      <img src={pfp} />
-      <button onClick={saveEdit}>SAVE CHANGES</button>
+    <div className='has-text-primary burbank is-flex is-justify-content-center'>
+      <div
+        className='is-flex is-justify-content-center is-flex-direction-column' style={{
+          width: '500px'
+        }}
+      >
+        <div className='mt-4 mb-1'>Display Name (change this before the tournament starts)</div>
+        <input className='input mb-5' type='text' value={username} onChange={(e) => setUsername(e.target.value)} />
+        <div className='mb-1'>(OPTIONAL) Pronouns to refer to you</div>
+        <input className='input mb-5' type='text' value={pronouns} onChange={(e) => setPronouns(e.target.value)} />
+        <div className='mb-1'>(OPTIONAL) Profile picture</div>
+        <input className='mb-1' type='file' accept='image/*' onChange={receiveFile} />
+        <img className='mb-5' src={pfp} />
+        <button className='button mb-6' onClick={saveEdit}>SAVE CHANGES</button>
+      </div>
     </div>
   )
 }
