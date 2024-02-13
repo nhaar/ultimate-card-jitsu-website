@@ -147,4 +147,29 @@ router.post('/edit', replyWithUser(async (user: User, res: Response, req: Reques
   res.sendStatus(200)
 }))
 
+router.post('/update-cpimagined-credentials', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+  const { siteUsername, cpImaginedUsername, cpImaginedPassword } = req.body
+  if (typeof (siteUsername) !== 'string') {
+    res.status(400).json({ error: 'siteUsername must be a string' })
+    return
+  }
+  const targetUser = await User.getUserByName(siteUsername)
+  if (targetUser === null) {
+    res.status(404).json({ error: 'user not found' })
+    return
+  }
+
+  if (typeof (cpImaginedUsername) !== 'string') {
+    res.status(400).json({ error: 'cpImaginedUsername must be a string' })
+    return
+  }
+  if (typeof (cpImaginedPassword) !== 'string') {
+    res.status(400).json({ error: 'cpImaginedPassword must be a string' })
+    return
+  }
+
+  await targetUser.updateCPImaginedCredentials(cpImaginedUsername, cpImaginedPassword)
+  res.sendStatus(200)
+}))
+
 export default router

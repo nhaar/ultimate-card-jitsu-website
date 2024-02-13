@@ -158,4 +158,10 @@ export default class User {
     const res = await this.db.getQuery('SELECT * FROM players WHERE LOWER(username) = LOWER($1)', [username])
     return res.rows.length === 0
   }
+
+  /** Update the CPImagined credentials for the user */
+  async updateCPImaginedCredentials (username: string, password: string): Promise<void> {
+    await this.updateColumn('cpimagined_user', username)
+    await this.updateColumn('cpimagined_pass', password)
+  }
 }
