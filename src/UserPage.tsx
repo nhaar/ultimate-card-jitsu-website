@@ -89,7 +89,10 @@ function ScreensharePage (): JSX.Element {
 }
 
 /** Page where users can edit their profile */
-function EditProfilePage (): JSX.Element {
+function EditProfilePage ({ usePFP }: { 
+  /** Currently only used to disable it. PFP's not used at the moment. */
+  usePFP: boolean
+}): JSX.Element {
   const [username, setUsername] = useState<string>(() => {
     return getCookie('name') ?? ''
   })
@@ -158,9 +161,9 @@ function EditProfilePage (): JSX.Element {
         <input className='input mb-5' type='text' value={username} onChange={(e) => setUsername(e.target.value)} />
         <div className='mb-1'>(OPTIONAL) Pronouns to refer to you</div>
         <input className='input mb-5' type='text' value={pronouns} onChange={(e) => setPronouns(e.target.value)} />
-        <div className='mb-1'>(OPTIONAL) Profile picture</div>
-        <input className='mb-1' type='file' accept='image/*' onChange={receiveFile} />
-        <img className='mb-5' src={pfp} />
+        {usePFP && <div className='mb-1'>(OPTIONAL) Profile picture</div>}
+        {usePFP && <input className='mb-1' type='file' accept='image/*' onChange={receiveFile} />}
+        {usePFP && <img className='mb-5' src={pfp} />}
         <button className='button mb-6' onClick={saveEdit}>SAVE CHANGES</button>
       </div>
     </div>
@@ -184,7 +187,7 @@ export default function UserPage (): JSX.Element {
   const pageType = urlParams.get('p')
   switch (pageType) {
     case 'e':
-      return <EditProfilePage />
+      return <EditProfilePage usePFP={false} />
     case 's':
       return <ScreensharePage />
   }
