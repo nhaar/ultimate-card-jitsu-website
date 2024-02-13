@@ -218,3 +218,21 @@ export async function getTournamentDate (): Promise<Date | null> {
   if (date === null) return null
   return new Date(Number(date))
 }
+
+/** Deletes an ongoing tournament */
+export async function deleteTournament (): Promise<boolean> {
+  const response = await postJSON('api/tournament/delete', {})
+  return response.ok
+}
+
+/** Sets the tournament start date to the given one */
+export async function setTournamentDate (date: Date): Promise<boolean> {
+  const response = await postJSON('api/tournament/set-date', { date: String(date.getTime()) })
+  return response.ok
+}
+
+/** Removes the start date of the tournament */
+export async function resetTournamentDate (): Promise<boolean> {
+  const response = await postJSON('api/tournament/reset-date', {})
+  return response.ok
+}

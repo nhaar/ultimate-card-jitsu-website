@@ -89,7 +89,7 @@ function ScreensharePage (): JSX.Element {
 }
 
 /** Page where users can edit their profile */
-function EditProfilePage ({ usePFP }: { 
+function EditProfilePage ({ usePFP }: {
   /** Currently only used to disable it. PFP's not used at the moment. */
   usePFP: boolean
 }): JSX.Element {

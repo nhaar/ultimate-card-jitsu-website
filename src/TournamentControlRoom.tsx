@@ -1,9 +1,11 @@
 import { useContext, useEffect, useState } from 'react'
-import { TournamentMatch, TournamentTies, createTournament, getAllPlayers, getPlayerInfo, getTies, getTournamentMatches, isTournamentActive, rollbackTournament, settleTie, updateMatchScore } from './api'
+import { TournamentMatch, TournamentTies, createTournament, deleteTournament, getAllPlayers, getPlayerInfo, getTies, getTournamentMatches, isTournamentActive, resetTournamentDate, rollbackTournament, setTournamentDate, settleTie, updateMatchScore } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 
 /** Component responsible for the control room when a tournament is not active */
 function PretournamentControlRoom (): JSX.Element {
+  /** Value that will be used for the tournament date */
+  const [date, setDate] = useState<string>('')
   const [unselectedPlayers, setUnselectedPlayers] = useState<string[]>([])
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([])
 
@@ -40,8 +42,22 @@ function PretournamentControlRoom (): JSX.Element {
     window.alert(ok ? 'Tournament created!' : 'Failed to create tournament')
   }
 
+  /** Handle click to set the date */
+  function changeDate (): void {
+    void setTournamentDate(new Date(date))
+  }
+
+  /** Handle click to remove the date */
+  function removeDate (): void {
+    void resetTournamentDate()
+  }
+
   return (
     <div>
+      DATE CHANGE
+      <input type='datetime-local' value={date} onChange={(e) => setDate(e.target.value)} />
+      <button className='button' onClick={changeDate}>SET DATE</button>
+      <button className='button is-danger' onClick={removeDate}>REMOVE DATE</button>
       INACTIVE
       <div>
         UNSELECTED
@@ -251,11 +267,22 @@ function ActiveTournamentControlRoom (): JSX.Element {
     })()
   }
 
+  /** Handle clicking to delete the tournament */
+  function clickDeleteTournament (): void {
+    const confirm = window.confirm('Are you sure you want to delete the tournament?')
+    if (confirm) {
+      void deleteTournament()
+    }
+  }
+
   return (
     <div>
       <PlayerInfoContext.Provider value={playerInfo}>
         <button onClick={clickRollbackTournament}>
           UNDO (rollback tournament)
+        </button>
+        <button className='button is-danger' onClick={clickDeleteTournament}>
+          DELETE TOURNAMENT
         </button>
         {matches.map((match, i) => {
           const players = []
