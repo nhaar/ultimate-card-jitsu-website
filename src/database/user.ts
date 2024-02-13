@@ -111,7 +111,6 @@ export default class User {
    */
   async getCPImaginedCredentials (): Promise<{ username: string, password: string }> {
     const res = await this.db.getQuery('SELECT cpimagined_user, cpimagined_pass FROM players WHERE id = $1', [this.id])
-    console.log(res)
     return { username: res.rows[0].cpimagined_user, password: res.rows[0].cpimagined_pass }
   }
 
