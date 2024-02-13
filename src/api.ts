@@ -242,3 +242,9 @@ export async function registerAccount (username: string, password: string): Prom
   const response = await postJSON('api/user/register', { username, password })
   return response.ok
 }
+
+/** Update the credentials to CPImagined for a given user in the website. */
+export async function updateCPImaginedCredentials (siteUsername: string, cpImaginedUsername: string, cpImaginedPassword: string): Promise<boolean> {
+  const response = await postJSON('api/user/update-cpimagined-credentials', { siteUsername, cpImaginedUsername, cpImaginedPassword })
+  return response.ok
+}

@@ -11,6 +11,7 @@ import PlayerWatchPage from './PlayerWatchPage'
 import TournamentControlRoom from './TournamentControlRoom'
 import TournamentRules from './TournamentRules'
 import AccountCreator from './AccountCreator'
+import CPImaginedCredentialsHandler from './CPImaginedCredentialsHandler'
 
 /** Component for the website's whole navbar */
 function Navbar (): JSX.Element {
@@ -76,6 +77,10 @@ export default function App (): JSX.Element {
     }
     case '/account-create': {
       Page = <AccountCreator />
+      break
+    }
+    case '/cpimagined-credentials': {
+      Page = <CPImaginedCredentialsHandler />
       break
     }
     default: {
