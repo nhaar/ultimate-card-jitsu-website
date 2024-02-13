@@ -14,7 +14,8 @@ export interface PlayerInfo {
 }
 
 interface Match {
-  runners: number[]
+  /** Array with all player IDs in the match, or of `null`, if they are not yet decided */
+  runners: Array<number | null>
 
   // this array organizes the runners in the order they finished using the "runner index",
   // eg [2, 0, 1, 3] means index 2 of runners finished first, and so forth
@@ -136,10 +137,10 @@ class Tournament {
       }
       this.bracket = {
         start: {
-          matches: Tournament.generateMatches(players.map(player => player.id))
+          matches: Tournament.generateFirstPhaseMatches(players.map(player => player.id))
         },
         final: {
-          matches: []
+          matches: Tournament.generateFinalPhaseMatches()
         },
         players
       }
@@ -149,7 +150,7 @@ class Tournament {
   /**
    * Generates all the matches for the first phase of the tournament
    */
-  static generateMatches (runners: number[]): Match[] {
+  static generateFirstPhaseMatches (runners: number[]): Match[] {
     const matches: Match[] = []
 
     // use these sets so that we generate the matches using every player and then once it's done we restart, creating a loop
@@ -205,6 +206,20 @@ class Tournament {
     return matches
   }
 
+  /** Generate all the matches for the final phase of the tournament */
+  static generateFinalPhaseMatches (): Match[] {
+    const matches = []
+    // final matches, matches with no players at the moment
+    for (let i = 0; i < Tournament.FINAL_MATCHES; i++) {
+      matches.push({
+        runners: [null, null, null, null],
+        standings: []
+      })
+    }
+
+    return matches
+  }
+
   static isPlayerInfo (obj: any): obj is PlayerInfo {
     if (typeof (obj) !== 'object' || obj === null || Array.isArray(obj)) {
       return false
@@ -222,7 +237,7 @@ class Tournament {
       return false
     }
 
-    if (!Array.isArray(obj.runners) || obj.runners.every((x: any) => typeof (x) === 'number') === false || obj.runners.length !== 4) {
+    if (!Array.isArray(obj.runners) || obj.runners.every((x: any) => typeof (x) === 'number' || x === null) === false || obj.runners.length !== 4) {
       return false
     }
     if (!Array.isArray(obj.standings) || obj.standings.every((x: any) => typeof (x) === 'number') === false || (obj.standings.length !== 4 && obj.standings.length !== 0)) {
@@ -432,7 +447,17 @@ class Tournament {
       return this.bracket.players.map(player => player.id)
     } else {
       // all finalists should be in any of the matches of the final
-      return this.bracket.final.matches[0].runners
+
+      // at this point there should be no `null` players in the array.
+      const players = this.bracket.final.matches[0].runners
+      const finalPlayers = []
+      for (const player of players) {
+        if (player === null) {
+          throw new Error('null player in final match')
+        }
+        finalPlayers.push(player)
+      }
+      return finalPlayers
     }
   }
 
@@ -601,10 +626,7 @@ class Tournament {
     const finalists = sortedPlayers.slice(0, 4).map(player => player[0].player)
 
     for (let i = 0; i < Tournament.FINAL_MATCHES; i++) {
-      this.bracket.final.matches.push({
-        runners: [...finalists],
-        standings: []
-      })
+      this.bracket.final.matches[i].runners = [...finalists]
     }
   }
 
@@ -692,7 +714,7 @@ class Tournament {
    * Check if the final phase (second phase) of the tournament has started
    */
   hasFinalStarted (): boolean {
-    return this.bracket.final.matches.length > 0
+    return this.bracket.final.matches[0].runners.every(runner => runner !== null)
   }
 
   /** Check if the final phase has ended (and thus the tournament, apart from tie settling) */
