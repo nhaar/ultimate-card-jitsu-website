@@ -31,27 +31,11 @@ router.post('/login', asyncWrapper(async (req: Request, res: Response): Promise<
   }
 }))
 
-router.post('/register', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
-  const { username, password, creatorToken } = req.body
+router.post('/register', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+  const { username, password } = req.body
 
   if ((await User.userExists(username))) {
     res.status(400).json({ error: 'user already exists' })
-    return
-  }
-
-  if (typeof (creatorToken) !== 'string') {
-    res.status(400).json({ error: 'session token must be a string' })
-    return
-  }
-
-  const creator: User | null = await User.getUserByToken(creatorToken)
-  if (creator === null) {
-    res.status(401).json({ error: 'invalid session token' })
-    return
-  }
-
-  if (!(await creator.isAdmin())) {
-    res.status(401).json({ error: 'user is not an admin' })
     return
   }
 

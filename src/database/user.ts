@@ -30,10 +30,26 @@ export default class User {
     return await bcrypt.hash(password, config.SALT)
   }
 
+  /** Used to create the admin account if it doesn't exist. */
+  static async createAdmin (): Promise<void> {
+    const admin = await User.getUserByName(config.ADMIN_NAME)
+    if (admin !== null) return
+
+    const adminUser = await User.createUser(config.ADMIN_NAME, config.ADMIN_PASSWORD)
+    await adminUser.makeAdmin()
+  }
+
+  /** Make this user an admin */
+  async makeAdmin (): Promise<void> {
+    await this.updateColumn('is_admin', 1)
+  }
+
+  /** Creates an user with the given name and password and returns it. */
   static async createUser (username: string, password: string): Promise<User> {
     const db = new Database()
-    const query = await db.getQuery('INSERT INTO players (username, password) VALUES ($1, $2)', [username, await User.encryptPassword(password)])
-    return new User(query.rows[0].id)
+    await db.getQuery('INSERT INTO players (username, password) VALUES ($1, $2)', [username, await User.encryptPassword(password)])
+    const maxId = await db.getQuery('SELECT MAX(id) FROM players', [])
+    return new User(maxId.rows[0].max)
   }
 
   static async getUserByName (username: string): Promise<User | null> {

@@ -82,8 +82,13 @@ io.on('connection', (socket) => {
   })
 })
 
+// initiatilizing database: create tables, and then add admin user if it doesn't exist
 const db = new Database()
-db.initTables()
+db.initTables().then(() => {
+  void User.createAdmin()
+}, () => {
+  console.error('Failed to initialize database')
+})
 
 const PORT = 5000
 

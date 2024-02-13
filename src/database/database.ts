@@ -14,8 +14,8 @@ export default class Database {
     })
   }
 
-  initTables (): void {
-    void this.pool.query(`
+  async initTables (): Promise<void> {
+    await this.pool.query(`
       CREATE TABLE IF NOT EXISTS players (
         id SERIAL PRIMARY KEY,
         username TEXT NOT NULL,
