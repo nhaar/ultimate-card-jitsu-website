@@ -29,7 +29,11 @@ function ScreensharePage (): JSX.Element {
       mediaRecorder.ondataavailable = null
       createMediaRecorder(stream)
     }
-    mediaRecorder.start(5000)
+
+    // if trying to start when the user stops sharing, it will throw an error
+    try {
+      mediaRecorder.start(5000)
+    } catch {}
   }
 
   /**
