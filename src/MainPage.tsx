@@ -162,9 +162,9 @@ function TournamentRanking ({ ranking }: { ranking: Ranking }): JSX.Element {
 /** Component that displays rankings for a phase */
 function PhaseRankings ({ ranking, third, title }: {
   /** Ranking object, from the backend */
-  ranking: Ranking,
+  ranking: Ranking
   /** The ranking was built to have a haiku with the first two lines set, this defines the third one */
-  third: string,
+  third: string
   /** Title to display for the phase */
   title: string
 }): JSX.Element {
@@ -317,10 +317,17 @@ function InTournamentPage (): JSX.Element {
 /** Component that renders the page post tournament */
 function PostTournamentPage (): JSX.Element {
   return (
-    <div>
-      <h1>The Tournament Has Finished!</h1>
-      <p>You can join the discord for more</p>
-      <DiscordWidget />
+    <div className='has-text-primary is-flex is-justify-content-center burbank mb-6'>
+      <div className='is-flex is-flex-direction-column'>
+        <div
+          className='mb-3' style={{
+            fontSize: '32px'
+          }}
+        >
+          <Haiku first='The battle ended' second='The elements rest again' third={'But that\'s not for long'} />
+        </div>
+        <DiscordWidget />
+      </div>
     </div>
   )
 }
