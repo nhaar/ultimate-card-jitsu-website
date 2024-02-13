@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { SERVER_URL } from './urls'
 import { formatCookies, getCookie } from './utils'
 import { editUserInfo, EditUserResponse, getAccountInfo, getCPImaginedCredentials } from './api'
@@ -11,6 +11,7 @@ function ScreensharePage (): JSX.Element {
   const [socket, setSocket] = useState<Socket | null>(null)
   /** WebSocket id that will be used to identify this player */
   const [me, setMe] = useState<string>('')
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   /**
    * Creates a media recorder that will send video chunks to the backend every 5 seconds
@@ -36,6 +37,9 @@ function ScreensharePage (): JSX.Element {
    */
   function startScreensharing (): void {
     void navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then((stream) => {
+      if (videoRef.current !== null) {
+        videoRef.current.srcObject = stream
+      }
       createMediaRecorder(stream)
     })
     const name = formatCookies(document.cookie).name
@@ -57,8 +61,25 @@ function ScreensharePage (): JSX.Element {
   }, [])
 
   return (
-    <div>
-      <button onClick={startScreensharing}>share</button>
+    <div className='has-text-primary burbank is-flex is-justify-content-center'>
+      <div className='is-flex is-flex-direction-column'>
+        <div
+          className='mt-2 mb-3' style={{
+            fontSize: '32px'
+          }}
+        >
+          <Haiku first='Your vision is seen' second='As long as you can see it' third='Down below the page' />
+        </div>
+        <div className='is-flex is-justify-content-center'>
+          <button
+            className='button mb-3' onClick={startScreensharing} style={{
+              width: '300px'
+            }}
+          >START SCREENSHARING
+          </button>
+        </div>
+        <video autoPlay ref={videoRef} width={500} className='mb-5' />
+      </div>
     </div>
   )
 }
