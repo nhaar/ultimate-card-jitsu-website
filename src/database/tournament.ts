@@ -742,6 +742,32 @@ class Tournament {
     }
     return playerInfo
   }
+
+  /**
+   * Updates date for the start of the tournament
+   * @param date Miliseconds since epoch in string format
+   */
+  static async setTournamentDate (date: string): Promise<void> {
+    const db = new Database()
+    const query = await db.getQuery('SELECT * FROM tournament_date', [])
+    if (query.rows.length === 0) {
+      await db.getQuery('INSERT INTO tournament_date (date) VALUES ($1)', [date])
+    } else {
+      await db.getQuery('UPDATE tournament_date SET date = $1', [date])
+    }
+  }
+
+  /** Removes the scheduled tournament date */
+  static async removeTournamentDate (): Promise<void> {
+    const db = new Database()
+    await db.getQuery('DELETE FROM tournament_date', [])
+  }
+
+  /** Deletes an active tournament */
+  static async deleteTournament (): Promise<void> {
+    const db = new Database()
+    await db.getQuery('DELETE FROM tournament', [])
+  }
 }
 
 export default Tournament

@@ -1,6 +1,6 @@
 import express = require('express')
 import { Request, Response } from 'express'
-import { asyncWrapper } from '../utils/utils'
+import { asyncWrapper, isStringNumber } from '../utils/utils'
 import User from '../database/user'
 import Tournament, { PlayerInfo, TournamentPhase } from '../database/tournament'
 
@@ -140,6 +140,29 @@ router.get('/current-phase', asyncWrapper(async (_: Request, res: Response): Pro
 router.get('/is-finished', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
   const tournament = await Tournament.getTournament()
   res.json({ finished: tournament.isFinished }).status(200)
+}))
+
+router.post('/delete', User.checkAdminMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
+  await Tournament.deleteTournament()
+  res.sendStatus(200)
+}))
+
+router.post('/set-date', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+  const { date }: { date: string } = req.body
+  if (typeof (date) !== 'string') {
+    res.status(400).json({ error: 'date must be a string' })
+    return
+  }
+  if (!isStringNumber(date)) {
+    res.status(400).json({ error: 'date must be a number' })
+    return
+  }
+  await Tournament.setTournamentDate(date)
+}))
+
+router.post('/reset-date', User.checkAdminMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
+  await Tournament.removeTournamentDate()
+  res.sendStatus(200)
 }))
 
 export default router
