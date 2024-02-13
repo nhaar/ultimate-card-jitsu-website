@@ -9,6 +9,9 @@ $fire-emblem-red: #85161e;
 $fire-emblem-orange: #c9844b;
 $fire-emblem-yellow: #a9ae13;
 $fire-emblem-pink: #bf3b51;
+$cj-progression-background: #ebb366;
+$cj-progression-foreground: #fff7d9;
+$cj-progression-text: #3d261c;
 
 $primary: white;
 
@@ -22,6 +25,21 @@ $navbar-item-hover-background-color: $logo-background;
 $box-background-color: $fire-emblem-pink;
 $box-color: $primary;
 
+$table-background-color: $cj-progression-foreground;
+$table-color: $cj-progression-text;
+$table-cell-border: $cj-progression-background;
+$table-striped-row-even-background-color: $cj-progression-background;
+$table-row-hover-background-color: $cj-logo-orange;
+$table-striped-row-even-hover-background-color: $table-row-hover-background-color;
+
 $body-background-color: $fire-emblem-red;
+
+.emblem-pink-bg {
+  background-color: $fire-emblem-pink;
+}
+
+.emblem-yellow {
+  color: $fire-emblem-yellow;
+}
 
 @import "~bulma/bulma";

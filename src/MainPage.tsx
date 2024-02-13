@@ -21,7 +21,11 @@ enum TournamentState {
  */
 function addTwitchEmbed (elementId: string): void {
   // loaded from script
-  const Twitch = (window as any).Twitch
+  const Twitch = (window as any).Twitch;
+
+  // for dev server, need to clear the element first
+  (document.getElementById(elementId) as HTMLElement).innerHTML = ''
+
   // can't do anything about this warning since using new is how the Twitch docs tell you to do it
   /* eslint-disable no-new */
   new Twitch.Embed(elementId, {
@@ -155,24 +159,44 @@ function TournamentRanking ({ ranking }: { ranking: Ranking }): JSX.Element {
   )
 }
 
-/** Component for the rankings in the first phase */
-function FirstPhaseRankings ({ ranking }: { ranking: Ranking }): JSX.Element {
+/** Component that displays rankings for a phase */
+function PhaseRankings ({ ranking, third, title }: {
+  /** Ranking object, from the backend */
+  ranking: Ranking,
+  /** The ranking was built to have a haiku with the first two lines set, this defines the third one */
+  third: string,
+  /** Title to display for the phase */
+  title: string
+}): JSX.Element {
   return (
     <div>
-      <h1>Tournament is currently in the first phase.</h1>
+      <div
+        className='mb-4' style={{
+          fontSize: '24px'
+        }}
+      >
+        <Haiku first='Tournament in phases' second='With a start and a final' third={third} />
+      </div>
+      <div style={{
+        textAlign: 'center',
+        fontSize: '32px'
+      }}
+      >
+        {title}
+      </div>
       <TournamentRanking ranking={ranking} />
     </div>
   )
 }
 
+/** Component for the rankings in the first phase */
+function FirstPhaseRankings ({ ranking }: { ranking: Ranking }): JSX.Element {
+  return <PhaseRankings ranking={ranking} third='But now it begins.' title='Start Phase' />
+}
+
 /** Component for the rankings in the second phase */
 function FinalPhaseRankings ({ ranking }: { ranking: Ranking }): JSX.Element {
-  return (
-    <div>
-      <h1>Tournament is currently in the final group stage.</h1>
-      <TournamentRanking ranking={ranking} />
-    </div>
-  )
+  return <PhaseRankings ranking={ranking} third='And now is the end.' title='Finals' />
 }
 
 /** Component that renders a match's players */
@@ -208,17 +232,33 @@ function UpcomingMatches ({ matches }: { matches: TournamentMatch[] }): JSX.Elem
     // only include matches that haven't been played (i.e. have no standings)
     if (match.standings.length === 0) {
       matchComponents.push((
-        <div>
-          <h2>Match {index + 1}</h2>
-          <TournamentMatchElement match={match} />
+        <div className='mb-5'>
+          <h2
+            className='emblem-yellow' style={{
+              textAlign: 'center'
+            }}
+          >Match {index + 1}
+          </h2>
+          <div className='is-flex is-justify-content-center'>
+            <TournamentMatchElement match={match} />
+          </div>
         </div>
       ))
     }
   })
 
   return (
-    <div>
-      <h1>Upcoming Matches</h1>
+    <div
+      className='emblem-pink-bg p-4' style={{
+        borderRadius: '10px'
+      }}
+    >
+      <h1
+        className='mb-6' style={{
+          fontSize: '32px'
+        }}
+      >Upcoming Matches
+      </h1>
       <div>
         {matchComponents}
       </div>
@@ -249,23 +289,26 @@ function InTournamentPage (): JSX.Element {
   return (
     <PlayerInfoContext.Provider value={playerInfo}>
       <div
-        className='is-flex is-flex-direction-column is-justify-content-center' style={{
+        className='has-text-primary burbank is-flex is-justify-content-center' style={{
           width: '100%'
         }}
       >
-        <div>
+        <div className='is-flex is-flex-direction-column'>
           <div
-            className='p-4 is-flex is-justify-content-center candombe' style={{
+            style={{
               fontSize: '72px'
             }}
-          >THE TOURNAMENT HAS STARTED!
+          >
+            THE TOURNAMENT HAS STARTED!
           </div>
           <div className='is-flex is-justify-content-center' id='twitch-embed' />
+          <div className='is-flex is-justify-content-center mt-6'>
+            {rankingElement}
+          </div>
+          <div className='is-flex is-justify-content-center mt-6 mb-5'>
+            <UpcomingMatches matches={upcomingMatches} />
+          </div>
         </div>
-        <div>
-          {rankingElement}
-        </div>
-        <UpcomingMatches matches={upcomingMatches} />
       </div>
     </PlayerInfoContext.Provider>
   )
