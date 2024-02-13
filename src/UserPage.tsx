@@ -265,6 +265,15 @@ export default function UserPage (): JSX.Element {
         </div>
       </div>
       <div className='box'>
+        <div className='is-flex is-justify-content-center'>
+          <a
+            href='https://www.cpimagined.net/' style={{
+              color: '#363636',
+              fontSize: '24px'
+            }}
+          >CLICK HERE TO GO TO CP IMAGINED. YOU MUST DOWNLOAD THEIR CLIENT (100% NO SCAM GUARANTEE)
+          </a>
+        </div>
         <Haiku first='CP Imagined' second='Is how you must play, but look!' third='Must use this account:' />
         {cpImaginedElement}
         <div
