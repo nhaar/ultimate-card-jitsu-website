@@ -236,3 +236,9 @@ export async function resetTournamentDate (): Promise<boolean> {
   const response = await postJSON('api/tournament/reset-date', {})
   return response.ok
 }
+
+/** Registers an account with the given name and password. */
+export async function registerAccount (username: string, password: string): Promise<boolean> {
+  const response = await postJSON('api/user/register', { username, password })
+  return response.ok
+}

@@ -3,6 +3,7 @@ export default function AdminPage (): JSX.Element {
     <div>
       <a href='admin-watch'>PLAYER WATCH</a>
       <a href='tournament-control'>TOURNAMENT CONTROL</a>
+      <a href='account-create'>CREATE ACCOUNTS</a>
     </div>
   )
 }
