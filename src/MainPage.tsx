@@ -31,7 +31,7 @@ function addTwitchEmbed (elementId: string): void {
 /** Component that creates the widget for the Discord server */
 function DiscordWidget (): JSX.Element {
   return (
-    <iframe src={`https://discord.com/widget?id=${WIDGET_ID}&theme=dark`} width='350' height='500' allowTransparency sandbox='allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts' />
+    <iframe src={`https://discord.com/widget?id=${WIDGET_ID}&theme=dark`} width='350' height='500' sandbox='allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts' />
   )
 }
 
