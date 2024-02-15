@@ -334,15 +334,7 @@ export default function MainPage (): JSX.Element {
 
   // initializing page
   useEffect(() => {
-    void (async () => {
-      const isActive = await isTournamentActive()
-      if (isActive) {
-        const isFinished = await isTournamentFinished()
-        setTournamentState(isFinished ? TournamentState.Finished : TournamentState.InProgress)
-      } else {
-        setTournamentState(TournamentState.NotStarted)
-      }
-    })()
+    void updateTournamentState()
 
     // connecting socket to watch for tournament updates in real time
     const socket = io(SERVER_URL)
@@ -352,39 +344,71 @@ export default function MainPage (): JSX.Element {
 
     // this will be fired when the tournament is updated
     socket.on('updateTournament', (data: TournamentUpdate) => {
-      if (data.state !== undefined) {
-        setTournamentState(data.state)
-      }
-      if (data.date !== undefined) {
-        setTournamentDate(data.date)
-      }
-      if (data.ranking !== undefined) {
-        setRanking(data.ranking)
-      }
-      if (data.playerInfo !== undefined) {
-        setPlayerInfo(data.playerInfo)
-      }
-      if (data.isFirstPhase !== undefined) {
-        setIsFirstPhase(data.isFirstPhase)
-      }
-      if (data.upcomingMatches !== undefined) {
-        setUpcomingMatches(data.upcomingMatches)
+      if (data.updateAll === true) {
+        void updateAllTournamentInfo()
+      } else {
+        if (data.updateState === true) {
+          void updateTournamentState()
+        }
+        if (data.updateDate === true) {
+          void updateTournamentDate()
+        }
+        if (data.scoreUpdate === true) {
+          void updateTournamentScoreDependentInfo()
+        }
+        if (data.playerInfo === true) {
+          void updatePlayerInfo()
+        }
       }
     })
   }, [])
+
+  /** Update all tournament information in the page */
+  async function updateAllTournamentInfo (): Promise<void> {
+    await updateTournamentState()
+    await updateTournamentDate()
+    await updateTournamentScoreDependentInfo()
+    await updatePlayerInfo()
+  }
+
+  /** Update the tournament state */
+  async function updateTournamentState (): Promise<void> {
+    const isActive = await isTournamentActive()
+    if (isActive) {
+      const isFinished = await isTournamentFinished()
+      setTournamentState(isFinished ? TournamentState.Finished : TournamentState.InProgress)
+    } else {
+      setTournamentState(TournamentState.NotStarted)
+    }
+  }
+
+  /** Update the tournament info that depends on scores */
+  async function updateTournamentScoreDependentInfo (): Promise<void> {
+    const isFirstPhase = await isCurrentPhaseFirstPhase()
+    setIsFirstPhase(isFirstPhase)
+    setUpcomingMatches(await getTournamentMatches())
+    setRanking(await getRankings(isFirstPhase ? TournamentPhase.Start : TournamentPhase.Final))
+  }
+
+  /** Update the player info */
+  async function updatePlayerInfo (): Promise<void> {
+    setPlayerInfo(await getPlayerInfo())
+  }
+
+  /** Update the date for the tournament */
+  async function updateTournamentDate (): Promise<void> {
+    setTournamentDate(await getTournamentDate())
+  }
 
   // updating whenever base information is changed
   // doing at top level because it's where we have setters easily available
   useEffect(() => {
     void (async () => {
       if (tournamentState === TournamentState.NotStarted) {
-        setTournamentDate(await getTournamentDate())
+        await updateTournamentDate()
       } else if (tournamentState === TournamentState.InProgress) {
-        const isFirstPhase = await isCurrentPhaseFirstPhase()
-        setIsFirstPhase(isFirstPhase)
-        setUpcomingMatches(await getTournamentMatches())
-        setRanking(await getRankings(isFirstPhase ? TournamentPhase.Start : TournamentPhase.Final))
-        setPlayerInfo(await getPlayerInfo())
+        await updateTournamentScoreDependentInfo()
+        await updatePlayerInfo()
       }
     })()
   }, [tournamentState])

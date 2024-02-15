@@ -4,7 +4,7 @@ import { PlayerInfoContext } from './context/PlayerInfoContext'
 import { Socket, io } from 'socket.io-client'
 import { SERVER_URL } from './urls'
 import { getCookie } from './utils'
-import { TournamentState, TournamentUpdate, TournamentUpdateContext } from './context/TournamentContext'
+import { TournamentUpdate, TournamentUpdateContext } from './context/TournamentContext'
 
 /** Component responsible for the control room when a tournament is not active */
 function PretournamentControlRoom (): JSX.Element {
@@ -12,6 +12,7 @@ function PretournamentControlRoom (): JSX.Element {
   const [date, setDate] = useState<string>('')
   const [unselectedPlayers, setUnselectedPlayers] = useState<string[]>([])
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([])
+  const sendUpdate = useContext(TournamentUpdateContext)
 
   useEffect(() => {
     void (async () => {
@@ -44,16 +45,26 @@ function PretournamentControlRoom (): JSX.Element {
   async function handleCreateTournament (): Promise<void> {
     const ok = await createTournament(selectedPlayers)
     window.alert(ok ? 'Tournament created!' : 'Failed to create tournament')
+    if (ok) {
+      sendUpdate({ updateState: true, playerInfo: true })
+      window.location.reload()
+    }
   }
 
   /** Handle click to set the date */
   function changeDate (): void {
-    void setTournamentDate(new Date(date))
+    void (async () => {
+      await setTournamentDate(new Date(date))
+      sendUpdate({ updateDate: true })
+    })()
   }
 
   /** Handle click to remove the date */
   function removeDate (): void {
-    void resetTournamentDate()
+    void (async () => {
+      await resetTournamentDate()
+      sendUpdate({ updateDate: true })
+    })()
   }
 
   return (
@@ -107,6 +118,7 @@ function ControllerWithDecider<T> ({ Child, childProps, playerCount, runners, up
    * The string is expected to be a list of numbers separated by newlines, with all numbers being the runner IDs
    * */
   const [standingDecider, setStandingDecider] = useState('')
+  const sendUpdate = useContext(TournamentUpdateContext)
 
   /**
    * Takes the given players in string and parses and updates the match standings based on it
@@ -135,6 +147,7 @@ function ControllerWithDecider<T> ({ Child, childProps, playerCount, runners, up
       if (response) {
         window.alert('Standings updated')
         window.location.reload()
+        sendUpdate({ scoreUpdate: true })
       } else {
         window.alert('Failed to update standings')
       }
@@ -266,6 +279,7 @@ function ActiveTournamentControlRoom (): JSX.Element {
       const ok = await rollbackTournament()
       if (ok) {
         window.location.reload()
+        sendUpdate({ updateAll: true })
       } else {
         window.alert('Failed to roll back tournament')
       }
@@ -276,8 +290,11 @@ function ActiveTournamentControlRoom (): JSX.Element {
   function clickDeleteTournament (): void {
     const confirm = window.confirm('Are you sure you want to delete the tournament?')
     if (confirm) {
-      void deleteTournament()
-      sendUpdate({ state: TournamentState.NotStarted })
+      void (async () => {
+        await deleteTournament()
+        await resetTournamentDate()
+        sendUpdate({ updateState: true })
+      })()
     }
   }
 

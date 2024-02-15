@@ -28,14 +28,18 @@ export interface TournamentInfo {
   upcomingMatches: TournamentMatch[]
 }
 
-/** A mirror of tournament info, but with optional properties. Is meant to indicate a "patch" of the properties. */
+/** A package of information telling what needs to be updated. */
 export interface TournamentUpdate {
-  state?: TournamentState
-  date?: Date | null | undefined
-  ranking?: Ranking
-  playerInfo?: { [id: number]: string }
-  isFirstPhase?: boolean
-  upcomingMatches?: TournamentMatch[]
+  /** If set to `true`, will force to update everything  */
+  updateAll?: boolean
+  /** If set to `true`, will force to udpate the state */
+  updateState?: boolean
+  /** If set to `true`, will force to update the date */
+  updateDate?: boolean
+  /** If set to `true`, will force update of all score related things */
+  scoreUpdate?: boolean
+  /** If set to `true`, will force to fetch all player info */
+  playerInfo?: boolean
 }
 
 /** Context keeping all relevant state information of the tournament */
