@@ -4,12 +4,13 @@ import http = require('http')
 import express = require('express')
 import { Request, Response } from 'express'
 import cors = require('cors')
-import { Server } from 'socket.io'
+import { Server, Socket } from 'socket.io'
 
 import Database from './database/database'
 import api from './api/api'
 import ScreenShareManager from './screenshare/screenshare'
 import User from './database/user'
+import TournamentUpdater from './tournament-updater/tournament-updater'
 
 const app = express()
 const server = http.createServer(app)
@@ -42,9 +43,30 @@ function sendPlayersToAdmin (): void {
   }
 }
 
+// similarities between both manager and updater seem too much, might need to refactor
 const screenshare = new ScreenShareManager(sendPlayersToAdmin)
+const tournamentUpdater = new TournamentUpdater()
+
+/**
+ * Creates a socket response function that will only run an action if the socket provides a valid admin user token.
+ * @param callback Function that takes as the first parameter the socket that is emitting, and as the second parameter the user object of the admin.
+ */
+function adminOnlySocketResponse (socket: Socket, callback: ((socket: Socket, user: User) => void)): (({ token }: { token: string }) => void) {
+  return ({ token }) => {
+    void User.getUserByToken(token).then(user => {
+      if (user !== null) {
+        void user.isAdmin().then((isAdmin) => {
+          if (isAdmin) {
+            callback(socket, user)
+          }
+        })
+      }
+    })
+  }
+}
 
 io.on('connection', (socket) => {
+  console.log(socket)
   // currently there seems to be an unstability? Need to check if this is because of sockets in the same computer.
   console.log('CONNECTING ', socket.id)
 
@@ -68,17 +90,32 @@ io.on('connection', (socket) => {
   })
 
   /** Frontend sends request to connect new admin, with authorization token in the body. */
-  socket.on('connectAdmin', ({ token }) => {
-    void User.getUserByToken(token).then(user => {
-      if (user !== null) {
-        void user.isAdmin().then((isAdmin) => {
-          if (isAdmin) {
-            adminId = socket.id
-            sendPlayersToAdmin()
-          }
-        })
+  socket.on('connectAdmin', adminOnlySocketResponse(socket, (socket) => {
+    adminId = socket.id
+    sendPlayersToAdmin()
+  }))
+
+  /** Main page sending request to receive updates */
+  socket.on('watchTournament', () => {
+    tournamentUpdater.addViewer(socket.id)
+  })
+
+  /** Tournament control admin sending request to be able to send updates */
+  socket.on('connectUpdater', adminOnlySocketResponse(socket, (socket) => {
+    tournamentUpdater.adminId = socket.id
+  }))
+
+  /** Tournament control admin sending new information of the tournament */
+  socket.on('updateTournament', (data) => {
+    if (socket.id === tournamentUpdater.adminId) {
+      for (const viewer of tournamentUpdater.viewers) {
+        io.to(viewer).emit('updateTournament', data)
       }
-    })
+    }
+  })
+
+  socket.on('disconnect', () => {
+    tournamentUpdater.removeViewer(socket.id)
   })
 })
 
