@@ -4,17 +4,7 @@ import { STREAM_CHANNEL } from './stream-channel'
 import { Ranking, TournamentMatch, TournamentPhase, getPlayerInfo, getRankings, getTournamentDate, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import Haiku from './Haiku'
-
-/** Stage of the tournament */
-enum TournamentState {
-  /** Default */
-  Unknown,
-  /** Starting soon, not started */
-  NotStarted,
-  InProgress,
-  /** Just finished, wrapping up */
-  Finished
-}
+import { TournamentContext, TournamentState } from './context/TournamentContext'
 
 /**
  * Adds a twitch embed with an element that has the given HTML id
@@ -45,14 +35,7 @@ function DiscordWidget (): JSX.Element {
 
 /** Component for the page before the tournament starts */
 function PreTournamentPage (): JSX.Element {
-  const [tournamentDate, setTournamentDate] = useState<Date | null | undefined>(undefined)
-
-  useEffect(() => {
-    void (async () => {
-      const date = await getTournamentDate()
-      setTournamentDate(date)
-    })()
-  }, [])
+  const tournamentDate = useContext(TournamentContext).date
 
   let dateAnnouncement: JSX.Element
   const firstHaikuLine = 'The elements sleep...'
@@ -284,19 +267,9 @@ function UpcomingMatches ({ matches }: { matches: TournamentMatch[] }): JSX.Elem
 
 /** Component that handles rendering the page when the tournament is on-going */
 function InTournamentPage (): JSX.Element {
-  const [ranking, setRanking] = useState<Ranking>([])
-  const [playerInfo, setPlayerInfo] = useState<{ [id: number]: string }>({})
-  const [isFirstPhase, setIsFirstPhase] = useState<boolean>(true)
-  const [upcomingMatches, setUpcomingMatches] = useState<TournamentMatch[]>([])
+  const { isFirstPhase, ranking, playerInfo, upcomingMatches } = useContext(TournamentContext)
 
   useEffect(() => {
-    void (async () => {
-      const phase = await isCurrentPhaseFirstPhase()
-      setRanking(await getRankings(phase ? TournamentPhase.Start : TournamentPhase.Final))
-      setPlayerInfo(await getPlayerInfo())
-      setUpcomingMatches(await getTournamentMatches())
-      setIsFirstPhase(phase)
-    })()
     addTwitchEmbed('twitch-embed')
   }, [])
 
@@ -351,7 +324,13 @@ function PostTournamentPage (): JSX.Element {
 /** Component for the main page */
 export default function MainPage (): JSX.Element {
   const [tournamentState, setTournamentState] = useState<TournamentState>(TournamentState.Unknown)
+  const [isFirstPhase, setIsFirstPhase] = useState<boolean>(true)
+  const [upcomingMatches, setUpcomingMatches] = useState<TournamentMatch[]>([])
+  const [ranking, setRanking] = useState<Ranking>([])
+  const [playerInfo, setPlayerInfo] = useState<{ [id: number]: string }>({})
+  const [tournamentDate, setTournamentDate] = useState<Date | null | undefined>(undefined)
 
+  // initializing page
   useEffect(() => {
     void (async () => {
       const isActive = await isTournamentActive()
@@ -364,25 +343,59 @@ export default function MainPage (): JSX.Element {
     })()
   }, [])
 
+  // updating whenever base information is changed
+  // doing at top level because it's where we have setters easily available
+  useEffect(() => {
+    void (async () => {
+      if (tournamentState === TournamentState.NotStarted) {
+        setTournamentDate(await getTournamentDate())
+      } else if (tournamentState === TournamentState.InProgress) {
+        const isFirstPhase = await isCurrentPhaseFirstPhase()
+        setIsFirstPhase(isFirstPhase)
+        setUpcomingMatches(await getTournamentMatches())
+        setRanking(await getRankings(isFirstPhase ? TournamentPhase.Start : TournamentPhase.Final))
+        setPlayerInfo(await getPlayerInfo())
+      }
+    })()
+  }, [tournamentState])
+
+  let baseElement: JSX.Element
+
   switch (tournamentState) {
     case TournamentState.NotStarted: {
-      return (
+      baseElement = (
         <PreTournamentPage />
       )
+      break
     }
     case TournamentState.InProgress: {
-      return (
+      baseElement = (
         <InTournamentPage />
       )
+      break
     }
     case TournamentState.Finished: {
-      return (
+      baseElement = (
         <PostTournamentPage />
       )
+      break
+    }
+    default: {
+      baseElement = <div />
     }
   }
 
   return (
-    <div />
+    <TournamentContext.Provider value={{
+      state: tournamentState,
+      date: tournamentDate,
+      ranking,
+      playerInfo,
+      isFirstPhase,
+      upcomingMatches
+    }}
+    >
+      {baseElement}
+    </TournamentContext.Provider>
   )
 }
