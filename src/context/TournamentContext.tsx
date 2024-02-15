@@ -13,7 +13,7 @@ export enum TournamentState {
 }
 
 /** Object that has all relevant info for the current state of the tournament */
-interface TournamentInfo {
+export interface TournamentInfo {
   /** Status on it being started/etc. */
   state: TournamentState
   /** The date it will start. Should be `null` if there is no date decided, or `undefined` if it hasn't been fetched yet. */
@@ -28,6 +28,16 @@ interface TournamentInfo {
   upcomingMatches: TournamentMatch[]
 }
 
+/** A mirror of tournament info, but with optional properties. Is meant to indicate a "patch" of the properties. */
+export interface TournamentUpdate {
+  state?: TournamentState
+  date?: Date | null | undefined
+  ranking?: Ranking
+  playerInfo?: { [id: number]: string }
+  isFirstPhase?: boolean
+  upcomingMatches?: TournamentMatch[]
+}
+
 /** Context keeping all relevant state information of the tournament */
 export const TournamentContext = createContext<TournamentInfo>({
   state: TournamentState.Unknown,
@@ -37,3 +47,9 @@ export const TournamentContext = createContext<TournamentInfo>({
   isFirstPhase: true,
   upcomingMatches: []
 })
+
+// need to use this because of parsing error with ts-standard
+const defaultFunction = (): void => { throw new Error('Not implemented') }
+
+/** Context to keep the function used for sending an update of the tournament information to the WebSocket */
+export const TournamentUpdateContext = createContext<(update: TournamentUpdate) => void>(defaultFunction)

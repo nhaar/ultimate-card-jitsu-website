@@ -4,7 +4,9 @@ import { STREAM_CHANNEL } from './stream-channel'
 import { Ranking, TournamentMatch, TournamentPhase, getPlayerInfo, getRankings, getTournamentDate, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import Haiku from './Haiku'
-import { TournamentContext, TournamentState } from './context/TournamentContext'
+import { TournamentContext, TournamentState, TournamentUpdate } from './context/TournamentContext'
+import { io } from 'socket.io-client'
+import { SERVER_URL } from './urls'
 
 /**
  * Adds a twitch embed with an element that has the given HTML id
@@ -341,6 +343,34 @@ export default function MainPage (): JSX.Element {
         setTournamentState(TournamentState.NotStarted)
       }
     })()
+
+    // connecting socket to watch for tournament updates in real time
+    const socket = io(SERVER_URL)
+
+    // this will connect this ID to receive updates
+    socket.emit('watchTournament')
+
+    // this will be fired when the tournament is updated
+    socket.on('updateTournament', (data: TournamentUpdate) => {
+      if (data.state !== undefined) {
+        setTournamentState(data.state)
+      }
+      if (data.date !== undefined) {
+        setTournamentDate(data.date)
+      }
+      if (data.ranking !== undefined) {
+        setRanking(data.ranking)
+      }
+      if (data.playerInfo !== undefined) {
+        setPlayerInfo(data.playerInfo)
+      }
+      if (data.isFirstPhase !== undefined) {
+        setIsFirstPhase(data.isFirstPhase)
+      }
+      if (data.upcomingMatches !== undefined) {
+        setUpcomingMatches(data.upcomingMatches)
+      }
+    })
   }, [])
 
   // updating whenever base information is changed

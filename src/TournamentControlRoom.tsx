@@ -1,6 +1,10 @@
 import { useContext, useEffect, useState } from 'react'
 import { TournamentMatch, TournamentTies, createTournament, deleteTournament, getAllPlayers, getPlayerInfo, getTies, getTournamentMatches, isTournamentActive, resetTournamentDate, rollbackTournament, setTournamentDate, settleTie, updateMatchScore } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
+import { Socket, io } from 'socket.io-client'
+import { SERVER_URL } from './urls'
+import { getCookie } from './utils'
+import { TournamentState, TournamentUpdate, TournamentUpdateContext } from './context/TournamentContext'
 
 /** Component responsible for the control room when a tournament is not active */
 function PretournamentControlRoom (): JSX.Element {
@@ -232,6 +236,7 @@ function ActiveTournamentControlRoom (): JSX.Element {
   const [matches, setMatches] = useState<TournamentMatch[]>([])
   const [ties, setTies] = useState<TournamentTies | null>(null)
   const [playerInfo, setPlayerInfo] = useState<{ [id: number]: string }>({})
+  const sendUpdate = useContext(TournamentUpdateContext)
 
   // to fetch things, means that needs to restart page to see changes
   useEffect(() => {
@@ -272,6 +277,7 @@ function ActiveTournamentControlRoom (): JSX.Element {
     const confirm = window.confirm('Are you sure you want to delete the tournament?')
     if (confirm) {
       void deleteTournament()
+      sendUpdate({ state: TournamentState.NotStarted })
     }
   }
 
@@ -319,20 +325,39 @@ function ActiveTournamentControlRoom (): JSX.Element {
 /** Component for the control room of the tournament */
 export default function TournamentControlRoom (): JSX.Element {
   const [isActive, setIsActive] = useState(false)
+  const [socket, setSocket] = useState<Socket | null>(null)
 
   useEffect(() => {
     void (async () => {
       setIsActive(await isTournamentActive())
     })()
+
+    // set up socket so that we can send tournmanet updates
+    const socket = io(SERVER_URL)
+
+    // to authenticate this user as an updater
+    socket.emit('connectUpdater', { token: getCookie('token') })
+
+    setSocket(socket)
   }, [])
+
+  /** Takes an update object and sends it to the WebSocket so that it can update data for all users. */
+  function sendUpdate (update: TournamentUpdate): void {
+    if (socket === null) {
+      throw new Error('Socket is null')
+    }
+    socket.emit('updateTournament', update)
+  }
 
   const controlRoomElement = isActive ? <ActiveTournamentControlRoom /> : <PretournamentControlRoom />
   return (
-    <div className='has-text-primary'>
-      <div>
-        Control room intentionally left not user friendly due to time constraints, good luck!
+    <TournamentUpdateContext.Provider value={sendUpdate}>
+      <div className='has-text-primary'>
+        <div>
+          Control room intentionally left not user friendly due to time constraints, good luck!
+        </div>
+        {controlRoomElement}
       </div>
-      {controlRoomElement}
-    </div>
+    </TournamentUpdateContext.Provider>
   )
 }
