@@ -158,6 +158,7 @@ router.post('/set-date', User.checkAdminMiddleware, asyncWrapper(async (req: Req
     return
   }
   await Tournament.setTournamentDate(date)
+  res.sendStatus(200)
 }))
 
 router.post('/reset-date', User.checkAdminMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
