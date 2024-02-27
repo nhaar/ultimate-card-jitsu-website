@@ -1,0 +1,8 @@
+.video-hidden {
+    visibility: hidden;
+    display: none;
+}
+
+.video-visible {
+    visibility: visible;
+}
