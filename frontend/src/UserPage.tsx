@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client'
 import { useEffect, useRef, useState } from 'react'
-import { SERVER_URL } from './urls'
+import { SERVER_URL } from '../config.json'
 import { formatCookies, getCookie } from './utils'
 import { editUserInfo, EditUserResponse, getAccountInfo, getCPImaginedCredentials } from './api'
 import Haiku from './Haiku'

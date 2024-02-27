@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
-import { SERVER_URL } from './urls'
+import { SERVER_URL } from '../config.json'
 
 import './styles/video-styles.css'
 import { formatCookies } from './utils'

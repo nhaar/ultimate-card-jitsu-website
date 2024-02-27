@@ -1,12 +1,11 @@
 import { useContext, useEffect, useState } from 'react'
-import { WIDGET_ID } from './discord-widget'
-import { STREAM_CHANNEL } from './stream-channel'
+import { STREAM_CHANNEL, DISCORD_WIDGET } from '../config.json'
 import { Ranking, TournamentMatch, TournamentPhase, getPlayerInfo, getRankings, getTournamentDate, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import Haiku from './Haiku'
 import { TournamentContext, TournamentState, TournamentUpdate } from './context/TournamentContext'
 import { io } from 'socket.io-client'
-import { SERVER_URL } from './urls'
+import { SERVER_URL } from '../config.json'
 
 /**
  * Adds a twitch embed with an element that has the given HTML id
@@ -31,7 +30,7 @@ function addTwitchEmbed (elementId: string): void {
 /** Component that creates the widget for the Discord server */
 function DiscordWidget (): JSX.Element {
   return (
-    <iframe src={`https://discord.com/widget?id=${WIDGET_ID}&theme=dark`} width='350' height='500' sandbox='allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts' />
+    <iframe src={`https://discord.com/widget?id=${DISCORD_WIDGET}&theme=dark`} width='350' height='500' sandbox='allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts' />
   )
 }
 
