@@ -1,4 +1,4 @@
-import { SERVER_URL } from './config.json'
+import config from './config.json'
 
 /**
  * Used to send a POST request to the server with a JSON object
@@ -7,7 +7,7 @@ import { SERVER_URL } from './config.json'
  * @returns
  */
 export async function postJSON (route: string, object: object): Promise<Response> {
-  const response = await fetch(SERVER_URL + '/' + route, {
+  const response = await fetch(config.SERVER_URL + '/' + route, {
     method: 'POST',
     body: JSON.stringify(object),
     headers: {

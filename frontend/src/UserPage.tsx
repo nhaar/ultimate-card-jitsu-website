@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client'
 import { useEffect, useRef, useState } from 'react'
-import { SERVER_URL } from './config.json'
+import config from './config.json'
 import { formatCookies, getCookie } from './utils'
 import { editUserInfo, EditUserResponse, getAccountInfo, getCPImaginedCredentials } from './api'
 import Haiku from './Haiku'
@@ -52,7 +52,7 @@ function ScreensharePage (): JSX.Element {
 
   // connecting socket
   useEffect(() => {
-    const socket = io(SERVER_URL)
+    const socket = io(config.SERVER_URL)
 
     // this is for receiving the id from the backend
     socket.on('me', ({ id }) => {

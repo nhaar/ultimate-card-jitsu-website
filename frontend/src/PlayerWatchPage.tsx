@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
-import { SERVER_URL } from './config.json'
+import config from './config.json'
 
 import './styles/video-styles.css'
 import { formatCookies } from './utils'
@@ -59,7 +59,7 @@ export default function PlayerWatchPage (): JSX.Element {
 
   // connect socket as an admin to receive video chunks
   useEffect(() => {
-    const socket = io(SERVER_URL)
+    const socket = io(config.SERVER_URL)
     setSocket(socket)
 
     const token = formatCookies(document.cookie).token

@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react'
-import { STREAM_CHANNEL, DISCORD_WIDGET, SERVER_URL } from './config.json'
+import config from './config.json'
 import { Ranking, TournamentMatch, TournamentPhase, getPlayerInfo, getRankings, getTournamentDate, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import Haiku from './Haiku'
@@ -21,7 +21,7 @@ function addTwitchEmbed (elementId: string): void {
   new Twitch.Embed(elementId, {
     width: 854,
     height: 480,
-    channel: STREAM_CHANNEL
+    channel: config.STREAM_CHANNEL
   })
   /* eslint-disable no-new */
 }
@@ -29,7 +29,7 @@ function addTwitchEmbed (elementId: string): void {
 /** Component that creates the widget for the Discord server */
 function DiscordWidget (): JSX.Element {
   return (
-    <iframe src={`https://discord.com/widget?id=${DISCORD_WIDGET}&theme=dark`} width='350' height='500' sandbox='allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts' />
+    <iframe src={`https://discord.com/widget?id=${config.DISCORD_WIDGET}&theme=dark`} width='350' height='500' sandbox='allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts' />
   )
 }
 
@@ -335,7 +335,7 @@ export default function MainPage (): JSX.Element {
     void updateTournamentState()
 
     // connecting socket to watch for tournament updates in real time
-    const socket = io(SERVER_URL)
+    const socket = io(config.SERVER_URL)
 
     // this will connect this ID to receive updates
     socket.emit('watchTournament')

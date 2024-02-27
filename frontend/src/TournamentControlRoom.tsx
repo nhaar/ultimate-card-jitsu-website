@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react'
 import { TournamentMatch, TournamentTies, createTournament, deleteTournament, getAllPlayers, getPlayerInfo, getTies, getTournamentMatches, isTournamentActive, resetTournamentDate, rollbackTournament, setTournamentDate, settleTie, updateMatchScore } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import { Socket, io } from 'socket.io-client'
-import { SERVER_URL } from './config.json'
+import config from './config.json'
 import { getCookie } from './utils'
 import { TournamentUpdate, TournamentUpdateContext } from './context/TournamentContext'
 
@@ -350,7 +350,7 @@ export default function TournamentControlRoom (): JSX.Element {
     })()
 
     // set up socket so that we can send tournmanet updates
-    const socket = io(SERVER_URL)
+    const socket = io(config.SERVER_URL)
 
     // to authenticate this user as an updater
     socket.emit('connectUpdater', { token: getCookie('token') })
