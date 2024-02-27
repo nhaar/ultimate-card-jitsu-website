@@ -1,11 +1,10 @@
 import { useContext, useEffect, useState } from 'react'
-import { STREAM_CHANNEL, DISCORD_WIDGET } from '../config.json'
+import { STREAM_CHANNEL, DISCORD_WIDGET, SERVER_URL } from './config.json'
 import { Ranking, TournamentMatch, TournamentPhase, getPlayerInfo, getRankings, getTournamentDate, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import Haiku from './Haiku'
 import { TournamentContext, TournamentState, TournamentUpdate } from './context/TournamentContext'
 import { io } from 'socket.io-client'
-import { SERVER_URL } from '../config.json'
 
 /**
  * Adds a twitch embed with an element that has the given HTML id

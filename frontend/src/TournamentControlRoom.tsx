@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react'
 import { TournamentMatch, TournamentTies, createTournament, deleteTournament, getAllPlayers, getPlayerInfo, getTies, getTournamentMatches, isTournamentActive, resetTournamentDate, rollbackTournament, setTournamentDate, settleTie, updateMatchScore } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import { Socket, io } from 'socket.io-client'
-import { SERVER_URL } from '../config.json'
+import { SERVER_URL } from './config.json'
 import { getCookie } from './utils'
 import { TournamentUpdate, TournamentUpdateContext } from './context/TournamentContext'
 

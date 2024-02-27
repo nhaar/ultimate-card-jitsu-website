@@ -1,4 +1,4 @@
-import { SERVER_URL } from '../config.json'
+import { SERVER_URL } from './config.json'
 
 /**
  * Used to send a POST request to the server with a JSON object
