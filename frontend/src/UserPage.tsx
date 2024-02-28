@@ -4,6 +4,7 @@ import config from './config.json'
 import { formatCookies, getCookie } from './utils'
 import { editUserInfo, EditUserResponse, getAccountInfo, getCPImaginedCredentials } from './api'
 import Haiku from './Haiku'
+import { performLogout } from './PlayerPage'
 
 /** Page where the players can share screen */
 function ScreensharePage (): JSX.Element {
@@ -286,6 +287,9 @@ export default function UserPage (): JSX.Element {
         >
           Refresh this page if you are told you have received a new account.
         </div>
+      </div>
+      <div className='box is-flex is-justify-content-center'>
+        <button className='button is-warning' onClick={performLogout}>LOG OUT</button>
       </div>
       <div />
     </div>

@@ -84,3 +84,8 @@ export function getCookie (cookieName: string): string | null {
   const cookies = formatCookies(document.cookie)
   return cookies[cookieName] ?? null
 }
+
+/** Set the value of a cookie given its name */
+export function setCookie (cookieName: string, value: string): void {
+  document.cookie = `${cookieName}=${value}`
+}

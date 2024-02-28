@@ -1,3 +1,5 @@
+import { performLogout } from "./PlayerPage";
+
 export default function AdminPage (): JSX.Element {
   return (
     <div>
@@ -5,6 +7,7 @@ export default function AdminPage (): JSX.Element {
       <a href='tournament-control'>TOURNAMENT CONTROL</a>
       <a href='account-create'>CREATE ACCOUNTS</a>
       <a href='cpimagined-credentials'>CREDENTIALS HANDLER</a>
+      <button onClick={performLogout}>logout</button>
     </div>
   )
 }
