@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { postJSON } from './utils'
+import { setCookie } from './utils'
 import Haiku from './Haiku'
+import { performLogin } from './api'
 
 /** Component for the login page */
 export default function LoginPage (): JSX.Element {
@@ -10,15 +11,11 @@ export default function LoginPage (): JSX.Element {
   /** Attempts to log in player */
   function handleClickLogin (): void {
     void (async () => {
-      const response = await postJSON('api/user/login', {
-        username,
-        password
-      })
+      const data = await performLogin(username, password)
 
-      if (response.status === 200) {
-        const data = (await response.json()) as { token: string, name: string }
-        document.cookie = `token=${data.token}`
-        document.cookie = `name=${data.name}`
+      if (data !== undefined) {
+        setCookie('token', data.token)
+        setCookie('name', data.name)
         window.alert('Logged in!')
         window.location.href = '/'
       } else {

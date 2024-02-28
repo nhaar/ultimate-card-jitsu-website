@@ -1,4 +1,4 @@
-import { getJSON, postAndGetJSON, postJSON } from './utils'
+import { getJSON, postJSON } from './utils'
 
 /**
  * Checks if a tournament is active
@@ -276,4 +276,30 @@ export async function getMyUserRole (): Promise<UserRole | undefined> {
   }
 
   return undefined
+}
+
+/** Backend response for logging */
+interface LoginResponseData {
+  /** Session token to authenticate user */
+  token: string
+  /** Name of the user logged in */
+  name: string
+}
+
+/**
+ * Peforms login with given credentials
+ * @returns Fetched login data, or undefined if unsuccessful
+ */
+export async function performLogin (username: string, password: string): Promise<LoginResponseData | undefined> {
+  const response = await postJSON('api/user/login', {
+    username,
+    password
+  })
+
+  if (response.ok) {
+    const data = (await response.json()) as { token: string, name: string }
+    return data
+  } else {
+    return undefined
+  }
 }
