@@ -1,4 +1,4 @@
-import { performLogout } from "./PlayerPage";
+import { performLogout } from './PlayerPage'
 
 export default function AdminPage (): JSX.Element {
   return (
