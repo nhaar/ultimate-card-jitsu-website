@@ -66,15 +66,17 @@ export default class User {
     return new User(res.rows[0].id)
   }
 
+  /** Check if a user exists by its name (name is case insensitive) */
   static async userExists (username: string): Promise<boolean> {
     const db = new Database()
-    const res = await db.getQuery('SELECT * FROM players WHERE username = $1', [username])
+    const res = await db.getQuery('SELECT * FROM players WHERE LOWER(username) = $1', [username.toLowerCase()])
     return res.rows.length > 0
   }
 
+  /** Check whether or not a password is correct for a given username (name is case insensitive) */
   static async checkPassword (username: string, password: string): Promise<boolean> {
     const db = new Database()
-    const hash = (await db.getQuery('SELECT password FROM players WHERE username = $1', [username])).rows[0].password
+    const hash = (await db.getQuery('SELECT password FROM players WHERE LOWER(username) = $1', [username.toLowerCase()])).rows[0].password
     return await bcrypt.compare(password, hash)
   }
 
