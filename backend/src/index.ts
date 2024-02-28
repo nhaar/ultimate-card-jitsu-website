@@ -66,7 +66,6 @@ function adminOnlySocketResponse (socket: Socket, callback: ((socket: Socket, us
 }
 
 io.on('connection', (socket) => {
-  console.log(socket)
   // currently there seems to be an unstability? Need to check if this is because of sockets in the same computer.
   console.log('CONNECTING ', socket.id)
 
