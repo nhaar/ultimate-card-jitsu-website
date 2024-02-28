@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { postAndGetJSON, setCookie } from './utils'
+import { setCookie } from './utils'
 import LoginPage from './LoginPage'
 import UserPage from './UserPage'
 import AdminPage from './AdminPage'
-
-type UserRole = 'user' | 'admin' | 'none'
+import { UserRole, getMyUserRole } from './api'
 
 /** Prompts the user if they want to logout or not, and does it if agreed */
 export function performLogout (): void {
@@ -21,11 +20,7 @@ export default function PlayerPage (): JSX.Element {
 
   useEffect(() => {
     void (async () => {
-      const response = await postAndGetJSON('api/user/user-role', {})
-      if (response !== null) {
-        const role = (response as { role: UserRole }).role
-        setUserRole(role)
-      }
+      setUserRole(await getMyUserRole())
     })()
   }, [])
 
@@ -33,13 +28,13 @@ export default function PlayerPage (): JSX.Element {
     case undefined: {
       return <div />
     }
-    case 'none': {
+    case UserRole.None: {
       return <LoginPage />
     }
-    case 'user': {
+    case UserRole.User: {
       return <UserPage />
     }
-    case 'admin': {
+    case UserRole.Admin: {
       return <AdminPage />
     }
   }

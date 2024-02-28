@@ -1,4 +1,4 @@
-import { getJSON, postJSON } from './utils'
+import { getJSON, postAndGetJSON, postJSON } from './utils'
 
 /**
  * Checks if a tournament is active
@@ -247,4 +247,33 @@ export async function registerAccount (username: string, password: string): Prom
 export async function updateCPImaginedCredentials (siteUsername: string, cpImaginedUsername: string, cpImaginedPassword: string): Promise<boolean> {
   const response = await postJSON('api/user/update-cpimagined-credentials', { siteUsername, cpImaginedUsername, cpImaginedPassword })
   return response.ok
+}
+
+/** Roles a user can have, ie all the types of user that exist */
+export enum UserRole {
+  /** Represents logged out */
+  None,
+  /** Admin user */
+  Admin,
+  /** Normal user */
+  User
+}
+
+/**
+ * Gets the "role" of the user in the current app
+ * @returns Role or undefined if not found
+ */
+export async function getMyUserRole (): Promise<UserRole | undefined> {
+  const response = await postAndGetJSON('api/user/user-role', {})
+  if (response !== null) {
+    const role = (response as { role: 'user' | 'admin' | 'none' }).role
+    // setUserRole(role)
+    switch (role) {
+      case 'user': return UserRole.User
+      case 'admin': return UserRole.Admin
+      case 'none': return UserRole.None
+    }
+  }
+
+  return undefined
 }
