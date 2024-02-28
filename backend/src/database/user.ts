@@ -166,4 +166,9 @@ export default class User {
     await this.updateColumn('cpimagined_user', username)
     await this.updateColumn('cpimagined_pass', password)
   }
+
+  /** Changes the user's password to a new one */
+  async changePassword (newPassword: string): Promise<void> {
+    await this.updateColumn('password', await User.encryptPassword(newPassword))
+  }
 }

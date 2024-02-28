@@ -1,19 +1,19 @@
 import { useState } from 'react'
-import { registerAccount } from './api'
+import { registerOrUpdateAccount } from './api'
 
-/** Component that handles the account creator page */
+/** Component that handles the account creator page, which also handles changing passwords */
 export default function AccountCreator (): JSX.Element {
   const [username, setUsername] = useState<string>('')
   const [password, setPassword] = useState<string>('')
 
-  /** Create account when clicked */
+  /** Create/update account when clicked */
   function createAccount (): void {
     void (async () => {
-      const response = await registerAccount(username, password)
+      const response = await registerOrUpdateAccount(username, password)
       if (response) {
-        window.alert('Account created')
+        window.alert('Account created/updated')
       } else {
-        window.alert('Failed to create account')
+        window.alert('Failed to create/update account')
       }
     })()
   }

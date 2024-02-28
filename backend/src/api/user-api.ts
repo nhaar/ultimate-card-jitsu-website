@@ -34,13 +34,8 @@ router.post('/login', asyncWrapper(async (req: Request, res: Response): Promise<
   }
 }))
 
-router.post('/register', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+router.post('/update-account', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   const { username, password } = req.body
-
-  if ((await User.userExists(username))) {
-    res.status(400).json({ error: 'user already exists' })
-    return
-  }
 
   if (typeof (username) !== 'string') {
     res.status(400).json({ error: 'username must be a string' })
@@ -52,7 +47,16 @@ router.post('/register', User.checkAdminMiddleware, asyncWrapper(async (req: Req
     return
   }
 
-  await User.createUser(username, password)
+  // here we decide if we're creating an account or changing the password
+  if ((await User.userExists(username))) {
+    const user = await User.getUserByName(username)
+    if (user === null) {
+      throw new Error('Impossible user existing and not being found')
+    }
+    await user.changePassword(password)
+  } else {
+    await User.createUser(username, password)
+  }
 
   res.sendStatus(200)
 }))
