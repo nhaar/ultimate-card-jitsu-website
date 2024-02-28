@@ -54,7 +54,7 @@ router.post('/register', User.checkAdminMiddleware, asyncWrapper(async (req: Req
   res.sendStatus(200)
 }))
 
-router.post('/user-role', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+router.get('/user-role', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   if (req.headers.cookies === undefined) {
     res.status(400).json({ error: 'no cookies' })
     return

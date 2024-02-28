@@ -264,7 +264,7 @@ export enum UserRole {
  * @returns Role or undefined if not found
  */
 export async function getMyUserRole (): Promise<UserRole | undefined> {
-  const response = await postAndGetJSON('api/user/user-role', {})
+  const response = await getJSON('api/user/user-role')
   if (response !== null) {
     const role = (response as { role: 'user' | 'admin' | 'none' }).role
     // setUserRole(role)
