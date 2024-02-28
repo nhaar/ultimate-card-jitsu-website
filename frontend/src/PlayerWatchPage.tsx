@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
 import config from './config.json'
 
 import './styles/video-styles.css'
+import FoldImage from './images/fold.png'
 import { formatCookies } from './utils'
 import VideoPlayer, { CropInfo, VideoCache } from './VideoPlayer'
 
@@ -14,6 +15,18 @@ interface PlayerInfo {
 /** A map of all players and their respective crop */
 interface PlayerCrops {
   [name: string]: CropInfo
+}
+
+/** Data for drawing the fold. Remember that the fold is just a rectangle */
+interface FoldData {
+  /** Whether the fold should be visible or not */
+  visible: boolean
+  /** Scale relative to the original image size */
+  scale: string
+  /** Number between 0 to 1 representing how far from the left the fold is within the video */
+  left: string
+  /** Number between 0 to 1 representing how far from the top the fold is within the video */
+  top: string
 }
 
 /** Component that handles the admin page */
@@ -42,6 +55,20 @@ export default function PlayerWatchPage (): JSX.Element {
   const [currentCrop, setCurrentCrop] = useState<CropInfo | null>(null)
   /** To store all player crops locally */
   const [playerCrops, setPlayerCrops] = useState<PlayerCrops>({})
+
+  /** Store all fold information */
+  const [foldData, setFoldData] = useState<FoldData>({
+    visible: false,
+    scale: '1',
+    top: '0',
+    left: '0'
+  })
+
+  /** Ref to the image element containing fold */
+  const foldRef = useRef<HTMLImageElement>(null)
+
+  /** The base fold width, or undefined if it hasn't been calculated yet */
+  const [foldWidth, setFoldWidth] = useState<number | undefined>(undefined)
 
   /**
    * Remove all players from a queue if they were in it, mutates the given array
@@ -192,9 +219,34 @@ export default function PlayerWatchPage (): JSX.Element {
       <VideoPlayer key={selectedPlayer?.id} socket={socket} socketId={selectedPlayer?.id ?? ''} width={videoWidth} height={videoHeight} cropInfo={selectedPlayer !== null ? playerCrops[selectedPlayer.name] : undefined} videoCache={videoCache} setVideoCache={setVideoCache} />
       )
 
+  /** Helper function that converts a number to a percentage in string format */
+  function toPercentageString (value: number): string {
+    if (isNaN(value)) {
+      return '0%'
+    }
+    return String(value * 100) + '%'
+  }
+
+  /** Style applied to the fold's image lement */
+  const foldStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: toPercentageString(Number(foldData.top)),
+    left: toPercentageString(Number(foldData.left)),
+    width: foldWidth === undefined ? undefined : Number(foldData.scale) * foldWidth,
+    display: foldData.visible ? undefined : 'none'
+  }
+
+  // used to calculate the fold image width whenever the reference is captured
+  useEffect(() => {
+    if (foldRef.current !== null) {
+      setFoldWidth(foldRef.current.naturalWidth)
+    }
+  }, [foldRef])
+
   return (
     <div className='is-flex is-flex-direction-row'>
-      <div>
+      <div className='is-relative'>
+        <img ref={foldRef} style={foldStyle} src={FoldImage} />
         {mainVideo}
       </div>
       <div
@@ -225,6 +277,25 @@ export default function PlayerWatchPage (): JSX.Element {
         </div>
         <div>
           {cropComponents}
+        </div>
+        {/* fold components below */}
+        <div>
+          <div>
+            <span>fold-visible</span>
+            <input type='checkbox' checked={foldData.visible} onChange={e => setFoldData(f => ({ ...f, visible: e.target.checked }))} />
+          </div>
+          <div>
+            <span>fold-scale</span>
+            <input type='number' value={foldData.scale} onChange={e => setFoldData(f => ({ ...f, scale: e.target.value }))} />
+          </div>
+          <div>
+            <span>fold-top</span>
+            <input type='number' value={foldData.top} onChange={e => setFoldData(f => ({ ...f, top: e.target.value }))} />
+          </div>
+          <div>
+            <span>fold-left</span>
+            <input type='number' value={foldData.left} onChange={e => setFoldData(f => ({ ...f, left: e.target.value }))} />
+          </div>
         </div>
       </div>
     </div>
