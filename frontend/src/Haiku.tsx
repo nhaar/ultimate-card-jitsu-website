@@ -6,7 +6,8 @@ export default function Haiku ({ first, second, third }: {
 }): JSX.Element {
   return (
     <div style={{
-      textAlign: 'center'
+      textAlign: 'center',
+      textShadow: '3px 3px 3px #000, -3px 3px 3px #000, -3px -3px 3px #000, 3px -3px 3px #000'
     }}
     >
       <div>{first}</div>

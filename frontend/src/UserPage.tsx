@@ -7,7 +7,7 @@ import Haiku from './Haiku'
 import { performLogout } from './PlayerPage'
 
 /** Page where the players can share screen */
-function ScreensharePage (): JSX.Element {
+function ScreensharePage(): JSX.Element {
   /** WebSocket connection as a player */
   const [socket, setSocket] = useState<Socket | null>(null)
   /** WebSocket id that will be used to identify this player */
@@ -18,7 +18,7 @@ function ScreensharePage (): JSX.Element {
    * Creates a media recorder that will send video chunks to the backend every 5 seconds
    * @param stream
    */
-  function createMediaRecorder (stream: MediaStream): void {
+  function createMediaRecorder(stream: MediaStream): void {
     const mediaRecorder = new MediaRecorder(stream)
     mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0) {
@@ -34,13 +34,13 @@ function ScreensharePage (): JSX.Element {
     // if trying to start when the user stops sharing, it will throw an error
     try {
       mediaRecorder.start(5000)
-    } catch {}
+    } catch { }
   }
 
   /**
    * Starts sharing screen to backend
    */
-  function startScreensharing (): void {
+  function startScreensharing(): void {
     void navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then((stream) => {
       if (videoRef.current !== null) {
         videoRef.current.srcObject = stream
@@ -77,7 +77,7 @@ function ScreensharePage (): JSX.Element {
         </div>
         <div className='is-flex is-justify-content-center'>
           <button
-            className='button mb-3' onClick={startScreensharing} style={{
+            className='button mb-3 burbank' onClick={startScreensharing} style={{
               width: '300px'
             }}
           >START SCREENSHARING
@@ -90,7 +90,7 @@ function ScreensharePage (): JSX.Element {
 }
 
 /** Page where users can edit their profile */
-function EditProfilePage ({ usePFP }: {
+function EditProfilePage({ usePFP }: {
   /** Currently only used to disable it. PFP's not used at the moment. */
   usePFP: boolean
 }): JSX.Element {
@@ -111,7 +111,7 @@ function EditProfilePage ({ usePFP }: {
   /**
    * Event listener for changing the file input that handles the profile picture
    */
-  function receiveFile (e: React.ChangeEvent<HTMLInputElement>): void {
+  function receiveFile(e: React.ChangeEvent<HTMLInputElement>): void {
     const file = e.target.files !== null ? e.target.files[0] : null
     if (file !== null) {
       const reader = new FileReader()
@@ -126,7 +126,7 @@ function EditProfilePage ({ usePFP }: {
   }
 
   /** Saves changes to an user */
-  function saveEdit (): void {
+  function saveEdit(): void {
     void (async () => {
       const editResponse = await editUserInfo(username, pronouns, pfp)
       switch (editResponse) {
@@ -174,7 +174,7 @@ function EditProfilePage ({ usePFP }: {
 /**
  * Handles the page where non admin players can perform actions. Not to be confused with PlayerPage which handles all types of users
  */
-export default function UserPage (): JSX.Element {
+export default function UserPage(): JSX.Element {
   const [cpImaginedCredentials, setCPImaginedCredentials] = useState<{ username: string, password: string } | null>(null)
   useEffect(() => {
     void (async () => {
@@ -201,7 +201,7 @@ export default function UserPage (): JSX.Element {
         }}
       >You haven't received your CPImagined account for the tournament yet. One will be given to you before the tournament starts.
       </div>
-      )
+    )
     : (
       <div className='is-flex is-justify-content-center mt-3'>
         <div style={{
@@ -217,7 +217,7 @@ export default function UserPage (): JSX.Element {
           }}
           >Username:
           </div>
-          <input className='input' type='text' readOnly value={cpImaginedCredentials.username} />
+          <input className='input burbank' type='text' readOnly value={cpImaginedCredentials.username} />
           <div style={{
             display: 'flex',
             justifyContent: 'center',
@@ -225,60 +225,62 @@ export default function UserPage (): JSX.Element {
           }}
           >Password:
           </div>
-          <input className='input' type='text' readOnly value={cpImaginedCredentials.password} />
+          <input className='input burbank' type='text' readOnly value={cpImaginedCredentials.password} />
         </div>
       </div>
 
-      )
+    )
 
   return (
     <div className='has-text-primary burbank'>
       <div style={{
         fontSize: '72px',
-        textAlign: 'center'
+        textAlign: 'center',
+        textShadow: '3px 3px 8px #000, -3px 3px 8px #000, -3px -3px 8px #000, 3px -3px 8px #000'
       }}
-      >"{username}"
+      >{username}
       </div>
       <div
         className='my-3' style={{
           fontSize: '24px'
         }}
       >
-        <Haiku first='Welcome grasshoper' second={'In here there\'s much you can do'} third='Take a look below' />
+        <Haiku first='Welcome grasshopper' second={'In here there\'s much you can do'} third='Take a look below' />
       </div>
-      <div className='box'>
+      <div className='box' style={{ fontSize: '14pt' }}>
         <Haiku first='Personality' second='Is important for ninjas' third='You may edit it here' />
         <div className='is-flex is-justify-content-center mt-2'>
           <button
-            className='button' onClick={() => { window.location.href = '/player?p=e' }} style={{
+            className='button burbank' onClick={() => { window.location.href = '/player?p=e' }} style={{
               width: '200px'
             }}
           >EDIT PROFILE
           </button>
         </div>
       </div>
-      <div className='box is-flex is-justify-content-center is-flex-direction-column'>
+      <div className='box is-flex is-justify-content-center is-flex-direction-column' style={{ fontSize: '14pt' }}>
         <Haiku first='If now you compete' second='Please share your screen to the stream' third='Else I cannot see!' />
         <div className='is-flex is-justify-content-center mt-2'>
           <button
-            className='button' onClick={() => { window.location.href = '/player?p=s' }} style={{
+            className='button burbank' onClick={() => { window.location.href = '/player?p=s' }} style={{
               width: '200px'
             }}
           >SCREENSHARE
           </button>
         </div>
       </div>
-      <div className='box'>
+      <div className='box' style={{ fontSize: '14pt' }}>
         <div className='is-flex is-justify-content-center'>
           <a
-            href='https://www.cpimagined.net/' style={{
-              color: '#363636',
-              fontSize: '24px'
+            href='https://www.cpimagined.net/download' style={{
+              color: '#169cf7',
+              fontSize: '24px',
+              textDecoration: 'underline'
             }}
-          >CLICK HERE TO GO TO CP IMAGINED. YOU MUST DOWNLOAD THEIR CLIENT (100% NO SCAM GUARANTEE)
+          >CLICK HERE TO GO TO CPIMAGINED. YOU MUST DOWNLOAD THEIR CLIENT (100% NO SCAM GUARANTEE)
           </a>
         </div>
-        <Haiku first='CP Imagined' second='Is how you must play, but look!' third='Must use this account:' />
+        <Haiku first='CPImagined' second='Is how you must play, but look!' third='Must use this account:' />
         {cpImaginedElement}
         <div
           className='mt-2' style={{

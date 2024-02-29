@@ -4,60 +4,114 @@ import { Ranking, TournamentMatch, TournamentPhase, getPlayerInfo, getRankings, 
 import Haiku from './Haiku'
 import { TournamentContext, TournamentState, TournamentUpdate } from './context/TournamentContext'
 import { io } from 'socket.io-client'
+import CountdownTimer from './CountdownTimer';
+
+var titleList: any = {
+  "normal": "The Ultimate Card-Jitsu Tournament",
+  "fire": "The SPICIEST Card-Jitsu Tournament"
+}
+
+// dynamically update site theme based on tourney type
+function changeFavicon(src: string) {
+  var link = document.createElement('link'),
+    oldLink = document.getElementById('dynamic-favicon');
+  link.id = 'dynamic-favicon';
+  link.rel = 'shortcut icon';
+  link.href = src;
+  if (oldLink) {
+    document.head.removeChild(oldLink);
+  }
+  document.head.appendChild(link);
+}
+
+function changeBackground(image: string) {
+  document.body.style.backgroundImage = "url('" + image + "')";
+}
+
+export function determineLogo() {
+  return ("./images/logo" + config.TOURNAMENT_TYPE + ".png")
+}
+
+function changeTitle(title: string) {
+  document.title = title
+}
+
+if (config.TOURNAMENT_TYPE !== null) {
+  // set favicon
+  var favicon = "./images/favicon" + config.TOURNAMENT_TYPE + ".ico"
+  changeFavicon(favicon)
+  // set background
+  var background = "./images/background" + config.TOURNAMENT_TYPE + ".png"
+  changeBackground(background)
+  // set title
+  var title = titleList[config.TOURNAMENT_TYPE]
+  changeTitle(title)
+}
 
 /**
  * Adds a twitch embed with an element that has the given HTML id
  */
-function addTwitchEmbed (elementId: string): void {
-  // loaded from script
-  const Twitch = (window as any).Twitch;
+function addTwitchEmbed(elementId: string): void {
+  if (config.STREAM_CHANNEL !== null) {
+    // loaded from script
+    const Twitch = (window as any).Twitch;
 
-  // for dev server, need to clear the element first
-  (document.getElementById(elementId) as HTMLElement).innerHTML = ''
+    // for dev server, need to clear the element first
+    (document.getElementById(elementId) as HTMLElement).innerHTML = ''
 
-  // can't do anything about this warning since using new is how the Twitch docs tell you to do it
-  /* eslint-disable no-new */
-  new Twitch.Embed(elementId, {
-    width: 854,
-    height: 480,
-    channel: config.STREAM_CHANNEL
-  })
-  /* eslint-disable no-new */
+    // can't do anything about this warning since using new is how the Twitch docs tell you to do it
+    /* eslint-disable no-new */
+    new Twitch.Embed(elementId, {
+      width: 854,
+      height: 480,
+      channel: config.STREAM_CHANNEL
+    })
+    /* eslint-disable no-new */
+  }
 }
 
 /** Component that creates the widget for the Discord server */
-function DiscordWidget (): JSX.Element {
-  return (
-    <iframe src={`https://discord.com/widget?id=${config.DISCORD_WIDGET}&theme=dark`} width='350' height='500' sandbox='allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts' />
-  )
+function DiscordWidget(): JSX.Element {
+  if (config.DISCORD_WIDGET !== null) {
+    return (
+      <iframe src={`https://discord.com/widget?id=${config.DISCORD_WIDGET}&theme=dark`} width='80%' height='500' sandbox='allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts' />
+    )
+  } else {
+    return (<div></div>)
+  }
 }
 
 /** Component for the page before the tournament starts */
-function PreTournamentPage (): JSX.Element {
+function PreTournamentPage(): JSX.Element {
   const tournamentDate = useContext(TournamentContext).date
-
+  var now = new Date()
   let dateAnnouncement: JSX.Element
   const firstHaikuLine = 'The elements sleep...'
   if (tournamentDate === undefined) {
     dateAnnouncement = <Haiku first={firstHaikuLine} second='And asking for the server...' third='No results are found!' />
   } else if (tournamentDate === null) {
     dateAnnouncement = <Haiku first={firstHaikuLine} second='The future is foggy now,' third='Unknown is the date.' />
+  } else if (tournamentDate.getTime() >= now.getTime()) {
+    dateAnnouncement = <Haiku first={firstHaikuLine} second="But now they're awakening," third='Soon it will begin...' />
   } else {
-    dateAnnouncement = <Haiku first={firstHaikuLine} second='But now awaking they are,' third='Soon it will begin...' />
+    dateAnnouncement = <Haiku first={'The elements wake...'} second="The tournament has begun!" third='Ninjas, it is time...' />
   }
 
   const dateValueElement = tournamentDate === null
     ? <div />
     : (
-      <div
-        className='mt-3' style={{
-          textAlign: 'center',
-          color: '#c35617',
-          fontSize: '72px'
-        }}
-      >{tournamentDate?.toLocaleString()}
+      <div>
+        <div
+          className='mt-3' style={{
+            textAlign: 'center',
+            color: '#c35617',
+            fontSize: '72px'
+          }}
+        >{tournamentDate?.toLocaleString()}
+        </div>
+        <CountdownTimer targetDate={tournamentDate} />
       </div>
-      )
+    )
 
   const isDateDecided = tournamentDate !== undefined && tournamentDate !== null
 
@@ -142,7 +196,7 @@ function TournamentRanking ({ ranking }: { ranking: Ranking }): JSX.Element {
 }
 
 /** Component that displays rankings for a phase */
-function PhaseRankings ({ ranking, third, title, subtitle }: {
+function PhaseRankings({ ranking, third, title, subtitle }: {
   /** Ranking object, from the backend */
   ranking: Ranking
   /** The ranking was built to have a haiku with the first two lines set, this defines the third one */
@@ -163,7 +217,8 @@ function PhaseRankings ({ ranking, third, title, subtitle }: {
       </div>
       <div style={{
         textAlign: 'center',
-        fontSize: '32px'
+        fontSize: '32px',
+        textShadow: '3px 3px 3px #000, -3px 3px 3px #000, -3px -3px 3px #000, 3px -3px 3px #000'
       }}
       >
         {title}
@@ -171,7 +226,8 @@ function PhaseRankings ({ ranking, third, title, subtitle }: {
       <div
         className='mb-1' style={{
           textAlign: 'center',
-          fontSize: '18px'
+          fontSize: '18px',
+          textShadow: '3px 3px 3px #000, -3px 3px 3px #000, -3px -3px 3px #000, 3px -3px 3px #000'
         }}
       >
         {subtitle}
@@ -182,12 +238,12 @@ function PhaseRankings ({ ranking, third, title, subtitle }: {
 }
 
 /** Component for the rankings in the first phase */
-function FirstPhaseRankings ({ ranking }: { ranking: Ranking }): JSX.Element {
+function FirstPhaseRankings({ ranking }: { ranking: Ranking }): JSX.Element {
   return <PhaseRankings ranking={ranking} third='But now it begins.' title='Start Phase' subtitle='This is the first phase. The top 4 ninjas will proceed to the finals.' />
 }
 
 /** Component for the rankings in the second phase */
-function FinalPhaseRankings ({ ranking }: { ranking: Ranking }): JSX.Element {
+function FinalPhaseRankings({ ranking }: { ranking: Ranking }): JSX.Element {
   return <PhaseRankings ranking={ranking} third='And now is the end.' title='Finals' subtitle='In the finals, only the number one ranked ninja will be victorious.' />
 }
 
@@ -206,15 +262,16 @@ function TournamentMatchElement ({ match }: { match: TournamentMatch }): JSX.Ele
     <div style={{
       display: 'grid',
       gridTemplateColumns: 'repeat(3, 1fr)',
-      width: '200px',
-      textAlign: 'center'
+      width: '80%',
+      textAlign: 'center',
+      textShadow: '2px 2px 2px #000, -2px 2px 2px #000, -2px -2px 2px #000, 2px -2px 2px #000'
     }}
     >
       <div />
       <div>{players[0]}</div>
       <div />
       <div>{players[1]}</div>
-      <div className='candombe'>VS</div>
+      <div className='candombe emblem-yellow' style={{ textShadow: '1px 1px 1px #000, -1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000' }}>VS</div>
       <div>{players[2]}</div>
       <div />
       <div>{players[3]}</div>
@@ -253,7 +310,8 @@ export function UpcomingMatches ({ matches, startMatch, matchTotal, isComingUpLa
         <div className='mb-5'>
           <h2
             className='emblem-yellow' style={{
-              textAlign: 'center'
+              textAlign: 'center',
+              textShadow: '2px 2px 2px #000, -2px 2px 2px #000, -2px -2px 2px #000, 2px -2px 2px #000'
             }}
           >Match {index + 1}
           </h2>
@@ -270,12 +328,15 @@ export function UpcomingMatches ({ matches, startMatch, matchTotal, isComingUpLa
   return (
     <div
       className='emblem-pink-bg p-4' style={{
-        borderRadius: '10px'
+        borderRadius: '10px',
+        width: '50%'
       }}
     >
       <h1
         className='mb-6' style={{
-          fontSize: '32px'
+          fontSize: '32px',
+          textShadow: '3px 3px 3px #000, -3px 3px 3px #000, -3px -3px 3px #000, 3px -3px 3px #000',
+          textAlign: 'center'
         }}
       >{title}
       </h1>
@@ -305,7 +366,8 @@ function InTournamentPage (): JSX.Element {
       <div className='is-flex is-flex-direction-column'>
         <div
           style={{
-            fontSize: '72px'
+            fontSize: '72px',
+              textShadow: '4px 4px 4px #000, -4px 4px 4px #000, -4px -4px 4px #000, 4px -4px 4px #000'
           }}
         >
           THE TOURNAMENT HAS STARTED!
@@ -350,7 +412,7 @@ function PostTournamentPage (): JSX.Element {
 }
 
 /** Component for the main page */
-export default function MainPage (): JSX.Element {
+export default function MainPage(): JSX.Element {
   const [tournamentState, setTournamentState] = useState<TournamentState>(TournamentState.Unknown)
   const [isFirstPhase, setIsFirstPhase] = useState<boolean>(true)
   const [upcomingMatches, setUpcomingMatches] = useState<TournamentMatch[]>([])
@@ -390,7 +452,7 @@ export default function MainPage (): JSX.Element {
   }, [])
 
   /** Update all tournament information in the page */
-  async function updateAllTournamentInfo (): Promise<void> {
+  async function updateAllTournamentInfo(): Promise<void> {
     await updateTournamentState()
     await updateTournamentDate()
     await updateTournamentScoreDependentInfo()
@@ -398,7 +460,7 @@ export default function MainPage (): JSX.Element {
   }
 
   /** Update the tournament state */
-  async function updateTournamentState (): Promise<void> {
+  async function updateTournamentState(): Promise<void> {
     const isActive = await isTournamentActive()
     if (isActive) {
       const isFinished = await isTournamentFinished()
@@ -409,7 +471,7 @@ export default function MainPage (): JSX.Element {
   }
 
   /** Update the tournament info that depends on scores */
-  async function updateTournamentScoreDependentInfo (): Promise<void> {
+  async function updateTournamentScoreDependentInfo(): Promise<void> {
     const isFirstPhase = await isCurrentPhaseFirstPhase()
     setIsFirstPhase(isFirstPhase)
     setUpcomingMatches(await getTournamentMatches())
@@ -417,12 +479,12 @@ export default function MainPage (): JSX.Element {
   }
 
   /** Update the player info */
-  async function updatePlayerInfo (): Promise<void> {
+  async function updatePlayerInfo(): Promise<void> {
     setPlayerInfo(await getPlayerInfo())
   }
 
   /** Update the date for the tournament */
-  async function updateTournamentDate (): Promise<void> {
+  async function updateTournamentDate(): Promise<void> {
     setTournamentDate(await getTournamentDate())
   }
 

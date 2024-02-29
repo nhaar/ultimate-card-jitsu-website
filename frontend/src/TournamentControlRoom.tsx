@@ -7,7 +7,7 @@ import { getCookie } from './utils'
 import { TournamentUpdate, TournamentUpdateContext } from './context/TournamentContext'
 
 /** Component responsible for the control room when a tournament is not active */
-function PretournamentControlRoom (): JSX.Element {
+function PretournamentControlRoom(): JSX.Element {
   /** Value that will be used for the tournament date */
   const [date, setDate] = useState<string>('')
   const [unselectedPlayers, setUnselectedPlayers] = useState<string[]>([])
@@ -25,7 +25,7 @@ function PretournamentControlRoom (): JSX.Element {
    * Moves a player from unselected to selected
    * @param player
    */
-  function selectPlayer (player: string): void {
+  function selectPlayer(player: string): void {
     const u = [...unselectedPlayers].filter((p) => p !== player)
     setUnselectedPlayers(u)
     setSelectedPlayers([...selectedPlayers, player])
@@ -35,14 +35,14 @@ function PretournamentControlRoom (): JSX.Element {
    * Moves a player from selected to unselected
    * @param player
    */
-  function unselectPlayer (player: string): void {
+  function unselectPlayer(player: string): void {
     const s = [...selectedPlayers].filter((p) => p !== player)
     setSelectedPlayers(s)
     setUnselectedPlayers([...unselectedPlayers, player])
   }
 
   /** Handles clicking for creating a tournament */
-  async function handleCreateTournament (): Promise<void> {
+  async function handleCreateTournament(): Promise<void> {
     const ok = await createTournament(selectedPlayers)
     window.alert(ok ? 'Tournament created!' : 'Failed to create tournament')
     if (ok) {
@@ -52,7 +52,7 @@ function PretournamentControlRoom (): JSX.Element {
   }
 
   /** Handle click to set the date */
-  function changeDate (): void {
+  function changeDate(): void {
     void (async () => {
       await setTournamentDate(new Date(date))
       sendUpdate({ updateDate: true })
@@ -60,7 +60,7 @@ function PretournamentControlRoom (): JSX.Element {
   }
 
   /** Handle click to remove the date */
-  function removeDate (): void {
+  function removeDate(): void {
     void (async () => {
       await resetTournamentDate()
       sendUpdate({ updateDate: true })
@@ -68,31 +68,46 @@ function PretournamentControlRoom (): JSX.Element {
   }
 
   return (
-    <div>
-      DATE CHANGE
-      <input type='datetime-local' value={date} onChange={(e) => setDate(e.target.value)} />
-      <button className='button' onClick={changeDate}>SET DATE</button>
-      <button className='button is-danger' onClick={removeDate}>REMOVE DATE</button>
-      INACTIVE
+    <div style={{ padding: '2%' }}>
+      <span style={{
+        fontSize: '24pt',
+        color: '#FFF'
+      }}
+        className="burbank">DATE CHANGE</span><br />
+      <input type='datetime-local' value={date} onChange={(e) => setDate(e.target.value)} /><br /><br />
+      <button className='button' style={{ marginRight: '1%' }} onClick={changeDate}>SET DATE</button>
+      <button className='button is-danger' onClick={removeDate}>REMOVE DATE</button><br /><br />
       <div>
-        UNSELECTED
+        <span style={{
+          fontSize: '14pt',
+          color: '#FFF',
+          marginRight: '1%',
+          verticalAlign: 'middle'
+        }}
+          className="burbank">UNSELECTED</span>
         {unselectedPlayers.map((player) => (
-          <button key={player} onClick={() => selectPlayer(player)}>{player}</button>
+          <button className='button' key={player} onClick={() => selectPlayer(player)}>{player}</button>
         ))}
-      </div>
+      </div><br />
       <div>
-        SELECTED
+        <span style={{
+          fontSize: '14pt',
+          color: '#FFF',
+          marginRight: '1%',
+          verticalAlign: 'middle'
+        }}
+          className="burbank">SELECTED</span>
         {selectedPlayers.map((player) => (
-          <button key={player} onClick={() => unselectPlayer(player)}>{player}</button>
+          <button className='button' key={player} onClick={() => unselectPlayer(player)}>{player}</button>
         ))}
-      </div>
-      <button onClick={() => { void handleCreateTournament() }}>CREATE TOURNAMENT</button>
+      </div><br /><br />
+      <button className='button' onClick={() => { void handleCreateTournament() }}>CREATE TOURNAMENT</button>
     </div>
   )
 }
 
 /** A base component used to create a component that requires inputting multiple players to decide the winner of matches */
-function ControllerWithDecider<T> ({ Child, childProps, playerCount, runners, updateCallback }: {
+function ControllerWithDecider<T>({ Child, childProps, playerCount, runners, updateCallback }: {
   /**
    * The component that will be created base on this one, it must receive the decider element which is used for writing
    * the standings and submitting
@@ -125,7 +140,7 @@ function ControllerWithDecider<T> ({ Child, childProps, playerCount, runners, up
    * @param matchIndex
    * @returns
    */
-  function decideStandings (): void {
+  function decideStandings(): void {
     const players = standingDecider.split('\n').filter((p) => p.trim() !== '')
     if (players.length !== playerCount) {
       window.alert('Need 4 players')
@@ -156,7 +171,7 @@ function ControllerWithDecider<T> ({ Child, childProps, playerCount, runners, up
   const decider = (
     <div>
       <textarea value={standingDecider} onChange={(e) => setStandingDecider(e.target.value)} />
-      <button onClick={decideStandings}>DECIDE</button>
+      <button className="button" style={{ marginLeft: '1%' }} onClick={decideStandings}>DECIDE</button>
     </div>
   )
 
@@ -170,13 +185,13 @@ function ControllerWithDecider<T> ({ Child, childProps, playerCount, runners, up
  * @param players Array with player IDs
  * @param playerInfo Player info object from the context
  */
-function listAllPlayers (players: number[], playerInfo: { [id: number]: string }): string {
+function listAllPlayers(players: number[], playerInfo: { [id: number]: string }): string {
   const labeledPlayers = players.map(p => `${p} - ${playerInfo[p]}`)
   return labeledPlayers.join('||||')
 }
 
 /** Base component that controls a match's results, to be used with `ControllerWithDecider` */
-function TournamentMatchController ({ match, index, decider }: {
+function TournamentMatchController({ match, index, decider }: {
   /** Object of match */
   match: TournamentMatch
   /** Index of match (in tournament matches array) */
@@ -197,26 +212,30 @@ function TournamentMatchController ({ match, index, decider }: {
   }
 
   let matchElement: JSX.Element
+  var matchPlayers = listAllPlayers(players, playerInfo).split('||||')
   if (hasNull) {
     throw new Error('Match has null player, should have been filtered')
   }
   if (match.standings.length === 0) {
     matchElement = (
       <div>
-        <div>
-          NOT STARTED, BETWEEN {listAllPlayers(players, playerInfo)}
+        <div className="burbank">
+          NOT STARTED
         </div>
-        {decider}
+        <div style={{ width: '5%' }}>
+          <TournamentMatchElement player1={matchPlayers[0]} player2={matchPlayers[1]} player3={matchPlayers[2]} player4={matchPlayers[3]} />
+        </div><br />
+        {decider}<br />
       </div>
     )
   } else {
-    matchElement = <div>FINISHED</div>
+    matchElement = <div className="burbank">FINISHED</div>
   }
 
   return (
     <div>
-      <div>
-        MATCH {index}
+      <div className="burbank" style={{ fontSize: '18pt' }}>
+        MATCH {index + 1}
       </div>
       {matchElement}
     </div>
@@ -224,7 +243,7 @@ function TournamentMatchController ({ match, index, decider }: {
 }
 
 /** Base component that controls a tie's results, to be used with `ControllerWithDecider` */
-function TournamentTieController ({ points, players, decider }: {
+function TournamentTieController({ points, players, decider }: {
   /** The point value that all players are tied at */
   points: number
   /** All the player IDs that are tied */
@@ -236,7 +255,7 @@ function TournamentTieController ({ points, players, decider }: {
 
   return (
     <div>
-      <div>
+      <div className="burbank">
         TIE AT {points} POINTS BETWEEN {listAllPlayers(players, playerInfo)}
       </div>
       {decider}
@@ -244,8 +263,32 @@ function TournamentTieController ({ points, players, decider }: {
   )
 }
 
+/** Component that renders a match's players */
+function TournamentMatchElement({ player1, player2, player3, player4 }: { player1: string, player2: string, player3: string, player4: string }): JSX.Element {
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(3, 1fr)',
+      width: '80%',
+      textAlign: 'center',
+      textShadow: '2px 2px 2px #000, -2px 2px 2px #000, -2px -2px 2px #000, 2px -2px 2px #000'
+    }} className="burbank"
+    >
+      <div />
+      <div>{player1}</div>
+      <div />
+      <div>{player2}</div>
+      <div className='candombe emblem-yellow' style={{ textShadow: '2px 2px 2px #000, -2px 2px 2px #000, -2px -2px 2px #000, 2px -2px 2px #000', verticalAlign: 'middle', fontSize: '24pt' }}>VS</div>
+      <div>{player3}</div>
+      <div />
+      <div>{player4}</div>
+      <div />
+    </div>
+  )
+}
+
 /** Component for the control room while the tournament is ongoing */
-function ActiveTournamentControlRoom (): JSX.Element {
+function ActiveTournamentControlRoom(): JSX.Element {
   const [matches, setMatches] = useState<TournamentMatch[]>([])
   const [ties, setTies] = useState<TournamentTies | null>(null)
   const [playerInfo, setPlayerInfo] = useState<{ [id: number]: string }>({})
@@ -265,16 +308,20 @@ function ActiveTournamentControlRoom (): JSX.Element {
   if (ties?.exists === true) {
     for (const points in ties.ties) {
       const players = ties.ties[points]
-      tieComponents.push(<ControllerWithDecider<{ points: number, players: number[] }>
-        Child={TournamentTieController} childProps={{ players, points: Number(points) }} playerCount={players.length} runners={players} updateCallback={async (standings) => {
-          return await settleTie(Number(points), standings)
-        }}
-                         />)
+      if (players.length !== 0) {
+        tieComponents.push(<ControllerWithDecider<{ points: number, players: number[] }>
+          Child={TournamentTieController} childProps={{ players, points: Number(points) }} playerCount={players.length} runners={players} updateCallback={async (standings) => {
+            return await settleTie(Number(points), standings)
+          }}
+        />)
+      } else {
+        continue
+      }
     }
   }
 
   /** Handle clicking to rollback the tournament */
-  function clickRollbackTournament (): void {
+  function clickRollbackTournament(): void {
     void (async () => {
       const ok = await rollbackTournament()
       if (ok) {
@@ -287,7 +334,7 @@ function ActiveTournamentControlRoom (): JSX.Element {
   }
 
   /** Handle clicking to delete the tournament */
-  function clickDeleteTournament (): void {
+  function clickDeleteTournament(): void {
     const confirm = window.confirm('Are you sure you want to delete the tournament?')
     if (confirm) {
       void (async () => {
@@ -299,14 +346,14 @@ function ActiveTournamentControlRoom (): JSX.Element {
   }
 
   return (
-    <div>
+    <div style={{ padding: '2%' }}>
       <PlayerInfoContext.Provider value={playerInfo}>
-        <button onClick={clickRollbackTournament}>
+        <button className="button" onClick={clickRollbackTournament}>
           UNDO (rollback tournament)
         </button>
-        <button className='button is-danger' onClick={clickDeleteTournament}>
+        <button style={{ marginLeft: '1%' }} className='button is-danger' onClick={clickDeleteTournament}>
           DELETE TOURNAMENT
-        </button>
+        </button><br /><br />
         {matches.map((match, i) => {
           const players = []
           let hasNull = false
@@ -332,6 +379,7 @@ function ActiveTournamentControlRoom (): JSX.Element {
           )
         })}
         <div>
+          <br/><br/><br/>
           {tieComponents}
         </div>
       </PlayerInfoContext.Provider>
@@ -340,7 +388,7 @@ function ActiveTournamentControlRoom (): JSX.Element {
 }
 
 /** Component for the control room of the tournament */
-export default function TournamentControlRoom (): JSX.Element {
+export default function TournamentControlRoom(): JSX.Element {
   const [isActive, setIsActive] = useState(false)
   const [socket, setSocket] = useState<Socket | null>(null)
 
@@ -359,7 +407,7 @@ export default function TournamentControlRoom (): JSX.Element {
   }, [])
 
   /** Takes an update object and sends it to the WebSocket so that it can update data for all users. */
-  function sendUpdate (update: TournamentUpdate): void {
+  function sendUpdate(update: TournamentUpdate): void {
     if (socket === null) {
       throw new Error('Socket is null')
     }
@@ -370,9 +418,6 @@ export default function TournamentControlRoom (): JSX.Element {
   return (
     <TournamentUpdateContext.Provider value={sendUpdate}>
       <div className='has-text-primary'>
-        <div>
-          Control room intentionally left not user friendly due to time constraints, good luck!
-        </div>
         {controlRoomElement}
       </div>
     </TournamentUpdateContext.Provider>

@@ -6,7 +6,7 @@
       url('BurbankBigRegular-Bold.woff') format('woff'),
       url('BurbankBigRegular-Bold.ttf') format('truetype'),
       url('BurbankBigRegular-Bold.svg#BurbankBigRegular-Bold') format('svg');
-  font-weight: bold;
+  font-weight: normal;
   font-style: normal;
   font-display: swap;
 }

@@ -4,7 +4,7 @@ import './styles/styles.scss'
 import './styles/navbar.css'
 import './styles/candombe.css'
 import './styles/burbank.css'
-import Logo from './images/logo.png'
+import { determineLogo } from './MainPage'
 import MainPage from './MainPage'
 import PlayerPage from './PlayerPage'
 import PlayerWatchPage from './PlayerWatchPage'
@@ -13,6 +13,7 @@ import TournamentRules from './TournamentRules'
 import AccountCreator from './AccountCreator'
 import CPImaginedCredentialsHandler from './CPImaginedCredentialsHandler'
 import UpcomingMatchesPopout from './UpcomingMatchesPopout'
+import Haiku from './Haiku'
 
 /** Component for the website's whole navbar */
 function Navbar (): JSX.Element {
@@ -21,7 +22,7 @@ function Navbar (): JSX.Element {
       <div className='navbar-brand'>
         <a className='navbar-item' href='/'>
           <img
-            src={Logo} width={855 / 4} height={645 / 4} style={{
+            src={determineLogo()} width={855 / 4} height={645 / 4} style={{
               maxHeight: 'none'
             }}
           />
@@ -89,7 +90,7 @@ export default function App (): JSX.Element {
       break
     }
     default: {
-      Page = <div>404</div>
+      Page = <Haiku first={'Ninja, you are lost.'} second="This page you have visited," third='is a 404.' />
       break
     }
   }

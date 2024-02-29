@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react'
 import { getAllPlayers, updateCPImaginedCredentials } from './api'
 
 /** Component that renders the page where the admin is capable of updating the credentials to CPImagined. */
-export default function CPImaginedCredentialsHandler (): JSX.Element {
+export default function CPImaginedCredentialsHandler(): JSX.Element {
   const [users, setUsers] = useState<string[]>([])
   const [selectedUser, setSelectedUser] = useState<number>(0)
   const [username, setUsername] = useState<string>('')
   const [password, setPassword] = useState<string>('')
 
   /** Updates credentials with the given data */
-  function updateCredentials (): void {
+  function updateCredentials(): void {
     void (async () => {
       const updated = await updateCPImaginedCredentials(users[selectedUser], username, password)
       if (updated) {
@@ -28,23 +28,28 @@ export default function CPImaginedCredentialsHandler (): JSX.Element {
   }, [])
 
   return (
-    <div>
+    <div style={{ padding: '2%' }}>
       <div>
-        USERS
+        <div style={{
+          fontSize: '24pt',
+          color: '#FFF'
+        }}
+          className="burbank">USERS</div>
         {users.map((user, index) => (
           <button
             className='button' key={index} onClick={() => setSelectedUser(index)} style={selectedUser === index
               ? {
-                  backgroundColor: 'blue',
-                  color: 'white'
-                }
-              : {}}
+                backgroundColor: 'blue',
+                color: 'white',
+                marginRight: '1%'
+              }
+              : { marginRight: '1%' }}
           >{user}
           </button>
         ))}
-      </div>
-      <input type='input' className='input' value={username} onChange={e => setUsername(e.target.value)} />
-      <input type='input' className='input' value={password} onChange={e => setPassword(e.target.value)} />
+      </div><br />
+      <input style={{ marginBottom: '1%' }} type='input' className='input' placeholder='CPImagined username' value={username} onChange={e => setUsername(e.target.value)} />
+      <input style={{ marginBottom: '1%' }} type='input' className='input' placeholder='CPImagined password' value={password} onChange={e => setPassword(e.target.value)} />
       <button className='button is-danger' onClick={updateCredentials}>CHANGE</button>
     </div>
   )
