@@ -768,6 +768,31 @@ class Tournament {
     const db = new Database()
     await db.getQuery('DELETE FROM tournament', [])
   }
+
+  /** Get a string descriptor of the current phase, used for display by the stream */
+  getDisplayPhase (): string {
+    const matches = this.getMatches()
+    
+    // "1-indexed"
+    let matchNumber = 1
+    for (const match of matches) {
+      if (match.standings.length === 0) {
+        break
+      }
+      matchNumber++
+    }
+
+    let phaseString = ''
+    if (this.isFinished) {
+      return 'FINISHED!'
+    } else if (this.isFirstPhaseFinished) {
+      phaseString = 'FINALS'
+    } else {
+      phaseString = 'START'
+    }
+
+    return `${phaseString}, MATCH #${matchNumber}`
+  }
 }
 
 export default Tournament

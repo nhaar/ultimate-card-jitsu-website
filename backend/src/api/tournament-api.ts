@@ -166,4 +166,25 @@ router.post('/reset-date', User.checkAdminMiddleware, asyncWrapper(async (_: Req
   res.sendStatus(200)
 }))
 
+router.get('/get-display-phase', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
+  let tournament: Tournament | undefined = undefined
+ 
+  // fetcher will raise an error if the tournament doesn't exist
+  try {
+    tournament = await Tournament.getTournament()
+  } catch {}
+
+  if (tournament === undefined) {
+    res.status(200).send({
+      phase: 'NOT STARTED'
+    })
+    return
+  }
+
+  const currentPhase = tournament.getDisplayPhase()
+  res.status(200).send({
+    phase: currentPhase
+  })
+}))
+
 export default router
