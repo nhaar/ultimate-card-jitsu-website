@@ -1,6 +1,5 @@
 {
   "name": "ultimate-card-jitsu-backend",
-  "version": "0.13.1",
   "description": "",
   "main": "index.js",
   "scripts": {
