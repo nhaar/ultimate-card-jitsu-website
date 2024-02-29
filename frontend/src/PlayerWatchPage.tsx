@@ -139,6 +139,17 @@ export default function PlayerWatchPage (): JSX.Element {
     setUnqueuedPlayers(u)
   }
 
+  /** Remove a player from the queue */
+  function removeFromQueue (id: string): void {
+    const u = [...unqueuedPlayers]
+    const q = [...queuedPlayers]
+    const removingIndex = q.findIndex(p => p.id === id)
+    u.push(q[removingIndex])
+    q.splice(removingIndex, 1)
+    setQueuedPlayers(q)
+    setUnqueuedPlayers(u)
+  }
+
   /**
    * Makes a player selected in the main screen
    * @param player Player to select
@@ -260,6 +271,7 @@ export default function PlayerWatchPage (): JSX.Element {
             return (
               <div key={player.id}>
                 <button onClick={() => selectPlayer(player)}>SELECT: {player.name}</button>
+                <button onClick={() => removeFromQueue(player.id)}>UNQUEUE</button>
                 <VideoPlayer key={player.id} socket={socket} socketId={player.id} width={200} height={200} videoCache={videoCache} setVideoCache={setVideoCache} />
               </div>
             )
