@@ -224,11 +224,31 @@ function TournamentMatchElement ({ match }: { match: TournamentMatch }): JSX.Ele
 }
 
 /** Component that renders the upcoming matches */
-function UpcomingMatches ({ matches }: { matches: TournamentMatch[] }): JSX.Element {
+export function UpcomingMatches ({ matches, startMatch, matchTotal, isComingUpLater }: {
+  matches: TournamentMatch[]
+  /** First match to be displayed, 0-indexed, leave out for 0 */
+  startMatch?: number
+  /** Total number of matches, leave out for all matches */
+  matchTotal?: number
+  /** Whether or not to use the "coming up later" title, leave out for false */
+  isComingUpLater?: boolean
+}): JSX.Element {
   const matchComponents: JSX.Element[] = []
+  let added = 0
   matches.forEach((match, index) => {
+    // to start only at the desired index
+    if (startMatch !== undefined && index < startMatch) {
+      return
+    }
+
+    // to stop after all the added ones are done
+    if (matchTotal !== undefined && added >= matchTotal) {
+      return
+    }
+
     // only include matches that haven't been played (i.e. have no standings)
     if (match.standings.length === 0) {
+      added++
       matchComponents.push((
         <div className='mb-5'>
           <h2
@@ -245,6 +265,8 @@ function UpcomingMatches ({ matches }: { matches: TournamentMatch[] }): JSX.Elem
     }
   })
 
+  const title = isComingUpLater === true ? 'Coming Up Later' : 'Upcoming Matches'
+
   return (
     <div
       className='emblem-pink-bg p-4' style={{
@@ -255,7 +277,7 @@ function UpcomingMatches ({ matches }: { matches: TournamentMatch[] }): JSX.Elem
         className='mb-6' style={{
           fontSize: '32px'
         }}
-      >Upcoming Matches
+      >{title}
       </h1>
       <div>
         {matchComponents}

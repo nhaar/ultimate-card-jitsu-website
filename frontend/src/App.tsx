@@ -12,6 +12,7 @@ import TournamentControlRoom from './TournamentControlRoom'
 import TournamentRules from './TournamentRules'
 import AccountCreator from './AccountCreator'
 import CPImaginedCredentialsHandler from './CPImaginedCredentialsHandler'
+import UpcomingMatchesPopout from './UpcomingMatchesPopout'
 
 /** Component for the website's whole navbar */
 function Navbar (): JSX.Element {
@@ -81,6 +82,10 @@ export default function App (): JSX.Element {
     }
     case '/cpimagined-credentials': {
       Page = <CPImaginedCredentialsHandler />
+      break
+    }
+    case '/upcoming': {
+      Page = <UpcomingMatchesPopout />
       break
     }
     default: {
