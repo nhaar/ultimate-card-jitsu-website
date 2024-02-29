@@ -1,7 +1,6 @@
 import { useContext, useEffect, useState } from 'react'
 import config from './config.json'
 import { Ranking, TournamentMatch, TournamentPhase, getPlayerInfo, getRankings, getTournamentDate, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
-import { PlayerInfoContext } from './context/PlayerInfoContext'
 import Haiku from './Haiku'
 import { TournamentContext, TournamentState, TournamentUpdate } from './context/TournamentContext'
 import { io } from 'socket.io-client'
@@ -99,7 +98,7 @@ function PreTournamentPage (): JSX.Element {
 
 /** Component that handles rendering a table with rankings from an input ranking object from the backend */
 function TournamentRanking ({ ranking }: { ranking: Ranking }): JSX.Element {
-  const playerInfo = useContext(PlayerInfoContext)
+  const { playerInfo } = useContext(TournamentContext)
 
   const tableRows = []
   let rank = 1
@@ -194,7 +193,7 @@ function FinalPhaseRankings ({ ranking }: { ranking: Ranking }): JSX.Element {
 
 /** Component that renders a match's players */
 function TournamentMatchElement ({ match }: { match: TournamentMatch }): JSX.Element {
-  const playerInfo = useContext(PlayerInfoContext)
+  const { playerInfo } = useContext(TournamentContext)
   const players = match.runners.map((runner) => {
     if (runner === null) {
       return '??????'
@@ -267,7 +266,7 @@ function UpcomingMatches ({ matches }: { matches: TournamentMatch[] }): JSX.Elem
 
 /** Component that handles rendering the page when the tournament is on-going */
 function InTournamentPage (): JSX.Element {
-  const { isFirstPhase, ranking, playerInfo, upcomingMatches } = useContext(TournamentContext)
+  const { isFirstPhase, ranking, upcomingMatches } = useContext(TournamentContext)
 
   useEffect(() => {
     addTwitchEmbed('twitch-embed')
@@ -276,38 +275,38 @@ function InTournamentPage (): JSX.Element {
   const rankingElement = isFirstPhase ? <FirstPhaseRankings ranking={ranking} /> : <FinalPhaseRankings ranking={ranking} />
 
   return (
-    <PlayerInfoContext.Provider value={playerInfo}>
-      <div
-        className='has-text-primary burbank is-flex is-justify-content-center' style={{
-          width: '100%'
-        }}
-      >
-        <div className='is-flex is-flex-direction-column'>
-          <div
-            style={{
-              fontSize: '72px'
-            }}
-          >
-            THE TOURNAMENT HAS STARTED!
-          </div>
-          <div className='is-flex is-justify-content-center' id='twitch-embed' />
-          <div className='is-flex is-justify-content-center mt-6'>
-            {rankingElement}
-          </div>
-          <div className='is-flex is-justify-content-center mt-6 mb-5'>
-            <UpcomingMatches matches={upcomingMatches} />
-          </div>
+    <div
+      className='has-text-primary burbank is-flex is-justify-content-center' style={{
+        width: '100%'
+      }}
+    >
+      <div className='is-flex is-flex-direction-column'>
+        <div
+          style={{
+            fontSize: '72px'
+          }}
+        >
+          THE TOURNAMENT HAS STARTED!
+        </div>
+        <div className='is-flex is-justify-content-center' id='twitch-embed' />
+        <div className='is-flex is-justify-content-center mt-6'>
+          {rankingElement}
+        </div>
+        <div className='is-flex is-justify-content-center mt-6 mb-5'>
+          <UpcomingMatches matches={upcomingMatches} />
         </div>
       </div>
-    </PlayerInfoContext.Provider>
+    </div>
   )
 }
 
 /** Component that renders the page post tournament */
 function PostTournamentPage (): JSX.Element {
+  const { ranking } = useContext(TournamentContext)
+
   return (
     <div className='has-text-primary is-flex is-justify-content-center burbank mb-6'>
-      <div className='is-flex is-flex-direction-column'>
+      <div className='is-flex is-flex-direction-column is-align-items-center'>
         <div
           className='mb-3' style={{
             fontSize: '32px'
@@ -315,6 +314,13 @@ function PostTournamentPage (): JSX.Element {
         >
           <Haiku first='The battle ended' second='The elements rest again' third={'But that\'s not for long'} />
         </div>
+        <div style={{
+          fontSize: '24px'
+        }}
+        >
+          <Haiku first='Battle aftermath:' second='Contains results of the end,' third='Points of the final' />
+        </div>
+        <TournamentRanking ranking={ranking} />
         <DiscordWidget />
       </div>
     </div>
@@ -404,7 +410,7 @@ export default function MainPage (): JSX.Element {
     void (async () => {
       if (tournamentState === TournamentState.NotStarted) {
         await updateTournamentDate()
-      } else if (tournamentState === TournamentState.InProgress) {
+      } else if (tournamentState === TournamentState.InProgress || tournamentState === TournamentState.Finished) {
         await updateTournamentScoreDependentInfo()
         await updatePlayerInfo()
       }
