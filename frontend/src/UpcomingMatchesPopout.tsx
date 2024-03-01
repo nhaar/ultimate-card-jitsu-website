@@ -6,6 +6,7 @@ import config from './config.json'
 import { TournamentMatch, getPlayerInfo, getTournamentMatches } from './api'
 import { TournamentContext, TournamentState, TournamentUpdate } from './context/TournamentContext'
 import { UpcomingMatches } from './MainPage'
+import { PlayerInfoContext } from './context/PlayerInfoContext'
 
 /** Component for the page with independent upcoming matches used for streaming as a popout */
 export default function UpcomingMatchesPopout (): JSX.Element {
@@ -37,20 +38,22 @@ export default function UpcomingMatchesPopout (): JSX.Element {
 
   return (
     <div className='has-text-primary burbank is-flex is-justify-content-center'>
-      <TournamentContext.Provider value={{
-        playerInfo,
-        upcomingMatches: matches,
+      <PlayerInfoContext.Provider value={playerInfo}>
+        <TournamentContext.Provider value={{
+          playerInfo,
+          upcomingMatches: matches,
 
-        // default values, not used
-        state: TournamentState.Unknown,
-        date: null,
-        ranking: [],
-        isFirstPhase: true
-      }}
-      >
-        <UpcomingMatches matches={matches} matchTotal={4} />
-        <UpcomingMatches matches={matches} startMatch={4} matchTotal={4} isComingUpLater />
-      </TournamentContext.Provider>
+          // default values, not used
+          state: TournamentState.Unknown,
+          date: null,
+          ranking: [],
+          isFirstPhase: true
+        }}
+        >
+          <UpcomingMatches matches={matches} matchTotal={4} isMini={true} />
+          <UpcomingMatches matches={matches} startMatch={4} matchTotal={4} isComingUpLater isMini={true} />
+        </TournamentContext.Provider>
+      </PlayerInfoContext.Provider>
     </div>
   )
 }

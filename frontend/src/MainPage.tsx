@@ -249,7 +249,7 @@ export function TournamentMatchElement ({ match, displayId }: { match: Tournamen
 }
 
 /** Component that renders the upcoming matches */
-export function UpcomingMatches ({ matches, startMatch, matchTotal, isComingUpLater }: {
+export function UpcomingMatches ({ matches, startMatch, matchTotal, isComingUpLater, isMini }: {
   matches: TournamentMatch[]
   /** First match to be displayed, 0-indexed, leave out for 0 */
   startMatch?: number
@@ -257,6 +257,8 @@ export function UpcomingMatches ({ matches, startMatch, matchTotal, isComingUpLa
   matchTotal?: number
   /** Whether or not to use the "coming up later" title, leave out for false */
   isComingUpLater?: boolean
+  /** Whether or not the component should be considered "mini", which will make its width compact */
+  isMini?: boolean
 }): JSX.Element {
   const matchComponents: JSX.Element[] = []
   let added = 0
@@ -292,12 +294,13 @@ export function UpcomingMatches ({ matches, startMatch, matchTotal, isComingUpLa
   })
 
   const title = isComingUpLater === true ? 'Coming Up Later' : 'Upcoming Matches'
+  const width = isMini === true ? undefined : '50%'
 
   return (
     <div
       className='emblem-pink-bg p-4' style={{
         borderRadius: '10px',
-        width: '50%'
+        width
       }}
     >
       <h1
