@@ -21,15 +21,12 @@ const io = new Server(server, {
   }
 })
 
-if (process.env.NODE_ENV === 'dev') {
-  app.use(cors())
-} else {
-  app.use(express.static(path.join(__dirname, '../public')))
-}
+app.use(cors())
+app.use(express.static(path.join(__dirname, '../public')))
 
 app.use('/api', api)
 
-app.use('/*', (req: Request, res: Response) => {
+app.use('/*', (_: Request, res: Response) => {
   res.sendFile(path.join(__dirname, '../public/index.html'))
 })
 
@@ -126,7 +123,9 @@ db.initTables().then(() => {
   console.error('Failed to initialize database')
 })
 
-const PORT = 5000
+const PORT = process.env.NODE_ENV === 'production' ? 80 : 5000
+
+console.log(process.env.NODE_ENV)
 
 server.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`)

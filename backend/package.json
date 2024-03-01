@@ -3,12 +3,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npx ts-node src/index.ts",
-    "dev": "set NODE_ENV=dev&&nodemon"
+    "start": "cross-env NODE_ENV=production nodemon",
+    "dev": "nodemon"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "ts-node": "^10.9.2",
     "ts-standard": "^12.0.2",
     "typescript": "^5.3.3"

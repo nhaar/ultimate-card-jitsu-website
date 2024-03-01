@@ -30,7 +30,7 @@ Run `npm install` in both the `frontend` and `backend` directories.
     * In the frontend, run `npm start` and it will start the local dev server. In the backend, run `npm run dev` and it will run the webserver with nodemon.
 
     For production:
-    * In the frontend, run `npm run build`, and after that, move the `build` folder to the public folder in the backend `mv frontend/build backend/public`. Finally, run in the backend `npm run start`.
+    * In the frontend, run `npm run build`, and after that, move the `build` folder to the public folder in the backend: (in the root directory) `mv frontend/build backend/public`. Finally, run in the backend `npm start`.
 
 4. You're done!
 
