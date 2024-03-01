@@ -1,0 +1,11 @@
+body {
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  min-height: 100vh;
+  min-width: 100vw;
+}
+
+.black-shadow {
+  text-shadow: 3px 3px 3px #000, -3px 3px 3px #000, -3px -3px 3px #000, 3px -3px 3px #000;
+}

@@ -28,23 +28,30 @@ export default function CPImaginedCredentialsHandler (): JSX.Element {
   }, [])
 
   return (
-    <div>
+    <div style={{ padding: '2%' }}>
       <div>
-        USERS
+        <div
+          className='burbank' style={{
+            fontSize: '24pt',
+            color: '#FFF'
+          }}
+        >USERS
+        </div>
         {users.map((user, index) => (
           <button
             className='button' key={index} onClick={() => setSelectedUser(index)} style={selectedUser === index
               ? {
                   backgroundColor: 'blue',
-                  color: 'white'
+                  color: 'white',
+                  marginRight: '1%'
                 }
-              : {}}
+              : { marginRight: '1%' }}
           >{user}
           </button>
         ))}
-      </div>
-      <input type='input' className='input' value={username} onChange={e => setUsername(e.target.value)} />
-      <input type='input' className='input' value={password} onChange={e => setPassword(e.target.value)} />
+      </div><br />
+      <input style={{ marginBottom: '1%' }} type='input' className='input' placeholder='CPImagined username' value={username} onChange={e => setUsername(e.target.value)} />
+      <input style={{ marginBottom: '1%' }} type='input' className='input' placeholder='CPImagined password' value={password} onChange={e => setPassword(e.target.value)} />
       <button className='button is-danger' onClick={updateCredentials}>CHANGE</button>
     </div>
   )

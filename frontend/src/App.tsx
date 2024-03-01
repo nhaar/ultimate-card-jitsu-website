@@ -1,10 +1,20 @@
-import React from 'react'
+import { useEffect } from 'react'
 
 import './styles/styles.scss'
 import './styles/navbar.css'
 import './styles/candombe.css'
 import './styles/burbank.css'
-import Logo from './images/logo.png'
+import './styles/main.css'
+import FaviconFire from './images/faviconfire.ico'
+import FaviconNormal from './images/faviconnormal.ico'
+import BackgroundNormal from './images/backgroundnormal.png'
+import BackgroundFire from './images/backgroundfire.png'
+import BackgroundWater from './images/backgroundwater.png'
+import BackgroundSnow from './images/backgroundsnow.png'
+import LogoFire from './images/logofire.png'
+import LogoNormal from './images/logonormal.png'
+
+import config from './config.json'
 import MainPage from './MainPage'
 import PlayerPage from './PlayerPage'
 import PlayerWatchPage from './PlayerWatchPage'
@@ -13,6 +23,107 @@ import TournamentRules from './TournamentRules'
 import AccountCreator from './AccountCreator'
 import CPImaginedCredentialsHandler from './CPImaginedCredentialsHandler'
 import UpcomingMatchesPopout from './UpcomingMatchesPopout'
+import Haiku from './Haiku'
+
+function getWebsiteTheme (): WebsiteThemes {
+  switch (config.TOURNAMENT_TYPE) {
+    case 'normal': return WebsiteThemes.Normal
+    case 'fire': return WebsiteThemes.Fire
+    case 'water': return WebsiteThemes.Water
+    case 'snow': return WebsiteThemes.Snow
+    default: throw new Error('invalid website theme supplied in JSON')
+  }
+}
+
+enum WebsiteThemes {
+  Normal,
+  Fire,
+  Water,
+  Snow
+}
+
+// dynamically update site theme based on tourney type
+function changeFavicon (theme: WebsiteThemes): void {
+  const link = document.getElementById('favicon')
+  if (link === null) {
+    throw new Error('favicon link element not setup in index.html')
+  }
+  if (!(link instanceof HTMLLinkElement)) {
+    throw new Error('invalid link element')
+  }
+
+  switch (theme) {
+    case WebsiteThemes.Normal: {
+      link.href = FaviconNormal
+      break
+    }
+    case WebsiteThemes.Fire: {
+      link.href = FaviconFire
+      break
+    }
+    default: {
+      throw new Error('not implemented')
+    }
+  }
+}
+
+function changeBackground (theme: WebsiteThemes): void {
+  let image: string
+  switch (theme) {
+    case WebsiteThemes.Normal: {
+      image = BackgroundNormal
+      break
+    }
+    case WebsiteThemes.Fire: {
+      image = BackgroundFire
+      break
+    }
+    case WebsiteThemes.Water: {
+      image = BackgroundWater
+      break
+    }
+    case WebsiteThemes.Snow: {
+      image = BackgroundSnow
+      break
+    }
+    default: {
+      throw new Error('not implemented')
+    }
+  }
+  document.body.style.backgroundImage = `url(${image})`
+}
+
+export function determineLogo (theme: WebsiteThemes): string {
+  switch (theme) {
+    case WebsiteThemes.Normal: {
+      return LogoNormal
+    }
+    case WebsiteThemes.Fire: {
+      return LogoFire
+    }
+    default: {
+      throw new Error('not implemented')
+    }
+  }
+}
+
+function changeTitle (theme: WebsiteThemes): void {
+  let title
+  switch (theme) {
+    case WebsiteThemes.Normal: {
+      title = 'The Ultimate Card-Jitsu Tournament'
+      break
+    }
+    case WebsiteThemes.Fire: {
+      title = 'The SPICIEST Card-Jitsu Fire Tournament'
+      break
+    }
+    default: {
+      throw new Error('not implemented')
+    }
+  }
+  document.title = title
+}
 
 /** Component for the website's whole navbar */
 function Navbar (): JSX.Element {
@@ -21,7 +132,7 @@ function Navbar (): JSX.Element {
       <div className='navbar-brand'>
         <a className='navbar-item' href='/'>
           <img
-            src={Logo} width={855 / 4} height={645 / 4} style={{
+            src={determineLogo(getWebsiteTheme())} width={855 / 4} height={645 / 4} style={{
               maxHeight: 'none'
             }}
           />
@@ -54,6 +165,13 @@ function Navbar (): JSX.Element {
 /** Component for the entire App */
 export default function App (): JSX.Element {
   let Page: JSX.Element
+
+  useEffect(() => {
+    const theme = getWebsiteTheme()
+    changeFavicon(theme)
+    changeBackground(theme)
+    changeTitle(theme)
+  }, [])
 
   switch (window.location.pathname) {
     case '/': {
@@ -89,7 +207,7 @@ export default function App (): JSX.Element {
       break
     }
     default: {
-      Page = <div>404</div>
+      Page = <Haiku first='Ninja, you are lost.' second='This page you have visited,' third='is a 404.' />
       break
     }
   }

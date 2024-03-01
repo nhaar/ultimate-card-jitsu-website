@@ -19,9 +19,16 @@ export default function AccountCreator (): JSX.Element {
   }
 
   return (
-    <div>
-      <input className='input' placeholder='username' type='text' value={username} onChange={e => setUsername(e.target.value)} />
-      <input className='input' placeholder='password' type='text' value={password} onChange={e => setPassword(e.target.value)} />
+    <div className='burbank' style={{ padding: '2%' }}>
+      <p style={{
+        fontSize: '24pt',
+        color: '#FFF'
+      }}
+      >
+        Create site accounts here!
+      </p><br />
+      <input className='input' placeholder='Username' type='text' value={username} onChange={e => setUsername(e.target.value)} /><br /><br />
+      <input className='input' placeholder='Password' type='text' value={password} onChange={e => setPassword(e.target.value)} /><br /><br />
       <button onClick={createAccount} className='button'>
         Create
       </button>

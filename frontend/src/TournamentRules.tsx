@@ -2,8 +2,8 @@
 export default function TournamentRules (): JSX.Element {
   return (
     <div
-      className='has-text-primary p-6' style={{
-        fontSize: '18px'
+      className='has-text-primary p-6 burbank' style={{
+        fontSize: '14pt'
       }}
     >
       <p className='mb-3'>

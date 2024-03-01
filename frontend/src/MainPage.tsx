@@ -1,68 +1,87 @@
 import { useContext, useEffect, useState } from 'react'
+import { io } from 'socket.io-client'
+
 import config from './config.json'
 import { Ranking, TournamentMatch, TournamentPhase, getPlayerInfo, getRankings, getTournamentDate, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
 import Haiku from './Haiku'
 import { TournamentContext, TournamentState, TournamentUpdate } from './context/TournamentContext'
-import { io } from 'socket.io-client'
+import CountdownTimer from './CountdownTimer'
+import { PlayerInfoContext } from './context/PlayerInfoContext'
 
 /**
  * Adds a twitch embed with an element that has the given HTML id
  */
 function addTwitchEmbed (elementId: string): void {
-  // loaded from script
-  const Twitch = (window as any).Twitch;
+  if (config.STREAM_CHANNEL !== undefined) {
+    // loaded from script
+    const Twitch = (window as any).Twitch;
 
-  // for dev server, need to clear the element first
-  (document.getElementById(elementId) as HTMLElement).innerHTML = ''
+    // for dev server, need to clear the element first
+    (document.getElementById(elementId) as HTMLElement).innerHTML = ''
 
-  // can't do anything about this warning since using new is how the Twitch docs tell you to do it
-  /* eslint-disable no-new */
-  new Twitch.Embed(elementId, {
-    width: 854,
-    height: 480,
-    channel: config.STREAM_CHANNEL
-  })
-  /* eslint-disable no-new */
+    // can't do anything about this warning since using new is how the Twitch docs tell you to do it
+    /* eslint-disable no-new */
+    new Twitch.Embed(elementId, {
+      width: 854,
+      height: 480,
+      channel: config.STREAM_CHANNEL
+    })
+    /* eslint-disable no-new */
+  }
 }
 
 /** Component that creates the widget for the Discord server */
 function DiscordWidget (): JSX.Element {
-  return (
-    <iframe src={`https://discord.com/widget?id=${config.DISCORD_WIDGET}&theme=dark`} width='350' height='500' sandbox='allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts' />
-  )
+  if (config.DISCORD_WIDGET !== undefined) {
+    return (
+      <iframe src={`https://discord.com/widget?id=${config.DISCORD_WIDGET}&theme=dark`} width='80%' height='500' sandbox='allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts' />
+    )
+  } else {
+    return <div />
+  }
 }
 
 /** Component for the page before the tournament starts */
 function PreTournamentPage (): JSX.Element {
   const tournamentDate = useContext(TournamentContext).date
+  const now = new Date()
 
   let dateAnnouncement: JSX.Element
   const firstHaikuLine = 'The elements sleep...'
+
   if (tournamentDate === undefined) {
     dateAnnouncement = <Haiku first={firstHaikuLine} second='And asking for the server...' third='No results are found!' />
   } else if (tournamentDate === null) {
     dateAnnouncement = <Haiku first={firstHaikuLine} second='The future is foggy now,' third='Unknown is the date.' />
+  } else if (tournamentDate.getTime() >= now.getTime()) {
+    // this part here will update once the time hits 0 by virtue of the countdown component
+    dateAnnouncement = <Haiku first={firstHaikuLine} second="But now they're awakening," third='Soon it will begin...' />
   } else {
-    dateAnnouncement = <Haiku first={firstHaikuLine} second='But now awaking they are,' third='Soon it will begin...' />
+    // this part is for if the tournament hasn't begun, but the time has passed over
+    // I feel like the second line might be a bit misleading but can't think of a replacement ATM
+    dateAnnouncement = <Haiku first='The elements wake...' second='The tournament has begun!' third='Ninjas, it is time...' />
   }
 
-  const dateValueElement = tournamentDate === null
+  const dateValueElement = tournamentDate === null || tournamentDate === undefined
     ? <div />
     : (
-      <div
-        className='mt-3' style={{
-          textAlign: 'center',
-          color: '#c35617',
-          fontSize: '72px'
-        }}
-      >{tournamentDate?.toLocaleString()}
+      <div>
+        <div
+          className='mt-3' style={{
+            textAlign: 'center',
+            color: '#c35617',
+            fontSize: '72px'
+          }}
+        >{tournamentDate.toLocaleString()}
+        </div>
+        <CountdownTimer targetDate={tournamentDate} />
       </div>
       )
 
   const isDateDecided = tournamentDate !== undefined && tournamentDate !== null
 
   useEffect(() => {
-    if (tournamentDate !== null && tournamentDate !== undefined) {
+    if (isDateDecided) {
       addTwitchEmbed('twitch-embed')
     }
   }, [tournamentDate])
@@ -161,15 +180,16 @@ function PhaseRankings ({ ranking, third, title, subtitle }: {
       >
         <Haiku first='Tournament in phases' second='With a start and a final' third={third} />
       </div>
-      <div style={{
-        textAlign: 'center',
-        fontSize: '32px'
-      }}
+      <div
+        className='black-shadow' style={{
+          textAlign: 'center',
+          fontSize: '32px'
+        }}
       >
         {title}
       </div>
       <div
-        className='mb-1' style={{
+        className='mb-1 black-shadow' style={{
           textAlign: 'center',
           fontSize: '18px'
         }}
@@ -192,13 +212,17 @@ function FinalPhaseRankings ({ ranking }: { ranking: Ranking }): JSX.Element {
 }
 
 /** Component that renders a match's players */
-function TournamentMatchElement ({ match }: { match: TournamentMatch }): JSX.Element {
-  const { playerInfo } = useContext(TournamentContext)
+export function TournamentMatchElement ({ match, displayId }: { match: TournamentMatch, displayId?: boolean }): JSX.Element {
+  const playerInfo = useContext(PlayerInfoContext)
   const players = match.runners.map((runner) => {
     if (runner === null) {
       return '??????'
     } else {
-      return playerInfo[runner]
+      const name = playerInfo[runner]
+      if (displayId === true) {
+        return `${runner} - ${name}`
+      }
+      return name
     }
   })
 
@@ -206,15 +230,16 @@ function TournamentMatchElement ({ match }: { match: TournamentMatch }): JSX.Ele
     <div style={{
       display: 'grid',
       gridTemplateColumns: 'repeat(3, 1fr)',
-      width: '200px',
-      textAlign: 'center'
+      width: '80%',
+      textAlign: 'center',
+      textShadow: '2px 2px 2px #000, -2px 2px 2px #000, -2px -2px 2px #000, 2px -2px 2px #000'
     }}
     >
       <div />
       <div>{players[0]}</div>
       <div />
       <div>{players[1]}</div>
-      <div className='candombe'>VS</div>
+      <div className='candombe emblem-yellow' style={{ textShadow: '1px 1px 1px #000, -1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000' }}>VS</div>
       <div>{players[2]}</div>
       <div />
       <div>{players[3]}</div>
@@ -253,7 +278,8 @@ export function UpcomingMatches ({ matches, startMatch, matchTotal, isComingUpLa
         <div className='mb-5'>
           <h2
             className='emblem-yellow' style={{
-              textAlign: 'center'
+              textAlign: 'center',
+              textShadow: '2px 2px 2px #000, -2px 2px 2px #000, -2px -2px 2px #000, 2px -2px 2px #000'
             }}
           >Match {index + 1}
           </h2>
@@ -270,12 +296,14 @@ export function UpcomingMatches ({ matches, startMatch, matchTotal, isComingUpLa
   return (
     <div
       className='emblem-pink-bg p-4' style={{
-        borderRadius: '10px'
+        borderRadius: '10px',
+        width: '50%'
       }}
     >
       <h1
-        className='mb-6' style={{
-          fontSize: '32px'
+        className='mb-6 black-shadow' style={{
+          fontSize: '32px',
+          textAlign: 'center'
         }}
       >{title}
       </h1>
@@ -305,7 +333,8 @@ function InTournamentPage (): JSX.Element {
       <div className='is-flex is-flex-direction-column'>
         <div
           style={{
-            fontSize: '72px'
+            fontSize: '72px',
+            textShadow: '4px 4px 4px #000, -4px 4px 4px #000, -4px -4px 4px #000, 4px -4px 4px #000'
           }}
         >
           THE TOURNAMENT HAS STARTED!
@@ -466,16 +495,18 @@ export default function MainPage (): JSX.Element {
   }
 
   return (
-    <TournamentContext.Provider value={{
-      state: tournamentState,
-      date: tournamentDate,
-      ranking,
-      playerInfo,
-      isFirstPhase,
-      upcomingMatches
-    }}
-    >
-      {baseElement}
-    </TournamentContext.Provider>
+    <PlayerInfoContext.Provider value={playerInfo}>
+      <TournamentContext.Provider value={{
+        state: tournamentState,
+        date: tournamentDate,
+        ranking,
+        playerInfo,
+        isFirstPhase,
+        upcomingMatches
+      }}
+      >
+        {baseElement}
+      </TournamentContext.Provider>
+    </PlayerInfoContext.Provider>
   )
 }

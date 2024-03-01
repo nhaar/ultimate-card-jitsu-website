@@ -5,6 +5,7 @@ import { Socket, io } from 'socket.io-client'
 import config from './config.json'
 import { getCookie } from './utils'
 import { TournamentUpdate, TournamentUpdateContext } from './context/TournamentContext'
+import { TournamentMatchElement } from './MainPage'
 
 /** Component responsible for the control room when a tournament is not active */
 function PretournamentControlRoom (): JSX.Element {
@@ -68,25 +69,47 @@ function PretournamentControlRoom (): JSX.Element {
   }
 
   return (
-    <div>
-      DATE CHANGE
-      <input type='datetime-local' value={date} onChange={(e) => setDate(e.target.value)} />
-      <button className='button' onClick={changeDate}>SET DATE</button>
-      <button className='button is-danger' onClick={removeDate}>REMOVE DATE</button>
-      INACTIVE
+    <div style={{ padding: '2%' }}>
+      <span
+        style={{
+          fontSize: '24pt',
+          color: '#FFF'
+        }}
+        className='burbank'
+      >DATE CHANGE
+      </span><br />
+      <input type='datetime-local' value={date} onChange={(e) => setDate(e.target.value)} /><br /><br />
+      <button className='button' style={{ marginRight: '1%' }} onClick={changeDate}>SET DATE</button>
+      <button className='button is-danger' onClick={removeDate}>REMOVE DATE</button><br /><br />
       <div>
-        UNSELECTED
+        <span
+          className='burbank' style={{
+            fontSize: '14pt',
+            color: '#FFF',
+            marginRight: '1%',
+            verticalAlign: 'middle'
+          }}
+        >UNSELECTED
+        </span>
         {unselectedPlayers.map((player) => (
-          <button key={player} onClick={() => selectPlayer(player)}>{player}</button>
+          <button className='button' key={player} onClick={() => selectPlayer(player)}>{player}</button>
         ))}
-      </div>
+      </div><br />
       <div>
-        SELECTED
+        <span
+          className='burbank' style={{
+            fontSize: '14pt',
+            color: '#FFF',
+            marginRight: '1%',
+            verticalAlign: 'middle'
+          }}
+        >SELECTED
+        </span>
         {selectedPlayers.map((player) => (
-          <button key={player} onClick={() => unselectPlayer(player)}>{player}</button>
+          <button className='button' key={player} onClick={() => unselectPlayer(player)}>{player}</button>
         ))}
-      </div>
-      <button onClick={() => { void handleCreateTournament() }}>CREATE TOURNAMENT</button>
+      </div><br /><br />
+      <button className='button' onClick={() => { void handleCreateTournament() }}>CREATE TOURNAMENT</button>
     </div>
   )
 }
@@ -156,7 +179,7 @@ function ControllerWithDecider<T> ({ Child, childProps, playerCount, runners, up
   const decider = (
     <div>
       <textarea value={standingDecider} onChange={(e) => setStandingDecider(e.target.value)} />
-      <button onClick={decideStandings}>DECIDE</button>
+      <button className='button' style={{ marginLeft: '1%' }} onClick={decideStandings}>DECIDE</button>
     </div>
   )
 
@@ -171,8 +194,7 @@ function ControllerWithDecider<T> ({ Child, childProps, playerCount, runners, up
  * @param playerInfo Player info object from the context
  */
 function listAllPlayers (players: number[], playerInfo: { [id: number]: string }): string {
-  const labeledPlayers = players.map(p => `${p} - ${playerInfo[p]}`)
-  return labeledPlayers.join('||||')
+  return players.map(p => `${p} - ${playerInfo[p]}`).join('||||')
 }
 
 /** Base component that controls a match's results, to be used with `ControllerWithDecider` */
@@ -183,8 +205,6 @@ function TournamentMatchController ({ match, index, decider }: {
   index: number
   decider: JSX.Element
 }): JSX.Element {
-  const playerInfo = useContext(PlayerInfoContext)
-
   const players = []
   let hasNull = false
   for (const player of match.runners) {
@@ -203,20 +223,23 @@ function TournamentMatchController ({ match, index, decider }: {
   if (match.standings.length === 0) {
     matchElement = (
       <div>
-        <div>
-          NOT STARTED, BETWEEN {listAllPlayers(players, playerInfo)}
+        <div className='burbank'>
+          NOT STARTED
         </div>
-        {decider}
+        <div style={{ width: '5%' }}>
+          <TournamentMatchElement match={match} displayId />
+        </div><br />
+        {decider}<br />
       </div>
     )
   } else {
-    matchElement = <div>FINISHED</div>
+    matchElement = <div className='burbank'>FINISHED</div>
   }
 
   return (
     <div>
-      <div>
-        MATCH {index}
+      <div className='burbank' style={{ fontSize: '18pt' }}>
+        MATCH {index + 1}
       </div>
       {matchElement}
     </div>
@@ -236,7 +259,7 @@ function TournamentTieController ({ points, players, decider }: {
 
   return (
     <div>
-      <div>
+      <div className='burbank'>
         TIE AT {points} POINTS BETWEEN {listAllPlayers(players, playerInfo)}
       </div>
       {decider}
@@ -265,11 +288,15 @@ function ActiveTournamentControlRoom (): JSX.Element {
   if (ties?.exists === true) {
     for (const points in ties.ties) {
       const players = ties.ties[points]
-      tieComponents.push(<ControllerWithDecider<{ points: number, players: number[] }>
-        Child={TournamentTieController} childProps={{ players, points: Number(points) }} playerCount={players.length} runners={players} updateCallback={async (standings) => {
-          return await settleTie(Number(points), standings)
-        }}
-                         />)
+      if (players.length !== 0) {
+        tieComponents.push(<ControllerWithDecider<{ points: number, players: number[] }>
+          Child={TournamentTieController} childProps={{ players, points: Number(points) }} playerCount={players.length} runners={players} updateCallback={async (standings) => {
+            return await settleTie(Number(points), standings)
+          }}
+                           />)
+      } else {
+        continue
+      }
     }
   }
 
@@ -299,14 +326,14 @@ function ActiveTournamentControlRoom (): JSX.Element {
   }
 
   return (
-    <div>
+    <div style={{ padding: '2%' }}>
       <PlayerInfoContext.Provider value={playerInfo}>
-        <button onClick={clickRollbackTournament}>
+        <button className='button' onClick={clickRollbackTournament}>
           UNDO (rollback tournament)
         </button>
-        <button className='button is-danger' onClick={clickDeleteTournament}>
+        <button style={{ marginLeft: '1%' }} className='button is-danger' onClick={clickDeleteTournament}>
           DELETE TOURNAMENT
-        </button>
+        </button><br /><br />
         {matches.map((match, i) => {
           const players = []
           let hasNull = false
@@ -332,6 +359,7 @@ function ActiveTournamentControlRoom (): JSX.Element {
           )
         })}
         <div>
+          <br /><br /><br />
           {tieComponents}
         </div>
       </PlayerInfoContext.Provider>
@@ -370,9 +398,6 @@ export default function TournamentControlRoom (): JSX.Element {
   return (
     <TournamentUpdateContext.Provider value={sendUpdate}>
       <div className='has-text-primary'>
-        <div>
-          Control room intentionally left not user friendly due to time constraints, good luck!
-        </div>
         {controlRoomElement}
       </div>
     </TournamentUpdateContext.Provider>

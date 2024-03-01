@@ -214,15 +214,17 @@ export default function PlayerWatchPage (): JSX.Element {
   // has to have fixed size for that reason
   const mainVideo = selectedPlayer === null
     ? (
-      <div style={{
-        width: `${videoWidth}px`,
-        height: `${videoHeight}px`,
-        backgroundColor: '#169cf7',
-        color: 'black',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}
+      <div
+        className='burbank' style={{
+          width: `${videoWidth}px`,
+          height: `${videoHeight}px`,
+          backgroundColor: '#169cf7',
+          color: 'black',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          fontSize: '24pt'
+        }}
       >Waiting for streams...
       </div>
       )
@@ -266,7 +268,13 @@ export default function PlayerWatchPage (): JSX.Element {
         }}
       >
         <div>
-          QUEUED PLAYERS
+          <span
+            className='burbank' style={{
+              color: '#FFF',
+              padding: '2%'
+            }}
+          >QUEUED PLAYERS
+          </span>
           {queuedPlayers.map((player) => {
             return (
               <div key={player.id}>
@@ -278,7 +286,13 @@ export default function PlayerWatchPage (): JSX.Element {
           })}
         </div>
         <div>
-          UNQUEUED PLAYERS
+          <span
+            className='burbank' style={{
+              color: '#FFF',
+              padding: '2%'
+            }}
+          >UNQUEUED PLAYERS
+          </span>
           {unqueuedPlayers.map((player) => {
             return (
               <div key={player.id}>

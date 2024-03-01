@@ -17,7 +17,7 @@ export default function LoginPage (): JSX.Element {
         setCookie('token', data.token)
         setCookie('name', data.name)
         window.alert('Logged in!')
-        window.location.href = '/'
+        window.location.href = '/player'
       } else {
         window.alert('Incorrect username or password')
       }

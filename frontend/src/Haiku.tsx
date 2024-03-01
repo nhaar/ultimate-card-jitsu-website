@@ -5,9 +5,10 @@ export default function Haiku ({ first, second, third }: {
   third: string
 }): JSX.Element {
   return (
-    <div style={{
-      textAlign: 'center'
-    }}
+    <div
+      className='black-shadow' style={{
+        textAlign: 'center'
+      }}
     >
       <div>{first}</div>
       <div>{second}</div>
