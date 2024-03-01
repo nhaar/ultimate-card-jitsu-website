@@ -291,7 +291,7 @@ export default function UserPage (): JSX.Element {
         </div>
       </div>
       <div className='box is-flex is-justify-content-center'>
-        <button className='button is-warning' onClick={performLogout}>LOG OUT</button>
+        <button className='button is-warning burbank' onClick={performLogout}>LOG OUT</button>
       </div>
       <div />
     </div>
