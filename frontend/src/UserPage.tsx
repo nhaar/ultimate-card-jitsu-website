@@ -7,7 +7,7 @@ import Haiku from './Haiku'
 import { performLogout } from './PlayerPage'
 
 /** Page where the players can share screen */
-function ScreensharePage(): JSX.Element {
+function ScreensharePage (): JSX.Element {
   /** WebSocket connection as a player */
   const [socket, setSocket] = useState<Socket | null>(null)
   /** WebSocket id that will be used to identify this player */
@@ -18,7 +18,7 @@ function ScreensharePage(): JSX.Element {
    * Creates a media recorder that will send video chunks to the backend every 5 seconds
    * @param stream
    */
-  function createMediaRecorder(stream: MediaStream): void {
+  function createMediaRecorder (stream: MediaStream): void {
     const mediaRecorder = new MediaRecorder(stream)
     mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0) {
@@ -40,7 +40,7 @@ function ScreensharePage(): JSX.Element {
   /**
    * Starts sharing screen to backend
    */
-  function startScreensharing(): void {
+  function startScreensharing (): void {
     void navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then((stream) => {
       if (videoRef.current !== null) {
         videoRef.current.srcObject = stream
@@ -90,7 +90,7 @@ function ScreensharePage(): JSX.Element {
 }
 
 /** Page where users can edit their profile */
-function EditProfilePage({ usePFP }: {
+function EditProfilePage ({ usePFP }: {
   /** Currently only used to disable it. PFP's not used at the moment. */
   usePFP: boolean
 }): JSX.Element {
@@ -111,7 +111,7 @@ function EditProfilePage({ usePFP }: {
   /**
    * Event listener for changing the file input that handles the profile picture
    */
-  function receiveFile(e: React.ChangeEvent<HTMLInputElement>): void {
+  function receiveFile (e: React.ChangeEvent<HTMLInputElement>): void {
     const file = e.target.files !== null ? e.target.files[0] : null
     if (file !== null) {
       const reader = new FileReader()
@@ -126,7 +126,7 @@ function EditProfilePage({ usePFP }: {
   }
 
   /** Saves changes to an user */
-  function saveEdit(): void {
+  function saveEdit (): void {
     void (async () => {
       const editResponse = await editUserInfo(username, pronouns, pfp)
       switch (editResponse) {
@@ -174,7 +174,7 @@ function EditProfilePage({ usePFP }: {
 /**
  * Handles the page where non admin players can perform actions. Not to be confused with PlayerPage which handles all types of users
  */
-export default function UserPage(): JSX.Element {
+export default function UserPage (): JSX.Element {
   const [cpImaginedCredentials, setCPImaginedCredentials] = useState<{ username: string, password: string } | null>(null)
   useEffect(() => {
     void (async () => {
@@ -201,7 +201,7 @@ export default function UserPage(): JSX.Element {
         }}
       >You haven't received your CPImagined account for the tournament yet. One will be given to you before the tournament starts.
       </div>
-    )
+      )
     : (
       <div className='is-flex is-justify-content-center mt-3'>
         <div style={{
@@ -229,7 +229,7 @@ export default function UserPage(): JSX.Element {
         </div>
       </div>
 
-    )
+      )
 
   return (
     <div className='has-text-primary burbank'>

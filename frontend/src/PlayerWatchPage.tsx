@@ -30,7 +30,7 @@ interface FoldData {
 }
 
 /** Component that handles the admin page */
-export default function PlayerWatchPage(): JSX.Element {
+export default function PlayerWatchPage (): JSX.Element {
   /** WebSocket connection */
   const [socket, setSocket] = useState<Socket | null>(null)
   const [players, setPlayers] = useState<PlayerInfo[]>([])
@@ -75,7 +75,7 @@ export default function PlayerWatchPage(): JSX.Element {
    * @param originalQueue Queue with the players
    * @param removedPlayers List of players that were removed (and may be in the queue)
    */
-  function updatePlayersInQueue(originalQueue: PlayerInfo[], removedPlayers: PlayerInfo[]): void {
+  function updatePlayersInQueue (originalQueue: PlayerInfo[], removedPlayers: PlayerInfo[]): void {
     for (const player of removedPlayers) {
       const index = originalQueue.findIndex((p) => p.id === player.id)
       if (index !== -1) {
@@ -130,7 +130,7 @@ export default function PlayerWatchPage(): JSX.Element {
     setPlayers(incomingPlayers)
   }, [incomingPlayers])
 
-  function addToQueue(id: string): void {
+  function addToQueue (id: string): void {
     const u = [...unqueuedPlayers]
     const unqueueIndex = u.findIndex((p) => p.id === id)
     const player = u[unqueueIndex]
@@ -154,7 +154,7 @@ export default function PlayerWatchPage(): JSX.Element {
    * Makes a player selected in the main screen
    * @param player Player to select
    */
-  function selectPlayer(player: PlayerInfo): void {
+  function selectPlayer (player: PlayerInfo): void {
     // to remove from queue
     const q = [...queuedPlayers]
     const queuedIndex = q.findIndex((p) => p.id === player.id)
@@ -176,7 +176,7 @@ export default function PlayerWatchPage(): JSX.Element {
   }
 
   /** Unselects the main video preview */
-  function unselectPlayer(): void {
+  function unselectPlayer (): void {
     setSelectedPlayer(null)
   }
 
@@ -214,22 +214,23 @@ export default function PlayerWatchPage(): JSX.Element {
   // has to have fixed size for that reason
   const mainVideo = selectedPlayer === null
     ? (
-      <div style={{
-        width: `${videoWidth}px`,
-        height: `${videoHeight}px`,
-        backgroundColor: '#169cf7',
-        color: 'black',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        fontSize: '24pt'
-      }} className="burbank"
+      <div
+        className='burbank' style={{
+          width: `${videoWidth}px`,
+          height: `${videoHeight}px`,
+          backgroundColor: '#169cf7',
+          color: 'black',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          fontSize: '24pt'
+        }}
       >Waiting for streams...
       </div>
-    )
+      )
     : (
       <VideoPlayer key={selectedPlayer?.id} socket={socket} socketId={selectedPlayer?.id ?? ''} width={videoWidth} height={videoHeight} cropInfo={selectedPlayer !== null ? playerCrops[selectedPlayer.name] : undefined} videoCache={videoCache} setVideoCache={setVideoCache} />
-    )
+      )
 
   /** Helper function that converts a number to a percentage in string format */
   function toPercentageString (value: number): string {
@@ -267,11 +268,13 @@ export default function PlayerWatchPage(): JSX.Element {
         }}
       >
         <div>
-          <span style={{
+          <span
+            className='burbank' style={{
               color: '#FFF',
               padding: '2%'
             }}
-              className="burbank">QUEUED PLAYERS</span>
+          >QUEUED PLAYERS
+          </span>
           {queuedPlayers.map((player) => {
             return (
               <div key={player.id}>
@@ -283,11 +286,13 @@ export default function PlayerWatchPage(): JSX.Element {
           })}
         </div>
         <div>
-        <span style={{
+          <span
+            className='burbank' style={{
               color: '#FFF',
               padding: '2%'
             }}
-              className="burbank">UNQUEUED PLAYERS</span>
+          >UNQUEUED PLAYERS
+          </span>
           {unqueuedPlayers.map((player) => {
             return (
               <div key={player.id}>

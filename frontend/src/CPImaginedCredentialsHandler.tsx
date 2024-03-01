@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react'
 import { getAllPlayers, updateCPImaginedCredentials } from './api'
 
 /** Component that renders the page where the admin is capable of updating the credentials to CPImagined. */
-export default function CPImaginedCredentialsHandler(): JSX.Element {
+export default function CPImaginedCredentialsHandler (): JSX.Element {
   const [users, setUsers] = useState<string[]>([])
   const [selectedUser, setSelectedUser] = useState<number>(0)
   const [username, setUsername] = useState<string>('')
   const [password, setPassword] = useState<string>('')
 
   /** Updates credentials with the given data */
-  function updateCredentials(): void {
+  function updateCredentials (): void {
     void (async () => {
       const updated = await updateCPImaginedCredentials(users[selectedUser], username, password)
       if (updated) {
@@ -30,19 +30,21 @@ export default function CPImaginedCredentialsHandler(): JSX.Element {
   return (
     <div style={{ padding: '2%' }}>
       <div>
-        <div style={{
-          fontSize: '24pt',
-          color: '#FFF'
-        }}
-          className="burbank">USERS</div>
+        <div
+          className='burbank' style={{
+            fontSize: '24pt',
+            color: '#FFF'
+          }}
+        >USERS
+        </div>
         {users.map((user, index) => (
           <button
             className='button' key={index} onClick={() => setSelectedUser(index)} style={selectedUser === index
               ? {
-                backgroundColor: 'blue',
-                color: 'white',
-                marginRight: '1%'
-              }
+                  backgroundColor: 'blue',
+                  color: 'white',
+                  marginRight: '1%'
+                }
               : { marginRight: '1%' }}
           >{user}
           </button>
