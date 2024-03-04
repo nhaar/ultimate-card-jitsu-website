@@ -4,6 +4,8 @@ body {
   background-attachment: fixed;
   min-height: 100vh;
   min-width: 100vw;
+  /* this is used as a color overlay for the background image */
+  box-shadow: inset 0 0 0 1000px rgba(188, 0, 0, 0.4);
 }
 
 .black-shadow {
