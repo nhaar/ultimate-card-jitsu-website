@@ -170,7 +170,8 @@ function ControllerWithDecider<T> ({ Child, childProps, playerCount, runners, up
       if (response) {
         window.alert('Standings updated')
         window.location.reload()
-        sendUpdate({ scoreUpdate: true })
+        // update state is for the end of the tournament, so might be refactorable
+        sendUpdate({ updateState: true, scoreUpdate: true })
       } else {
         window.alert('Failed to update standings')
       }
