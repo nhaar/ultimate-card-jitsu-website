@@ -34,7 +34,7 @@ function addTwitchEmbed (elementId: string): void {
 function DiscordWidget (): JSX.Element {
   if (config.DISCORD_WIDGET !== undefined) {
     return (
-      <iframe src={`https://discord.com/widget?id=${config.DISCORD_WIDGET}&theme=dark`} width='80%' height='500' sandbox='allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts' />
+      <iframe src={`https://discord.com/widget?id=${config.DISCORD_WIDGET}&theme=dark`} width='350' height='500' sandbox='allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts' />
     )
   } else {
     return <div />
@@ -94,7 +94,7 @@ function PreTournamentPage (): JSX.Element {
         fontSize: '42px'
       }}
     >
-      <div className='is-flex is-justify-content-center my-3 is-flex-direction-column'>
+      <div className='is-flex is-justify-content-center my-3 is-flex-direction-column black-shadow'>
         {dateAnnouncement}
         {dateValueElement}
       </div>
