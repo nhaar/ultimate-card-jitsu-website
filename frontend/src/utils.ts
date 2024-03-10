@@ -89,3 +89,17 @@ export function getCookie (cookieName: string): string | null {
 export function setCookie (cookieName: string, value: string): void {
   document.cookie = `${cookieName}=${value}`
 }
+
+/** Get ordinal number representation (eg 1st, 2nd) */
+export function getOrdinalNumber (x: number): string {
+  const lastDigit = x % 10
+  if (lastDigit === 1 && x % 100 !== 11) {
+    return String(x) + 'st'
+  } else if (lastDigit === 2 && x % 100 !== 12) {
+    return String(x) + 'nd'
+  } else if (lastDigit === 3 && x % 100 !== 13) {
+    return String(x) + 'rd'
+  } else {
+    return String(x) + 'th'
+  }
+}

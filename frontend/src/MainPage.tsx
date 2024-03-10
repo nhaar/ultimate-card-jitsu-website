@@ -2,11 +2,12 @@ import { useContext, useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
 
 import config from './config.json'
-import { Ranking, TournamentMatch, TournamentPhase, getPlayerInfo, getRankings, getTournamentDate, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
+import { Ranking, TournamentMatch, TournamentPhase, getPlayerInfo, getRankings, getTournamentDate, getTournamentFinalStandings, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
 import Haiku from './Haiku'
 import { TournamentContext, TournamentState, TournamentUpdate } from './context/TournamentContext'
 import CountdownTimer from './CountdownTimer'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
+import { getOrdinalNumber } from './utils'
 
 /**
  * Adds a twitch embed with an element that has the given HTML id
@@ -354,10 +355,63 @@ function InTournamentPage (): JSX.Element {
   )
 }
 
+/** Component handles showing the final standings of the tournament */
+function TournamentFinalStandings (): JSX.Element {
+  const [standings, setStandings] = useState<number[]>([])
+  const playerInfo = useContext(PlayerInfoContext)
+
+  useEffect(() => {
+    void (async () => {
+      setStandings(await getTournamentFinalStandings())
+    })()
+  }, [])
+
+  const standingsComponents = standings.map((player, i) => {
+    const style: React.CSSProperties = {
+      borderRadius: '5px'
+    }
+
+    if (i < 3) {
+      style.borderTopStyle = 'solid'
+      style.borderTopWidth = '2px'
+    }
+    // colors meant to reflect the center of the fire, water and snow symbols
+    if (i === 0) {
+      style.borderTopColor = '#e7e550'
+    } else if (i === 1) {
+      style.borderTopColor = '#5a77ae'
+    } else if (i === 2) {
+      style.borderTopColor = '#ebebeb'
+    }
+
+    return (
+      <div key={i} className='is-flex emblem-pink-bg p-4' style={style}>
+        <div className='mr-5' style={{
+          fontSize: '32px'
+        }}>
+          {getOrdinalNumber(i + 1)}
+        </div>
+        <div style={{
+          fontSize: '24px'
+        }}>
+          {playerInfo[player]}
+        </div>
+      </div>
+    )
+  })
+  
+  return (
+    <div className='is-flex is-flex-direction-column emblem-red-bg p-5 mb-5' style={{
+      width: '60vw',
+      rowGap: '20px'
+    }}>
+      {standingsComponents}
+    </div>
+  )
+}
+
 /** Component that renders the page post tournament */
 function PostTournamentPage (): JSX.Element {
-  const { ranking } = useContext(TournamentContext)
-
   return (
     <div className='has-text-primary is-flex is-justify-content-center burbank mb-6'>
       <div className='is-flex is-flex-direction-column is-align-items-center'>
@@ -372,9 +426,9 @@ function PostTournamentPage (): JSX.Element {
           fontSize: '24px'
         }}
         >
-          <Haiku first='Battle aftermath:' second='Contains results of the end,' third='Points of the final' />
+          <Haiku first='Battle aftermath:' second='Contains results of the end' third='the elements chose' />
         </div>
-        <TournamentRanking ranking={ranking} />
+        <TournamentFinalStandings />
         <DiscordWidget />
       </div>
     </div>

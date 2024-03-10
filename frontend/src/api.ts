@@ -303,3 +303,17 @@ export async function performLogin (username: string, password: string): Promise
     return undefined
   }
 }
+
+/**
+ * Get the standings of the finals, an array with all player IDs from 1st ot last
+ * @returns Will be empty if tournament isn't finished
+ */
+export async function getTournamentFinalStandings (): Promise<number[]> {
+  const response = await getJSON('api/tournament/final-standings')
+
+  if (response === null) {
+    return []
+  }
+
+  return (response as { standings: number [] }).standings
+}

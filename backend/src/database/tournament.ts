@@ -307,11 +307,11 @@ class Tournament {
     return true
   }
 
-  static async getTournament (): Promise<Tournament> {
+  static async getTournament (): Promise<Tournament | undefined> {
     const db = new Database()
     const query = await db.getQuery('SELECT * FROM tournament', [])
     if (query.rows.length === 0) {
-      throw new Error('tournament not found')
+      return undefined
     } else {
       return new Tournament(query.rows[0].data)
     }
@@ -792,6 +792,38 @@ class Tournament {
     }
 
     return `${phaseString}, MATCH #${matchNumber}`
+  }
+
+  /**
+   * Get the final standings, a list of all the player IDs from 1st to last
+   * @returns The standings or undefined if the tournament isn't finished yet
+   */
+  getFinalStandings (): number[] | undefined {
+    if (!this.isFinished) {
+      return undefined
+    } else {
+      const rankingsFirstPhase = this.getRankings(TournamentPhase.Start)
+      const rankingsFinalPhase = this.getRankings(TournamentPhase.Final)
+
+      const standings:number[] = []
+
+      function pushToStandingsFromRankings (rankings: Ranking, indexStart: number): void {
+        let i = 0;
+        for (const rankingArray of rankings) {
+          if (indexStart <= i) {
+            // because the rankings are decided, the array will have only one element which is the player itself
+            const player = rankingArray[0].player
+            standings.push(player)
+          }
+          i++
+        }
+      }
+
+      pushToStandingsFromRankings(rankingsFinalPhase, 0)
+      pushToStandingsFromRankings(rankingsFirstPhase, 4)
+
+      return standings
+    }
   }
 }
 

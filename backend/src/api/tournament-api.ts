@@ -41,7 +41,11 @@ router.post('/create', User.checkAdminMiddleware, asyncWrapper(async (req: Reque
 }))
 
 router.get('/matches', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
-  const tournament: Tournament = await Tournament.getTournament()
+  const tournament = await Tournament.getTournament()
+  if (tournament === undefined) {
+    res.sendStatus(400)
+    return
+  }
   res.json(tournament.getMatches()).status(200)
 }))
 
@@ -62,7 +66,12 @@ router.post('/update-score', User.checkAdminMiddleware, asyncWrapper(async (req:
     return
   }
 
-  const tournament: Tournament = await Tournament.getTournament()
+  const tournament = await Tournament.getTournament()
+  if (tournament === undefined) {
+    res.sendStatus(400)
+    return
+  }
+  
   const updateResult = await tournament.updateScore(matchIndex, standings)
   if (updateResult !== undefined) {
     res.status(400).json({ error: `invalid standings: ${updateResult}` })
@@ -72,7 +81,12 @@ router.post('/update-score', User.checkAdminMiddleware, asyncWrapper(async (req:
 }))
 
 router.get('/tie', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
-  const tournament: Tournament = await Tournament.getTournament()
+  const tournament = await Tournament.getTournament()
+  if (tournament === undefined) {
+    res.sendStatus(400)
+    return
+  }
+  
   const ties = tournament.getTies()
   const containsTie = tournament.isWaitingToSettleTies()
   res.json({ exists: containsTie, ties }).status(200)
@@ -103,18 +117,33 @@ router.post('/settle-tie', User.checkAdminMiddleware, asyncWrapper(async (req: R
     return
   }
 
-  const tournament: Tournament = await Tournament.getTournament()
+  const tournament = await Tournament.getTournament()
+  if (tournament === undefined) {
+    res.sendStatus(400)
+    return
+  }
+
   await tournament.settleTies({ [points]: winners })
   res.sendStatus(200)
 }))
 
 router.get('/players-info', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
-  const tournament: Tournament = await Tournament.getTournament()
+  const tournament = await Tournament.getTournament()
+  if (tournament === undefined) {
+    res.sendStatus(400)
+    return
+  }
+
   res.json(tournament.getPlayerInfo()).status(200)
 }))
 
 router.post('/rollback', User.checkAdminMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
   const tournament = await Tournament.getTournament()
+  if (tournament === undefined) {
+    res.sendStatus(400)
+    return
+  }
+
   await tournament.rollback()
   res.sendStatus(200)
 }))
@@ -123,6 +152,11 @@ router.post('/rollback', User.checkAdminMiddleware, asyncWrapper(async (_: Reque
 const rankingResponse = (phase: TournamentPhase): ((req: Request, res: Response) => void) => {
   return asyncWrapper(async (_: Request, res: Response): Promise<void> => {
     const tournament = await Tournament.getTournament()
+    if (tournament === undefined) {
+      res.sendStatus(400)
+      return
+    }
+
     const ranking = tournament.getRankings(phase)
     res.json(ranking).status(200)
   })
@@ -134,11 +168,21 @@ router.get('/final-rankings', rankingResponse(TournamentPhase.Final))
 
 router.get('/current-phase', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
   const tournament = await Tournament.getTournament()
+  if (tournament === undefined) {
+    res.sendStatus(400)
+    return
+  }
+
   res.json({ phase: tournament.getCurrentPhase() }).status(200)
 }))
 
 router.get('/is-finished', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
   const tournament = await Tournament.getTournament()
+  if (tournament === undefined) {
+    res.sendStatus(400)
+    return
+  }
+  
   res.json({ finished: tournament.isFinished }).status(200)
 }))
 
@@ -167,12 +211,7 @@ router.post('/reset-date', User.checkAdminMiddleware, asyncWrapper(async (_: Req
 }))
 
 router.get('/get-display-phase', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-  let tournament: Tournament | undefined = undefined
- 
-  // fetcher will raise an error if the tournament doesn't exist
-  try {
-    tournament = await Tournament.getTournament()
-  } catch {}
+  const tournament = await Tournament.getTournament()
 
   if (tournament === undefined) {
     res.status(200).send({
@@ -185,6 +224,22 @@ router.get('/get-display-phase', asyncWrapper(async (_: Request, res: Response):
   res.status(200).send({
     phase: currentPhase
   })
+}))
+
+router.get('/final-standings', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
+  const tournament = await Tournament.getTournament()
+
+  if (tournament === undefined) {
+    res.sendStatus(400)
+    return
+  }
+
+  const standings = tournament.getFinalStandings()
+  if (standings === undefined) {
+    res.sendStatus(400)
+  } else {
+    res.status(200).send({ standings })
+  }
 }))
 
 export default router
