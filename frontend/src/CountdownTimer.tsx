@@ -10,6 +10,10 @@ function ShowCounter ({ days, hours, minutes, seconds }: {
   minutes: number
   seconds: number
 }): JSX.Element {
+  const isDaysTrailing = days === 0
+  const isHoursTrailing = isDaysTrailing && hours === 0
+  const isMinutesTrailing = isHoursTrailing && minutes === 0
+
   return (
     <div
       className='show-counter' style={{
@@ -17,8 +21,10 @@ function ShowCounter ({ days, hours, minutes, seconds }: {
         margin: 'auto'
       }}
     >
-      <DateTimeDisplay value={days} type={days === 1 ? 'Day' : 'Days'} isDanger={false} />, <DateTimeDisplay value={hours} type={hours === 1 ? 'Hour' : 'Hours'} isDanger={false} />,&nbsp;
-      <DateTimeDisplay value={minutes} type={minutes === 1 ? 'Minute' : 'Minutes'} isDanger={false} />, <DateTimeDisplay value={seconds} type={seconds === 1 ? 'Second' : 'Seconds'} isDanger={false} />
+      <DateTimeDisplay value={days} type={days === 1 ? 'Day' : 'Days'} isDanger={false} isLast={false} isTrailingZero={isDaysTrailing} />
+      <DateTimeDisplay value={hours} type={hours === 1 ? 'Hour' : 'Hours'} isDanger={false} isLast={false} isTrailingZero={isHoursTrailing} />
+      <DateTimeDisplay value={minutes} type={minutes === 1 ? 'Minute' : 'Minutes'} isDanger={false} isLast={false} isTrailingZero={isMinutesTrailing} />
+      <DateTimeDisplay value={seconds} type={seconds === 1 ? 'Second' : 'Seconds'} isDanger={false} isLast={true} isTrailingZero={false} />
     </div>
   )
 }
