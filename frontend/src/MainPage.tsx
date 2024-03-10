@@ -116,6 +116,26 @@ function PreTournamentPage (): JSX.Element {
   )
 }
 
+/** Component for the "waiting tournament to start but stream should be on" page */
+function WaitingStartPage (): JSX.Element {
+  useEffect(() => {
+    addTwitchEmbed('twitch-embed')
+  }, [])
+  
+  return (
+    <div>
+      <div className='has-text-primary burbank' style={{
+        fontSize: '32px'
+      }}>
+        <Haiku first='Transmission begins !' second='Soon the battle unravels !' third='Join us in waiting !' />
+      </div>
+      <div className='is-flex is-justify-content-center mb-5'>
+        <div id='twitch-embed'/>
+      </div>
+    </div>
+  )
+}
+
 /** Component that handles rendering a table with rankings from an input ranking object from the backend */
 function TournamentRanking ({ ranking }: { ranking: Ranking }): JSX.Element {
   const { playerInfo } = useContext(TournamentContext)
@@ -534,6 +554,12 @@ export default function MainPage (): JSX.Element {
       )
       break
     }
+    case TournamentState.WaitingStart: {
+      baseElement = (
+        <WaitingStartPage />
+      )
+      break
+    }
     case TournamentState.InProgress: {
       baseElement = (
         <InTournamentPage />
@@ -555,6 +581,7 @@ export default function MainPage (): JSX.Element {
     <PlayerInfoContext.Provider value={playerInfo}>
       <TournamentContext.Provider value={{
         state: tournamentState,
+        setState: setTournamentState,
         date: tournamentDate,
         ranking,
         playerInfo,

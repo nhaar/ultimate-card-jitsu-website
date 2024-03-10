@@ -1,14 +1,7 @@
+import { useContext } from 'react'
 import DateTimeDisplay from './DateTimeDisplay'
 import { useCountdown } from './hooks/useCountdown'
-
-/** Expired noticed to refresh the page */
-function ExpiredNotice (): JSX.Element {
-  return (
-    <div className='expired-notice'>
-      <meta http-equiv='refresh' content='1' />
-    </div>
-  )
-}
+import { TournamentContext, TournamentState } from './context/TournamentContext'
 
 /** Component that renders a time (countdown) in a readable fashion */
 function ShowCounter ({ days, hours, minutes, seconds }: {
@@ -35,9 +28,15 @@ export default function CountdownTimer ({ targetDate }: {
   targetDate: Date
 }): JSX.Element {
   const [days, hours, minutes, seconds] = useCountdown(targetDate)
+  const { setState } = useContext(TournamentContext)
 
-  if (days + hours + minutes + seconds <= 0) {
-    return <ExpiredNotice />
+  if (minutes + seconds <= 0) {
+    if (setState === undefined) {
+      throw new Error('Should be defined at this point')
+    } else {
+      setState(TournamentState.WaitingStart)
+    }
+    return <div />
   } else {
     return (
       <ShowCounter
