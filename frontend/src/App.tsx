@@ -14,7 +14,6 @@ import BackgroundSnow from './images/backgroundsnow.png'
 import LogoFire from './images/logofire.png'
 import LogoNormal from './images/logonormal.png'
 
-import config from './config.json'
 import MainPage from './MainPage'
 import PlayerPage from './PlayerPage'
 import PlayerWatchPage from './PlayerWatchPage'
@@ -24,23 +23,7 @@ import AccountCreator from './AccountCreator'
 import CPImaginedCredentialsHandler from './CPImaginedCredentialsHandler'
 import UpcomingMatchesPopout from './UpcomingMatchesPopout'
 import Haiku from './Haiku'
-
-function getWebsiteTheme (): WebsiteThemes {
-  switch (config.TOURNAMENT_TYPE) {
-    case 'normal': return WebsiteThemes.Normal
-    case 'fire': return WebsiteThemes.Fire
-    case 'water': return WebsiteThemes.Water
-    case 'snow': return WebsiteThemes.Snow
-    default: throw new Error('invalid website theme supplied in JSON')
-  }
-}
-
-enum WebsiteThemes {
-  Normal,
-  Fire,
-  Water,
-  Snow
-}
+import { WebsiteThemes, getWebsiteTheme } from './website-theme'
 
 // dynamically update site theme based on tourney type
 function changeFavicon (theme: WebsiteThemes): void {

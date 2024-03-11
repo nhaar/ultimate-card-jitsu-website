@@ -5,6 +5,7 @@ import FoldImage from './images/fold.png'
 import { formatCookies } from './utils'
 import VideoPlayer, { CropInfo, VideoCache } from './VideoPlayer'
 import { UcjWS } from './ws'
+import { WebsiteThemes, getWebsiteTheme } from './website-theme'
 
 interface PlayerInfo {
   id: string
@@ -20,11 +21,11 @@ interface PlayerCrops {
 interface FoldData {
   /** Whether the fold should be visible or not */
   visible: boolean
-  /** Scale relative to the original image size */
+  /** Scale relative to the original image size, in percentage */
   scale: string
-  /** Number between 0 to 1 representing how far from the left the fold is within the video */
+  /** Percentage epresenting how far from the left the fold is within the video */
   left: string
-  /** Number between 0 to 1 representing how far from the top the fold is within the video */
+  /** Percentage representing how far from the top the fold is within the video */
   top: string
 }
 
@@ -84,7 +85,7 @@ export default function PlayerWatchPage (): JSX.Element {
   /** Store all fold information */
   const [foldData, setFoldData] = useState<FoldData>({
     visible: false,
-    scale: '1',
+    scale: '100',
     top: '0',
     left: '0'
   })
@@ -245,20 +246,12 @@ export default function PlayerWatchPage (): JSX.Element {
       <VideoPlayer key={selectedPlayer?.id} socket={socket} socketId={selectedPlayer?.id ?? ''} width={videoWidth} height={videoHeight} cropInfo={selectedPlayer !== null ? playerCrops[selectedPlayer.name] : undefined} videoCache={videoCache} setVideoCache={setVideoCache} />
       )
 
-  /** Helper function that converts a number to a percentage in string format */
-  function toPercentageString (value: number): string {
-    if (isNaN(value)) {
-      return '0%'
-    }
-    return String(value * 100) + '%'
-  }
-
   /** Style applied to the fold's image lement */
   const foldStyle: React.CSSProperties = {
     position: 'absolute',
-    top: toPercentageString(Number(foldData.top)),
-    left: toPercentageString(Number(foldData.left)),
-    width: foldWidth === undefined ? undefined : Number(foldData.scale) * foldWidth,
+    top: foldData.top + '%',
+    left: foldData.left + '%',
+    width: foldWidth === undefined ? undefined : Number(foldData.scale) / 100 * foldWidth,
     display: foldData.visible ? undefined : 'none'
   }
 
@@ -268,6 +261,11 @@ export default function PlayerWatchPage (): JSX.Element {
       setFoldWidth(foldRef.current.naturalWidth)
     }
   }, [foldRef])
+
+  // in CJ fire, we must use a vertical fold
+  if (getWebsiteTheme() === WebsiteThemes.Fire) {
+    foldStyle.transform = 'rotate(90deg)'
+  }
 
   return (
     <div className='is-flex is-flex-direction-row'>
