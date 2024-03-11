@@ -28,6 +28,9 @@ interface FoldData {
   top: string
 }
 
+/** Name for the local storage variable that stores crop data */
+const LOCAL_CROP_DATA = 'cropData'
+
 /** Component that handles the admin page */
 export default function PlayerWatchPage (): JSX.Element {
   /** WebSocket connection */
@@ -69,7 +72,14 @@ export default function PlayerWatchPage (): JSX.Element {
   /** Keeps crop of current selected player while being editted */
   const [currentCrop, setCurrentCrop] = useState<CropInfo | null>(null)
   /** To store all player crops locally */
-  const [playerCrops, setPlayerCrops] = useState<PlayerCrops>({})
+  const [playerCrops, setPlayerCrops] = useState<PlayerCrops>(() => {
+    const localCrops = localStorage.getItem(LOCAL_CROP_DATA)
+    if (localCrops !== null) {
+      return JSON.parse(localCrops)
+    }
+
+    return {}
+  })
 
   /** Store all fold information */
   const [foldData, setFoldData] = useState<FoldData>({
@@ -203,7 +213,9 @@ export default function PlayerWatchPage (): JSX.Element {
   // saving the crop for selected player when changing
   useEffect(() => {
     if (selectedPlayer !== null && currentCrop !== null) {
-      setPlayerCrops({ ...playerCrops, [selectedPlayer.name]: currentCrop })
+      const p = { ...playerCrops, [selectedPlayer.name]: currentCrop }
+      setPlayerCrops(p)
+      localStorage.setItem(LOCAL_CROP_DATA, JSON.stringify(p))
     }
   }, [currentCrop])
 
