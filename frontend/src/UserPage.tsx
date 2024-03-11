@@ -48,7 +48,11 @@ function ScreensharePage (): JSX.Element {
     // if trying to start when the user stops sharing, it will throw an error
     try {
       mediaRecorder.start(5000)
-    } catch { }
+    } catch {
+      // somewhat lazy way of doing this to prevent players from
+      // sharing after it stopped working
+      window.location.reload()
+    }
   }
 
   /**
