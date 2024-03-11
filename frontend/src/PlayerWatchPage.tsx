@@ -316,25 +316,27 @@ export default function PlayerWatchPage (): JSX.Element {
           })}
         </div>
         <div>
-          {cropComponents}
-        </div>
-        {/* fold components below */}
-        <div>
           <div>
-            <span>fold-visible</span>
-            <input type='checkbox' checked={foldData.visible} onChange={e => setFoldData(f => ({ ...f, visible: e.target.checked }))} />
+            {cropComponents}
           </div>
+          {/* fold components below */}
           <div>
-            <span>fold-scale</span>
-            <input type='number' value={foldData.scale} onChange={e => setFoldData(f => ({ ...f, scale: e.target.value }))} />
-          </div>
-          <div>
-            <span>fold-top</span>
-            <input type='number' value={foldData.top} onChange={e => setFoldData(f => ({ ...f, top: e.target.value }))} />
-          </div>
-          <div>
-            <span>fold-left</span>
-            <input type='number' value={foldData.left} onChange={e => setFoldData(f => ({ ...f, left: e.target.value }))} />
+            <div>
+              <span>fold-visible</span>
+              <input type='checkbox' checked={foldData.visible} onChange={e => setFoldData(f => ({ ...f, visible: e.target.checked }))} />
+            </div>
+            <div>
+              <span>fold-scale</span>
+              <input type='number' value={foldData.scale} onChange={e => setFoldData(f => ({ ...f, scale: e.target.value }))} />
+            </div>
+            <div>
+              <span>fold-top</span>
+              <input type='number' value={foldData.top} onChange={e => setFoldData(f => ({ ...f, top: e.target.value }))} />
+            </div>
+            <div>
+              <span>fold-left</span>
+              <input type='number' value={foldData.left} onChange={e => setFoldData(f => ({ ...f, left: e.target.value }))} />
+            </div>
           </div>
         </div>
       </div>
