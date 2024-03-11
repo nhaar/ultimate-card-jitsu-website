@@ -106,7 +106,9 @@ export default function VideoPlayer ({ socket, socketId, width, height, videoCac
   useEffect(() => {
     socket.onMessage((data) => {
       if (data.type === 'stream-data') {
-        setBlob(data.value as BlobResponse)
+        if (socketId === data.value.id) {
+          setBlob(data.value as BlobResponse)
+        }
       }
     })
   }, [])
