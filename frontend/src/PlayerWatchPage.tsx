@@ -265,7 +265,8 @@ export default function PlayerWatchPage (): JSX.Element {
       </div>
       <div
         className='is-flex is-flex-direction-row has-text-primary' style={{
-          overflow: 'scroll'
+          overflow: 'scroll',
+          maxHeight: '90vh'
         }}
       >
         <div>
@@ -281,7 +282,7 @@ export default function PlayerWatchPage (): JSX.Element {
               <div key={player.id}>
                 <button onClick={() => selectPlayer(player)}>SELECT: {player.name}</button>
                 <button onClick={() => removeFromQueue(player.id)}>UNQUEUE</button>
-                <VideoPlayer key={player.id} socket={socket} socketId={player.id} width={200} height={200} videoCache={videoCache} setVideoCache={setVideoCache} />
+                <VideoPlayer key={player.id} socket={socket} socketId={player.id} width={100} height={100} videoCache={videoCache} setVideoCache={setVideoCache} />
               </div>
             )
           })}
