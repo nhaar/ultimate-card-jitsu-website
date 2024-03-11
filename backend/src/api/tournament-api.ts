@@ -71,7 +71,7 @@ router.post('/update-score', User.checkAdminMiddleware, asyncWrapper(async (req:
     res.sendStatus(400)
     return
   }
-  
+
   const updateResult = await tournament.updateScore(matchIndex, standings)
   if (updateResult !== undefined) {
     res.status(400).json({ error: `invalid standings: ${updateResult}` })
@@ -86,7 +86,7 @@ router.get('/tie', asyncWrapper(async (req: Request, res: Response): Promise<voi
     res.sendStatus(400)
     return
   }
-  
+
   const ties = tournament.getTies()
   const containsTie = tournament.isWaitingToSettleTies()
   res.json({ exists: containsTie, ties }).status(200)
@@ -182,7 +182,7 @@ router.get('/is-finished', asyncWrapper(async (_: Request, res: Response): Promi
     res.sendStatus(400)
     return
   }
-  
+
   res.json({ finished: tournament.isFinished }).status(200)
 }))
 

@@ -772,7 +772,7 @@ class Tournament {
   /** Get a string descriptor of the current phase, used for display by the stream */
   getDisplayPhase (): string {
     const matches = this.getMatches()
-    
+
     // "1-indexed"
     let matchNumber = 1
     for (const match of matches) {
@@ -805,10 +805,10 @@ class Tournament {
       const rankingsFirstPhase = this.getRankings(TournamentPhase.Start)
       const rankingsFinalPhase = this.getRankings(TournamentPhase.Final)
 
-      const standings:number[] = []
+      const standings: number[] = []
 
       function pushToStandingsFromRankings (rankings: Ranking, indexStart: number): void {
-        let i = 0;
+        let i = 0
         for (const rankingArray of rankings) {
           if (indexStart <= i) {
             // because the rankings are decided, the array will have only one element which is the player itself

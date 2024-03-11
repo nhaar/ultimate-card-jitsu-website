@@ -1,6 +1,6 @@
 import crypto = require('crypto')
 
-import { WebSocket, WebSocketServer } from "ws";
+import { WebSocket, WebSocketServer } from 'ws'
 
 /** Class that stores the information for the tournament updater websocket system */
 export default class TournamentUpdater {
@@ -51,7 +51,7 @@ class ScreenShareManager {
   }
 
   /** Send all players to the admin watching the screens */
-  sendPlayersToAdmin () {
+  sendPlayersToAdmin (): void {
     if (this.adminWS !== undefined) {
       this.adminWS.send('get-players', { players: this.getPlayers() })
     }
@@ -115,7 +115,7 @@ class UcjWS {
   }
 
   /** Send a message with a type and value */
-  send (type: string, value: any) {
+  send (type: string, value: any): void {
     this.ws.send(JSON.stringify({
       type,
       value
@@ -125,7 +125,12 @@ class UcjWS {
   /** Set what the socket should do when receiving a message */
   onMessage (dataCallback: (data: WSData) => void): void {
     this.ws.on('message', (rawData) => {
+      // disabling this warning because this rawData is always going to
+      // represent a string
+      // couldn't think of a way of implementing the websocket library without running into this warning
+      /* eslint-disable @typescript-eslint/no-base-to-string */
       const data = JSON.parse(rawData.toString())
+      /* eslint-disable @typescript-eslint/no-base-to-string */
       dataCallback(data)
     })
   }
@@ -136,7 +141,7 @@ class UcjWS {
   }
 
   /** Generate a random websocket ID */
-  static generateId () {
+  static generateId (): string {
     return crypto.randomBytes(16).toString('hex')
   }
 }

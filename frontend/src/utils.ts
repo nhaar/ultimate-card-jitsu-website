@@ -108,7 +108,7 @@ export function getOrdinalNumber (x: number): string {
  * Convert a base64 string into a blob
  * @param b64 Base 64 string
  * @param type MIME type
- * @returns 
+ * @returns
  */
 export function convertBase64ToBlob (b64: string, type: string): Blob {
   const b64Indicator = 'base64,'

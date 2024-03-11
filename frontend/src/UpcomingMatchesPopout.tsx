@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react'
 
-import { io } from 'socket.io-client'
-
-import config from './config.json'
 import { TournamentMatch, getPlayerInfo, getTournamentMatches } from './api'
-import { TournamentContext, TournamentState, TournamentUpdate } from './context/TournamentContext'
+import { TournamentContext, TournamentState } from './context/TournamentContext'
 import { UpcomingMatches } from './MainPage'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import { UcjWS } from './ws'
@@ -18,8 +15,7 @@ export default function UpcomingMatchesPopout (): JSX.Element {
   useEffect(() => {
     const socket = new UcjWS()
 
-    
-    socket.onOpen(() => {      
+    socket.onOpen(() => {
       socket.send('watch-tournament')
     })
 
@@ -56,8 +52,8 @@ export default function UpcomingMatchesPopout (): JSX.Element {
           isFirstPhase: true
         }}
         >
-          <UpcomingMatches matches={matches} matchTotal={4} isMini={true} />
-          <UpcomingMatches matches={matches} startMatch={4} matchTotal={4} isComingUpLater isMini={true} />
+          <UpcomingMatches matches={matches} matchTotal={4} isMini />
+          <UpcomingMatches matches={matches} startMatch={4} matchTotal={4} isComingUpLater isMini />
         </TournamentContext.Provider>
       </PlayerInfoContext.Provider>
     </div>

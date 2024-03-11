@@ -17,9 +17,9 @@ export enum TournamentState {
 /** Object that has all relevant info for the current state of the tournament */
 export interface TournamentInfo {
   /** Status on it being started/etc. */
-  state: TournamentState,
+  state: TournamentState
   /** React setter for the state */
-  setState?: React.Dispatch<React.SetStateAction<TournamentState>>,
+  setState?: React.Dispatch<React.SetStateAction<TournamentState>>
   /** The date it will start. Should be `null` if there is no date decided, or `undefined` if it hasn't been fetched yet. */
   date: Date | null | undefined
   /** Ranking of the current phase of the tournament */

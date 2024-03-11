@@ -5,7 +5,7 @@ export default function DateTimeDisplay ({ value, type, isDanger, isLast, isTrai
   /** The "counter" noun, eg. "hours" */
   type: string
   /** Whether or not to display in danger colors */
-  isDanger: boolean,
+  isDanger: boolean
   /** Whether or not this is the last element in the right */
   isLast: boolean
   /** Whether or not this is a trailing zero */

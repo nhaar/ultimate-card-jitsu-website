@@ -26,7 +26,7 @@ export class UcjWS {
   }
 
   /** Add a callback for when the socket opens */
-  onOpen (callback: () => void) {
+  onOpen (callback: () => void): void {
     this.ws.addEventListener('open', callback)
   }
 

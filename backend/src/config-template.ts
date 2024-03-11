@@ -13,4 +13,4 @@ export const config = {
   ADMIN_NAME: '',
   /** Password of the admin user in the website */
   ADMIN_PASSWORD: ''
-} 
+}

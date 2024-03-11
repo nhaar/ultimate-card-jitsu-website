@@ -1,10 +1,9 @@
 import { useContext, useEffect, useState } from 'react'
-import { io } from 'socket.io-client'
 
 import config from './config.json'
 import { Ranking, TournamentMatch, TournamentPhase, getPlayerInfo, getRankings, getTournamentDate, getTournamentFinalStandings, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
 import Haiku from './Haiku'
-import { TournamentContext, TournamentState, TournamentUpdate } from './context/TournamentContext'
+import { TournamentContext, TournamentState } from './context/TournamentContext'
 import CountdownTimer from './CountdownTimer'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import { getOrdinalNumber } from './utils'
@@ -122,16 +121,18 @@ function WaitingStartPage (): JSX.Element {
   useEffect(() => {
     addTwitchEmbed('twitch-embed')
   }, [])
-  
+
   return (
     <div>
-      <div className='has-text-primary burbank' style={{
-        fontSize: '32px'
-      }}>
+      <div
+        className='has-text-primary burbank' style={{
+          fontSize: '32px'
+        }}
+      >
         <Haiku first='Transmission begins !' second='Soon the battle unravels !' third='Join us in waiting !' />
       </div>
       <div className='is-flex is-justify-content-center mb-5'>
-        <div id='twitch-embed'/>
+        <div id='twitch-embed' />
       </div>
     </div>
   )
@@ -407,25 +408,30 @@ function TournamentFinalStandings (): JSX.Element {
 
     return (
       <div key={i} className='is-flex emblem-pink-bg p-4' style={style}>
-        <div className='mr-5' style={{
-          fontSize: '32px'
-        }}>
+        <div
+          className='mr-5' style={{
+            fontSize: '32px'
+          }}
+        >
           {getOrdinalNumber(i + 1)}
         </div>
         <div style={{
           fontSize: '24px'
-        }}>
+        }}
+        >
           {playerInfo[player]}
         </div>
       </div>
     )
   })
-  
+
   return (
-    <div className='is-flex is-flex-direction-column emblem-red-bg p-5 mb-5' style={{
-      width: '60vw',
-      rowGap: '20px'
-    }}>
+    <div
+      className='is-flex is-flex-direction-column emblem-red-bg p-5 mb-5' style={{
+        width: '60vw',
+        rowGap: '20px'
+      }}
+    >
       {standingsComponents}
     </div>
   )

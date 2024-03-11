@@ -24,7 +24,7 @@ function ShowCounter ({ days, hours, minutes, seconds }: {
       <DateTimeDisplay value={days} type={days === 1 ? 'Day' : 'Days'} isDanger={false} isLast={false} isTrailingZero={isDaysTrailing} />
       <DateTimeDisplay value={hours} type={hours === 1 ? 'Hour' : 'Hours'} isDanger={false} isLast={false} isTrailingZero={isHoursTrailing} />
       <DateTimeDisplay value={minutes} type={minutes === 1 ? 'Minute' : 'Minutes'} isDanger={false} isLast={false} isTrailingZero={isMinutesTrailing} />
-      <DateTimeDisplay value={seconds} type={seconds === 1 ? 'Second' : 'Seconds'} isDanger={false} isLast={true} isTrailingZero={false} />
+      <DateTimeDisplay value={seconds} type={seconds === 1 ? 'Second' : 'Seconds'} isDanger={false} isLast isTrailingZero={false} />
     </div>
   )
 }

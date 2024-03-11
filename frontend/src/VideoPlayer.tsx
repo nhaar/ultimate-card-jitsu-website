@@ -6,7 +6,7 @@ import { convertBase64ToBlob } from './utils'
 interface BlobResponse {
   /** Video binary data in base 64 */
   blob: string
-    /** MIME type of video */
+  /** MIME type of video */
   type: string
   /** Socket ID of the user that is sending this video */
   id: string
