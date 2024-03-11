@@ -103,3 +103,21 @@ export function getOrdinalNumber (x: number): string {
     return String(x) + 'th'
   }
 }
+
+/**
+ * Convert a base64 string into a blob
+ * @param b64 Base 64 string
+ * @param type MIME type
+ * @returns 
+ */
+export function convertBase64ToBlob (b64: string, type: string): Blob {
+  const b64Indicator = 'base64,'
+  const startIndex = b64.indexOf(b64Indicator)
+  const byteCharacters = atob(b64.slice(startIndex + b64Indicator.length))
+  const byteNumbers = new Array(byteCharacters.length)
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i)
+  }
+  const byteArray = new Uint8Array(byteNumbers)
+  return new Blob([byteArray], { type })
+}

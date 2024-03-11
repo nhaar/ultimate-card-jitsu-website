@@ -5,12 +5,13 @@ import express = require('express')
 import { Request, Response } from 'express'
 import cors = require('cors')
 import { Server, Socket } from 'socket.io'
+import { WebSocketServer } from 'ws'
 
 import Database from './database/database'
 import api from './api/api'
-import ScreenShareManager from './screenshare/screenshare'
 import User from './database/user'
 import TournamentUpdater from './tournament-updater/tournament-updater'
+import { StreamWSS } from './screenshare/stream-ws'
 
 const app = express()
 const server = http.createServer(app)
@@ -30,18 +31,7 @@ app.use('/*', (_: Request, res: Response) => {
   res.sendFile(path.join(__dirname, '../public/index.html'))
 })
 
-/** Socket ID of connected admin, which is the target for receiving videos. Only one at a time. */
-let adminId: string
-
-/** Sends all new players to the admin connected to the socket, if any */
-function sendPlayersToAdmin (): void {
-  if (adminId !== undefined) {
-    io.to(adminId).emit('getPlayers', { players: screenshare.getPlayers() })
-  }
-}
-
 // similarities between both manager and updater seem too much, might need to refactor
-const screenshare = new ScreenShareManager(sendPlayersToAdmin)
 const tournamentUpdater = new TournamentUpdater()
 
 /**
@@ -64,32 +54,12 @@ function adminOnlySocketResponse (socket: Socket, callback: ((socket: Socket, us
 
 io.on('connection', (socket) => {
   // currently there seems to be an unstability? Need to check if this is because of sockets in the same computer.
-  console.log('CONNECTING ', socket.id)
+  console.log('SOCKET.IO CONNECTED ', socket.id)
 
   // When the frontend is sending a request to get their ID, we send it back to them.
   socket.on('me', () => {
     io.to(socket.id).emit('me', { id: socket.id })
   })
-
-  /** In this event, the frontend sends a blob object, and here we direct it to the admin's socket. */
-  socket.on('message', (data) => {
-    screenshare.updatePlayerActivity(data.id)
-    if (adminId !== undefined) {
-      io.to(adminId).emit('message', data)
-    }
-  })
-
-  /** Frontend connects player's screen */
-  socket.on('screenshare', ({ name, id }) => {
-    screenshare.addPlayer(id, name)
-    sendPlayersToAdmin()
-  })
-
-  /** Frontend sends request to connect new admin, with authorization token in the body. */
-  socket.on('connectAdmin', adminOnlySocketResponse(socket, (socket) => {
-    adminId = socket.id
-    sendPlayersToAdmin()
-  }))
 
   /** Main page sending request to receive updates */
   socket.on('watchTournament', () => {
@@ -115,6 +85,46 @@ io.on('connection', (socket) => {
   })
 })
 
+const wss = new StreamWSS(new WebSocketServer({ server }))
+
+wss.onConnection((ws) => {
+  console.log('stream WS connected')
+
+  const id = StreamWSS.generateId()
+  
+  ws.send('me', id)
+
+  ws.onMessage((data) => {
+    switch (data.type) {
+      /** In this event, the frontend sends a blob object (encoded), and here we direct it to the admin's socket. */
+      case 'stream-data': {
+        wss.screenshare.updatePlayerActivity(data.value.id)
+        if (wss.adminWS !== undefined) {
+          wss.adminWS.send('stream-data', data.value)
+        }
+        break
+      }
+    /** Frontend sends request to connect new admin, with authorization token in the body. */
+      case 'connect-admin': {
+        void User.getUserByToken(data.value).then(user => {
+          void user?.isAdmin().then(isAdmin => {
+            if (isAdmin) {
+              wss.adminWS = ws
+              wss.screenshare.sendPlayersToAdmin()
+            }
+          })
+        })
+      }
+      /** Frontend connects player's screen */
+      case 'screenshare': {
+        wss.screenshare.addPlayer(data.value.id, data.value.name)
+        wss.screenshare.sendPlayersToAdmin()
+        break
+      }
+    }
+  })
+})
+
 // initiatilizing database: create tables, and then add admin user if it doesn't exist
 const db = new Database()
 db.initTables().then(() => {
@@ -124,8 +134,6 @@ db.initTables().then(() => {
 })
 
 const PORT = process.env.NODE_ENV === 'production' ? 80 : 5000
-
-console.log(process.env.NODE_ENV)
 
 server.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`)

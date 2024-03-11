@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { io, Socket } from 'socket.io-client'
-import config from './config.json'
 
 import './styles/video-styles.css'
 import FoldImage from './images/fold.png'
 import { formatCookies } from './utils'
 import VideoPlayer, { CropInfo, VideoCache } from './VideoPlayer'
+import { StreamWS } from './stream-ws'
 
 interface PlayerInfo {
   id: string
@@ -32,7 +31,23 @@ interface FoldData {
 /** Component that handles the admin page */
 export default function PlayerWatchPage (): JSX.Element {
   /** WebSocket connection */
-  const [socket, setSocket] = useState<Socket | null>(null)
+  const [socket] = useState<StreamWS>(() => {
+    const socket = new StreamWS()
+
+    const token = formatCookies(document.cookie).token
+
+    socket.onOpen(() => {
+      socket.send('connect-admin', token)
+    })
+
+    socket.onMessage((data) => {
+      if (data.type === 'get-players') {
+        setIncomingPlayers(data.value.players)
+      }
+    })
+
+    return socket
+  })
   const [players, setPlayers] = useState<PlayerInfo[]>([])
 
   /** To keep track of the players sent by backend */
@@ -83,20 +98,6 @@ export default function PlayerWatchPage (): JSX.Element {
       }
     }
   }
-
-  // connect socket as an admin to receive video chunks
-  useEffect(() => {
-    const socket = io(config.SERVER_URL)
-    setSocket(socket)
-
-    const token = formatCookies(document.cookie).token
-    socket.emit('connectAdmin', { token })
-
-    // set the new players, used so we can handle the actual updating with react properly
-    socket.on('getPlayers', ({ players: incomingPlayers }: { players: PlayerInfo[] }) => {
-      setIncomingPlayers(incomingPlayers)
-    })
-  }, [])
 
   // update players when new ones are received
   useEffect(() => {

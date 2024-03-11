@@ -1,15 +1,24 @@
-import { io, Socket } from 'socket.io-client'
 import { useEffect, useRef, useState } from 'react'
-import config from './config.json'
 import { formatCookies, getCookie } from './utils'
 import { editUserInfo, EditUserResponse, getAccountInfo, getCPImaginedCredentials } from './api'
 import Haiku from './Haiku'
 import { performLogout } from './PlayerPage'
+import { StreamWS } from './stream-ws'
 
 /** Page where the players can share screen */
 function ScreensharePage (): JSX.Element {
   /** WebSocket connection as a player */
-  const [socket, setSocket] = useState<Socket | null>(null)
+  const [socket] = useState<StreamWS>(() => {
+    const socket = new StreamWS()
+
+    socket.onMessage((data) => {
+      if (data.type === 'me') {
+        setMe(data.value)
+      }
+    })
+
+    return socket
+  })
   /** WebSocket id that will be used to identify this player */
   const [me, setMe] = useState<string>('')
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -22,7 +31,12 @@ function ScreensharePage (): JSX.Element {
     const mediaRecorder = new MediaRecorder(stream)
     mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0) {
-        socket?.emit('message', { blob: e.data, type: e.data.type, id: me })
+        // converting blob to base 64 string so it can be passed through the websocket with all the other information
+        const reader = new FileReader()
+        reader.readAsDataURL(e.data)
+        reader.onloadend = () => {
+          socket.send('stream-data', { blob: reader.result, type: e.data.type, id: me })
+        }
       }
       mediaRecorder.stop()
       // because of how MediaRecorder works, the only way to have a readable video chunk is to record
@@ -48,22 +62,8 @@ function ScreensharePage (): JSX.Element {
       createMediaRecorder(stream)
     })
     const name = formatCookies(document.cookie).name
-    socket?.emit('screenshare', { name, id: me })
+    socket.send('screenshare', { name, id: me })
   }
-
-  // connecting socket
-  useEffect(() => {
-    const socket = io(config.SERVER_URL)
-
-    // this is for receiving the id from the backend
-    socket.on('me', ({ id }) => {
-      setMe(id)
-    })
-
-    // this is to signal that we are connecting and we want to get the ID (the socket will often reconnect and change ID so we only get it the first time)
-    socket.emit('me')
-    setSocket(socket)
-  }, [])
 
   return (
     <div className='has-text-primary burbank is-flex is-justify-content-center'>

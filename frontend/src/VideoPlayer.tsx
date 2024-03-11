@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { Socket } from 'socket.io-client'
+import { StreamWS } from './stream-ws'
+import { convertBase64ToBlob } from './utils'
 
 /** What a video chunk response from the backend looks like */
 interface BlobResponse {
-  /** Video binary data */
-  blob: ArrayBuffer
-  /** MIME type of video */
+  /** Video binary data in base 64 */
+  blob: string
+    /** MIME type of video */
   type: string
   /** Socket ID of the user that is sending this video */
   id: string
@@ -88,7 +90,7 @@ function VideoElement ({ videoRef, className, width, height, cropInfo }: {
 /** Component for the video player that the admin sees */
 export default function VideoPlayer ({ socket, socketId, width, height, videoCache, setVideoCache, cropInfo = { left: 0, right: 0, top: 0, bottom: 0 } }: {
   /** Socket object for our socket */
-  socket: Socket | null
+  socket: StreamWS
   /** ID of the socket of the user that is sending video that we want to watch */
   socketId: string
   /** Width of the video */
@@ -103,14 +105,12 @@ export default function VideoPlayer ({ socket, socketId, width, height, videoCac
   setVideoCache: React.Dispatch<React.SetStateAction<VideoCache>>
 }): JSX.Element {
   useEffect(() => {
-    if (socket !== null) {
-      // currently can only receive a single video at a time
-      socket.on('message', (data) => {
-        if (data.id !== socketId) return
-        setBlob(data as BlobResponse)
-      })
-    }
-  }, [socket])
+    socket.onMessage((data) => {
+      if (data.type === 'stream-data') {
+        setBlob(data.value as BlobResponse)
+      }
+    })
+  }, [])
 
   /**
    * Saves the latest received video blob from the backend
@@ -161,7 +161,7 @@ export default function VideoPlayer ({ socket, socketId, width, height, videoCac
       // must free memory of old blob
       URL.revokeObjectURL(blobUrl ?? '')
 
-      const newBlobUrl = URL.createObjectURL(new Blob([blob.blob], { type: blob.type }))
+      const newBlobUrl = URL.createObjectURL(convertBase64ToBlob(blob.blob, blob.type))
       setBlobUrl(newBlobUrl)
 
       // to save in cache
