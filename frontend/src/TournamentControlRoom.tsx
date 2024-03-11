@@ -1,11 +1,10 @@
 import { useContext, useEffect, useState } from 'react'
 import { TournamentMatch, TournamentTies, createTournament, deleteTournament, getAllPlayers, getPlayerInfo, getTies, getTournamentMatches, isTournamentActive, resetTournamentDate, rollbackTournament, setTournamentDate, settleTie, updateMatchScore } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
-import { Socket, io } from 'socket.io-client'
-import config from './config.json'
 import { getCookie } from './utils'
 import { TournamentUpdate, TournamentUpdateContext } from './context/TournamentContext'
 import { TournamentMatchElement } from './MainPage'
+import { UcjWS } from './ws'
 
 /** Component responsible for the control room when a tournament is not active */
 function PretournamentControlRoom (): JSX.Element {
@@ -371,20 +370,22 @@ function ActiveTournamentControlRoom (): JSX.Element {
 /** Component for the control room of the tournament */
 export default function TournamentControlRoom (): JSX.Element {
   const [isActive, setIsActive] = useState(false)
-  const [socket, setSocket] = useState<Socket | null>(null)
+  const [socket] = useState<UcjWS>(() => {
+    // set up socket so that we can send tournament updates
+    const socket = new UcjWS()
+
+    socket.onOpen(() => {
+      // to authenticate this user as an updater
+      socket.send('connect-updater', getCookie('token'))
+    })
+
+    return socket
+  })
 
   useEffect(() => {
     void (async () => {
       setIsActive(await isTournamentActive())
     })()
-
-    // set up socket so that we can send tournmanet updates
-    const socket = io(config.SERVER_URL)
-
-    // to authenticate this user as an updater
-    socket.emit('connectUpdater', { token: getCookie('token') })
-
-    setSocket(socket)
   }, [])
 
   /** Takes an update object and sends it to the WebSocket so that it can update data for all users. */
@@ -392,7 +393,7 @@ export default function TournamentControlRoom (): JSX.Element {
     if (socket === null) {
       throw new Error('Socket is null')
     }
-    socket.emit('updateTournament', update)
+    socket.send('update-tournament', update)
   }
 
   const controlRoomElement = isActive ? <ActiveTournamentControlRoom /> : <PretournamentControlRoom />

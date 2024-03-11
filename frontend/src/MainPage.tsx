@@ -8,6 +8,7 @@ import { TournamentContext, TournamentState, TournamentUpdate } from './context/
 import CountdownTimer from './CountdownTimer'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import { getOrdinalNumber } from './utils'
+import { UcjWS } from './ws'
 
 /**
  * Adds a twitch embed with an element that has the given HTML id
@@ -469,27 +470,31 @@ export default function MainPage (): JSX.Element {
     void updateTournamentState()
 
     // connecting socket to watch for tournament updates in real time
-    const socket = io(config.SERVER_URL)
+    const socket = new UcjWS()
 
-    // this will connect this ID to receive updates
-    socket.emit('watchTournament')
+    socket.onOpen(() => {
+      // this will connect this ID to receive updates
+      socket.send('watch-tournament')
+    })
 
-    // this will be fired when the tournament is updated
-    socket.on('updateTournament', (data: TournamentUpdate) => {
-      if (data.updateAll === true) {
-        void updateAllTournamentInfo()
-      } else {
-        if (data.updateState === true) {
-          void updateTournamentState()
-        }
-        if (data.updateDate === true) {
-          void updateTournamentDate()
-        }
-        if (data.scoreUpdate === true) {
-          void updateTournamentScoreDependentInfo()
-        }
-        if (data.playerInfo === true) {
-          void updatePlayerInfo()
+    socket.onMessage((data) => {
+      // this will be fired when the tournament is updated
+      if (data.type === 'update-tournament') {
+        if (data.value.updateAll === true) {
+          void updateAllTournamentInfo()
+        } else {
+          if (data.value.updateState === true) {
+            void updateTournamentState()
+          }
+          if (data.value.updateDate === true) {
+            void updateTournamentDate()
+          }
+          if (data.value.scoreUpdate === true) {
+            void updateTournamentScoreDependentInfo()
+          }
+          if (data.value.playerInfo === true) {
+            void updatePlayerInfo()
+          }
         }
       }
     })

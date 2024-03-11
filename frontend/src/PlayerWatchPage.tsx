@@ -4,7 +4,7 @@ import './styles/video-styles.css'
 import FoldImage from './images/fold.png'
 import { formatCookies } from './utils'
 import VideoPlayer, { CropInfo, VideoCache } from './VideoPlayer'
-import { StreamWS } from './stream-ws'
+import { UcjWS } from './ws'
 
 interface PlayerInfo {
   id: string
@@ -31,8 +31,8 @@ interface FoldData {
 /** Component that handles the admin page */
 export default function PlayerWatchPage (): JSX.Element {
   /** WebSocket connection */
-  const [socket] = useState<StreamWS>(() => {
-    const socket = new StreamWS()
+  const [socket] = useState<UcjWS>(() => {
+    const socket = new UcjWS()
 
     const token = formatCookies(document.cookie).token
 

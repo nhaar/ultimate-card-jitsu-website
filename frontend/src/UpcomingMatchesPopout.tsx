@@ -7,6 +7,7 @@ import { TournamentMatch, getPlayerInfo, getTournamentMatches } from './api'
 import { TournamentContext, TournamentState, TournamentUpdate } from './context/TournamentContext'
 import { UpcomingMatches } from './MainPage'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
+import { UcjWS } from './ws'
 
 /** Component for the page with independent upcoming matches used for streaming as a popout */
 export default function UpcomingMatchesPopout (): JSX.Element {
@@ -15,13 +16,18 @@ export default function UpcomingMatchesPopout (): JSX.Element {
 
   // connect socket to receive updates and init data
   useEffect(() => {
-    const socket = io(config.SERVER_URL)
+    const socket = new UcjWS()
 
-    socket.emit('watchTournament')
+    
+    socket.onOpen(() => {      
+      socket.send('watch-tournament')
+    })
 
-    socket.on('updateTournament', (data: TournamentUpdate) => {
-      if (data.updateAll === true || data.scoreUpdate === true) {
-        void updateMatches()
+    socket.onMessage((data) => {
+      if (data.type === 'update-tournament') {
+        if (data.value.updateAll === true || data.value.scoreUpdate === true) {
+          void updateMatches()
+        }
       }
     })
 

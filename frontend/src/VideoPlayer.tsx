@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Socket } from 'socket.io-client'
-import { StreamWS } from './stream-ws'
+import { UcjWS } from './ws'
 import { convertBase64ToBlob } from './utils'
 
 /** What a video chunk response from the backend looks like */
@@ -90,7 +89,7 @@ function VideoElement ({ videoRef, className, width, height, cropInfo }: {
 /** Component for the video player that the admin sees */
 export default function VideoPlayer ({ socket, socketId, width, height, videoCache, setVideoCache, cropInfo = { left: 0, right: 0, top: 0, bottom: 0 } }: {
   /** Socket object for our socket */
-  socket: StreamWS
+  socket: UcjWS
   /** ID of the socket of the user that is sending video that we want to watch */
   socketId: string
   /** Width of the video */

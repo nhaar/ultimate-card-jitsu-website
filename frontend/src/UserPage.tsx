@@ -3,13 +3,13 @@ import { formatCookies, getCookie } from './utils'
 import { editUserInfo, EditUserResponse, getAccountInfo, getCPImaginedCredentials } from './api'
 import Haiku from './Haiku'
 import { performLogout } from './PlayerPage'
-import { StreamWS } from './stream-ws'
+import { UcjWS } from './ws'
 
 /** Page where the players can share screen */
 function ScreensharePage (): JSX.Element {
   /** WebSocket connection as a player */
-  const [socket] = useState<StreamWS>(() => {
-    const socket = new StreamWS()
+  const [socket] = useState<UcjWS>(() => {
+    const socket = new UcjWS()
 
     socket.onMessage((data) => {
       if (data.type === 'me') {
