@@ -207,4 +207,11 @@ export default class User {
   async changePassword (newPassword: string): Promise<void> {
     await this.updateColumn('password', await User.encryptPassword(newPassword))
   }
+
+  /** Get an array with all the username of accounts that don't have proper CPImagned credentials */
+  static async getAllUsersWithoutCredentials (): Promise<string[]> {
+    const db = new Database()
+    const res = await db.getQuery('SELECT username FROM players WHERE cpimagined_user IS NULL OR cpimagined_user = \'\' OR cpimagined_pass IS NULL OR cpimagined_pass = \'\'', [])
+    return res.rows.map((row: any) => row.username)
+  }
 }

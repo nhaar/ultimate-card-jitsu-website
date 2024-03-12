@@ -125,6 +125,25 @@ router.get('/cpimagined-credentials', replyWithUser(async (user: User, res: Resp
   res.json(credentials).status(200)
 }))
 
+router.post('/user-cpimagined-credentials', User.checkCPIAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+  const { username } = req.body
+
+  const user = await User.getUserByName(username)
+  if (user === null) {
+    res.sendStatus(400)
+    return
+  }
+
+  const credentials = await user.getCPImaginedCredentials()
+  res.json(credentials).status(200)
+}))
+
+router.get('/get-credentialess-users', User.checkCPIAdminMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
+  const users = await User.getAllUsersWithoutCredentials()
+
+  res.json(users).status(200)
+}))
+
 router.get('/account-info', replyWithUser(async (user: User, res: Response): Promise<void> => {
   res.json({
     pronouns: await user.getPronouns(),

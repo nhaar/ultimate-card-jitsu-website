@@ -1,4 +1,4 @@
-import { getJSON, postJSON } from './utils'
+import { getJSON, postAndGetJSON, postJSON } from './utils'
 
 /**
  * Checks if a tournament is active
@@ -146,14 +146,14 @@ export async function isTournamentFinished (): Promise<boolean> {
   return (response as { finished: boolean }).finished
 }
 
-/** Get the CPImagined credentials associated with the account */
-export async function getCPImaginedCredentials (): Promise<{ username: string, password: string } | null> {
+/** Get the CPImagined credentials associated with the logged in account */
+export async function getCPImaginedCredentials (): Promise<CPImaginedCredentials | null> {
   const response = await getJSON('api/user/cpimagined-credentials')
   if (response === null) {
     throw new Error('Failed to get CP Imagined credentials')
   }
   if ((response as { username: any }).username === null) return null
-  return response as { username: string, password: string }
+  return response as CPImaginedCredentials
 }
 
 /** Object representing mutable account data */
@@ -328,4 +328,30 @@ export async function getTournamentFinalStandings (): Promise<number[]> {
 export async function makeCPIAdmin (target: string): Promise<boolean> {
   const response = await postJSON('api/user/make-cpi-admin', { target })
   return response.ok
+}
+
+/** Get an array of all usernames that don't have proper CPImagined credentials */
+export async function getUsersWithoutCredentials (): Promise<string[]> {
+  const response = await getJSON('api/user/get-credentialess-users')
+  return response as string[]
+}
+
+/** Response with CPImagined credentials */
+export interface CPImaginedCredentials {
+  username: string | null
+  password: string | null
+}
+
+/**
+ * Get the CPImagined credentials of an user
+ * @param username Name of the user to get credentials
+ * @returns `null` if couldn't get the credentials
+ */
+export async function getUserCPIImaginedCredentials (username: string): Promise<CPImaginedCredentials | null> {
+  const response = await postAndGetJSON('api/user/user-cpimagined-credentials', { username })
+  if (response === null) {
+    return null
+  }
+
+  return response as CPImaginedCredentials
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { formatCookies, getCookie } from './utils'
-import { editUserInfo, EditUserResponse, getAccountInfo, getCPImaginedCredentials, UserRole } from './api'
+import { CPImaginedCredentials, editUserInfo, EditUserResponse, getAccountInfo, getCPImaginedCredentials, UserRole } from './api'
 import Haiku from './Haiku'
 import { performLogout } from './PlayerPage'
 import { UcjWS } from './ws'
@@ -182,7 +182,7 @@ export default function UserPage ({ role }: {
   /** This user's role. */
   role: UserRole
 }): JSX.Element {
-  const [cpImaginedCredentials, setCPImaginedCredentials] = useState<{ username: string, password: string } | null>(null)
+  const [cpImaginedCredentials, setCPImaginedCredentials] = useState<CPImaginedCredentials | null>(null)
   useEffect(() => {
     void (async () => {
       const credentials = await getCPImaginedCredentials()
@@ -224,7 +224,7 @@ export default function UserPage ({ role }: {
           }}
           >Username:
           </div>
-          <input className='input burbank' type='text' readOnly value={cpImaginedCredentials.username} />
+          <input className='input burbank' type='text' readOnly value={cpImaginedCredentials.username ?? ''} />
           <div style={{
             display: 'flex',
             justifyContent: 'center',
@@ -232,7 +232,7 @@ export default function UserPage ({ role }: {
           }}
           >Password:
           </div>
-          <input className='input burbank' type='text' readOnly value={cpImaginedCredentials.password} />
+          <input className='input burbank' type='text' readOnly value={cpImaginedCredentials.password ?? ''} />
         </div>
       </div>
 

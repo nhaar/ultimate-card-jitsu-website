@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { getAllPlayers, updateCPImaginedCredentials } from './api'
+import { getAllPlayers, getUserCPIImaginedCredentials, getUsersWithoutCredentials, updateCPImaginedCredentials } from './api'
 
 /** Component that renders the page where the admin is capable of updating the credentials to CPImagined. */
 export default function CPImaginedCredentialsHandler (): JSX.Element {
   const [users, setUsers] = useState<string[]>([])
+  const [credentialessUsers, setCredentialessUsers] = useState<string[]>([])
   const [selectedUser, setSelectedUser] = useState<number>(0)
   const [username, setUsername] = useState<string>('')
   const [password, setPassword] = useState<string>('')
@@ -13,6 +14,7 @@ export default function CPImaginedCredentialsHandler (): JSX.Element {
     void (async () => {
       const updated = await updateCPImaginedCredentials(users[selectedUser], username, password)
       if (updated) {
+        await updateUsersWithoutCredentials()
         window.alert('Credentials updated')
       } else {
         window.alert('Failed to update credentials')
@@ -24,8 +26,38 @@ export default function CPImaginedCredentialsHandler (): JSX.Element {
     void (async () => {
       const users = await getAllPlayers()
       setUsers(users)
+      await updateUsersWithoutCredentials()
+      updateToUserCredentials(users[0])
     })()
   }, [])
+
+  /** Fetch and store the users without credentials as a state */
+  async function updateUsersWithoutCredentials (): Promise<void> {
+    setCredentialessUsers(await getUsersWithoutCredentials())
+  }
+
+  /** Fetch and user credentials and store in the state variables */
+  function updateToUserCredentials (username: string): void {
+    void getUserCPIImaginedCredentials(username).then((data): void => {
+      if (data !== null) {
+        setUsername(data.username ?? '')
+        setPassword(data.password ?? '')
+      }
+    })
+  }
+
+  /**
+   * Get callback that handles selecting an user
+   * @param username Regular username
+   * @param index Index in the selected users array
+   * @returns
+   */
+  function getHandleSelectUser (username: string, index: number): () => void {
+    return () => {
+      setSelectedUser(index)
+      updateToUserCredentials(username)
+    }
+  }
 
   return (
     <div style={{ padding: '2%' }}>
@@ -37,18 +69,21 @@ export default function CPImaginedCredentialsHandler (): JSX.Element {
           }}
         >USERS
         </div>
-        {users.map((user, index) => (
-          <button
-            className='button' key={index} onClick={() => setSelectedUser(index)} style={selectedUser === index
-              ? {
-                  backgroundColor: 'blue',
-                  color: 'white',
-                  marginRight: '1%'
-                }
-              : { marginRight: '1%' }}
-          >{user}
-          </button>
-        ))}
+        {users.map((user, index) => {
+          const unselectedBackgroundColor = credentialessUsers.includes(user) ? 'red' : undefined
+          return (
+            <button
+              className='button' key={index} onClick={getHandleSelectUser(user, index)} style={selectedUser === index
+                ? {
+                    backgroundColor: 'blue',
+                    color: 'white',
+                    marginRight: '1%'
+                  }
+                : { marginRight: '1%', backgroundColor: unselectedBackgroundColor }}
+            >{user}
+            </button>
+          )
+        })}
       </div><br />
       <input style={{ marginBottom: '1%' }} type='input' className='input' placeholder='CPImagined username' value={username} onChange={e => setUsername(e.target.value)} />
       <input style={{ marginBottom: '1%' }} type='input' className='input' placeholder='CPImagined password' value={password} onChange={e => setPassword(e.target.value)} />
