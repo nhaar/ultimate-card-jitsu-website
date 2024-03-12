@@ -22,6 +22,7 @@ import TournamentRules from './TournamentRules'
 import AccountCreator from './AccountCreator'
 import CPImaginedCredentialsHandler from './CPImaginedCredentialsHandler'
 import UpcomingMatchesPopout from './UpcomingMatchesPopout'
+import CPIAdminAssigner from './CPIAdminAssigner'
 import Haiku from './Haiku'
 import { WebsiteThemes, getWebsiteTheme } from './website-theme'
 
@@ -187,6 +188,10 @@ export default function App (): JSX.Element {
     }
     case '/upcoming': {
       Page = <UpcomingMatchesPopout />
+      break
+    }
+    case '/cpiadmin-assign': {
+      Page = <CPIAdminAssigner />
       break
     }
     default: {

@@ -256,7 +256,9 @@ export enum UserRole {
   /** Admin user */
   Admin,
   /** Normal user */
-  User
+  User,
+  /** CPImagined admin */
+  CPIAdmin
 }
 
 /**
@@ -266,12 +268,12 @@ export enum UserRole {
 export async function getMyUserRole (): Promise<UserRole | undefined> {
   const response = await getJSON('api/user/user-role')
   if (response !== null) {
-    const role = (response as { role: 'user' | 'admin' | 'none' }).role
-    // setUserRole(role)
+    const role = (response as { role: 'user' | 'admin' | 'none' | 'cpiadmin' }).role
     switch (role) {
       case 'user': return UserRole.User
       case 'admin': return UserRole.Admin
       case 'none': return UserRole.None
+      case 'cpiadmin': return UserRole.CPIAdmin
     }
   }
 
@@ -316,4 +318,14 @@ export async function getTournamentFinalStandings (): Promise<number[]> {
   }
 
   return (response as { standings: number [] }).standings
+}
+
+/**
+ * Attempt to make someone a CPI admin
+ * @param target Username of the user to target
+ * @returns Whether or not it was succesful
+ */
+export async function makeCPIAdmin (target: string): Promise<boolean> {
+  const response = await postJSON('api/user/make-cpi-admin', { target })
+  return response.ok
 }

@@ -34,6 +34,8 @@ export default function PlayerPage (): JSX.Element {
     case UserRole.User: {
       return <UserPage />
     }
+    // currently lumping together, but they don't have the same features
+    case UserRole.CPIAdmin:
     case UserRole.Admin: {
       return <AdminPage />
     }

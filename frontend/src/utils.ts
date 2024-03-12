@@ -49,6 +49,9 @@ export async function getJSON (route: string): Promise<object | null> {
     }
   })
 
+  if (!response.ok) {
+    return null
+  }
   let data: object | null = null
   try {
     data = await response.json()

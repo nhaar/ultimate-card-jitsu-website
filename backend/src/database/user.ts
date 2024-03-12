@@ -44,6 +44,11 @@ export default class User {
     await this.updateColumn('is_admin', 1)
   }
 
+  /** Make the user a CPI admin (which has a few admin permissions) */
+  async makeCPIAdmin (): Promise<void> {
+    await this.updateColumn('is_admin', 2)
+  }
+
   /** Creates an user with the given name and password and returns it. */
   static async createUser (username: string, password: string): Promise<User> {
     const db = new Database()
@@ -80,16 +85,31 @@ export default class User {
     return await bcrypt.compare(password, hash)
   }
 
+  /** Check if a user is a regular user (no type of admin) */
+  async isRegularUser (): Promise<boolean> {
+    const res = await this.db.getQuery('SELECT is_admin FROM players WHERE id = $1', [this.id])
+    return res.rows[0].is_admin === 0
+  }
+
+  /** Check if a user is a regular admin (all permissions) */
   async isAdmin (): Promise<boolean> {
     const res = await this.db.getQuery('SELECT is_admin FROM players WHERE id = $1', [this.id])
-    return Boolean(res.rows[0].is_admin)
+    return res.rows[0].is_admin === 1
+  }
+
+  /** Check if a user is a CPI admin (some permissions) */
+  async isCPIAdmin (): Promise<boolean> {
+    const res = await this.db.getQuery('SELECT is_admin FROM players WHERE id = $1', [this.id])
+
+    return res.rows[0].is_admin === 2
   }
 
   async updateColumn (column: string, value: any): Promise<void> {
     await this.db.getQuery(`UPDATE players SET ${column} = $1 WHERE id = $2`, [value, this.id])
   }
 
-  static checkAdminMiddleware (req: Request, res: Response, next: NextFunction): void {
+  /** Base method to be used to create a middleware that checks if the user has any sort of admin roles */
+  private static checkAdminRoleMiddleware (req: Request, res: Response, next: NextFunction, strictAdmin: boolean): void {
     void (async (req: Request, res: Response, next: NextFunction) => {
       const cookies = req.headers.cookies
       if (typeof (cookies) !== 'string') {
@@ -106,12 +126,28 @@ export default class User {
         res.status(401).json({ error: 'invalid session token' })
         return
       }
-      if (!(await creator.isAdmin())) {
-        res.status(401).json({ error: 'user is not an admin' })
+
+      const isAdmin = await creator.isAdmin()
+      const hasEnoughAdminPerms = (
+        (strictAdmin && (isAdmin)) ||
+        (!strictAdmin && (isAdmin || (await creator.isCPIAdmin())))
+      )
+      if (!hasEnoughAdminPerms) {
+        res.status(401).json({ error: 'user does not have admin perms' })
         return
       }
       next()
     })(req, res, next)
+  }
+
+  /** Middleware that only allows regular admins to use the endpoint */
+  static checkAdminMiddleware (req: Request, res: Response, next: NextFunction): void {
+    User.checkAdminRoleMiddleware(req, res, next, true)
+  }
+
+  /** Middleware that only allows CPI admins or regular admins to use the endpoint */
+  static checkCPIAdminMiddleware (req: Request, res: Response, next: NextFunction): void {
+    User.checkAdminRoleMiddleware(req, res, next, false)
   }
 
   /**

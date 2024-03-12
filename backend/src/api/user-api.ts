@@ -80,10 +80,14 @@ router.get('/user-role', asyncWrapper(async (req: Request, res: Response): Promi
     res.status(200).json({ role: 'admin' })
     return
   }
+  if (await user.isCPIAdmin()) {
+    res.status(200).json({ role: 'cpiadmin' })
+    return
+  }
   res.status(200).json({ role: 'user' })
 }))
 
-router.get('/all-players', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+router.get('/all-players', User.checkCPIAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   const users = await User.getAllUsers()
   res.json(users).status(200)
 }))
@@ -154,7 +158,7 @@ router.post('/edit', replyWithUser(async (user: User, res: Response, req: Reques
   res.sendStatus(200)
 }))
 
-router.post('/update-cpimagined-credentials', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+router.post('/update-cpimagined-credentials', User.checkCPIAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   const { siteUsername, cpImaginedUsername, cpImaginedPassword } = req.body
   if (typeof (siteUsername) !== 'string') {
     res.status(400).json({ error: 'siteUsername must be a string' })
@@ -176,6 +180,25 @@ router.post('/update-cpimagined-credentials', User.checkAdminMiddleware, asyncWr
   }
 
   await targetUser.updateCPImaginedCredentials(cpImaginedUsername, cpImaginedPassword)
+  res.sendStatus(200)
+}))
+
+router.post('/make-cpi-admin', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+  const { target } = req.body
+
+  const targetUser = await User.getUserByName(target)
+  if (targetUser === null) {
+    res.sendStatus(400)
+    return
+  }
+
+  // avoid "demoting"
+  if (!(await targetUser.isRegularUser())) {
+    res.sendStatus(401)
+    return
+  }
+
+  await targetUser.makeCPIAdmin()
   res.sendStatus(200)
 }))
 
