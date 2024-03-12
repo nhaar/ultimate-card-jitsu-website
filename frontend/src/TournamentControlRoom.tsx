@@ -74,15 +74,15 @@ function PretournamentControlRoom (): JSX.Element {
           fontSize: '24pt',
           color: '#FFF'
         }}
-        className='burbank'
+        className='burbank black-shadow'
       >DATE CHANGE
       </span><br />
-      <input type='datetime-local' value={date} onChange={(e) => setDate(e.target.value)} /><br /><br />
-      <button className='button' style={{ marginRight: '1%' }} onClick={changeDate}>SET DATE</button>
-      <button className='button is-danger' onClick={removeDate}>REMOVE DATE</button><br /><br />
+      <input className="input burbank" style={{width: "fit-content"}} type='datetime-local' value={date} onChange={(e) => setDate(e.target.value)} /><br /><br />
+      <button className='button burbank' style={{ marginRight: '1%' }} onClick={changeDate}>SET DATE</button>
+      <button className='button is-danger burbank' onClick={removeDate}>REMOVE DATE</button><br /><br />
       <div>
         <span
-          className='burbank' style={{
+          className='burbank black-shadow' style={{
             fontSize: '14pt',
             color: '#FFF',
             marginRight: '1%',
@@ -91,12 +91,12 @@ function PretournamentControlRoom (): JSX.Element {
         >UNSELECTED
         </span>
         {unselectedPlayers.map((player) => (
-          <button className='button' key={player} onClick={() => selectPlayer(player)}>{player}</button>
+          <button className='button burbank' key={player} onClick={() => selectPlayer(player)}>{player}</button>
         ))}
       </div><br />
       <div>
         <span
-          className='burbank' style={{
+          className='burbank black-shadow' style={{
             fontSize: '14pt',
             color: '#FFF',
             marginRight: '1%',
@@ -105,10 +105,10 @@ function PretournamentControlRoom (): JSX.Element {
         >SELECTED
         </span>
         {selectedPlayers.map((player) => (
-          <button className='button' key={player} onClick={() => unselectPlayer(player)}>{player}</button>
+          <button className='button burbank' key={player} onClick={() => unselectPlayer(player)}>{player}</button>
         ))}
       </div><br /><br />
-      <button className='button' onClick={() => { void handleCreateTournament() }}>CREATE TOURNAMENT</button>
+      <button className='button burbank' onClick={() => { void handleCreateTournament() }}>CREATE TOURNAMENT</button>
     </div>
   )
 }
@@ -178,8 +178,8 @@ function ControllerWithDecider<T> ({ Child, childProps, playerCount, runners, up
   }
   const decider = (
     <div>
-      <textarea value={standingDecider} onChange={(e) => setStandingDecider(e.target.value)} />
-      <button className='button' style={{ marginLeft: '1%' }} onClick={decideStandings}>DECIDE</button>
+      <textarea className='input burbank'style={{width: "fit-content", height: "19vh"}} placeholder="Input player IDs in descending order of placement, press enter after each player" value={standingDecider} onChange={(e) => setStandingDecider(e.target.value)} />
+      <button className='button burbank' style={{ marginLeft: '1%' }} onClick={decideStandings}>DECIDE</button>
     </div>
   )
 
@@ -223,22 +223,22 @@ function TournamentMatchController ({ match, index, decider }: {
   if (match.standings.length === 0) {
     matchElement = (
       <div>
-        <div className='burbank'>
+        <div className='burbank black-shadow'>
           NOT STARTED
         </div>
         <div style={{ width: '5%' }}>
           <TournamentMatchElement match={match} displayId />
         </div><br />
-        {decider}<br />
+        {decider}<br /><br />
       </div>
     )
   } else {
-    matchElement = <div className='burbank'>FINISHED</div>
+    matchElement = <div><div className='burbank black-shadow'>FINISHED</div><br/></div>
   }
 
   return (
     <div>
-      <div className='burbank' style={{ fontSize: '18pt' }}>
+      <div className='burbank black-shadow' style={{ fontSize: '18pt' }}>
         MATCH {index + 1}
       </div>
       {matchElement}
@@ -259,7 +259,7 @@ function TournamentTieController ({ points, players, decider }: {
 
   return (
     <div>
-      <div className='burbank'>
+      <div className='burbank black-shadow'>
         TIE AT {points} POINTS BETWEEN {listAllPlayers(players, playerInfo)}
       </div>
       {decider}
@@ -321,6 +321,7 @@ function ActiveTournamentControlRoom (): JSX.Element {
         await deleteTournament()
         await resetTournamentDate()
         sendUpdate({ updateState: true })
+        window.location.reload();
       })()
     }
   }
@@ -328,10 +329,10 @@ function ActiveTournamentControlRoom (): JSX.Element {
   return (
     <div style={{ padding: '2%' }}>
       <PlayerInfoContext.Provider value={playerInfo}>
-        <button className='button' onClick={clickRollbackTournament}>
+        <button className='button burbank' onClick={clickRollbackTournament}>
           UNDO (rollback tournament)
         </button>
-        <button style={{ marginLeft: '1%' }} className='button is-danger' onClick={clickDeleteTournament}>
+        <button style={{ marginLeft: '1%' }} className='button is-danger burbank' onClick={clickDeleteTournament}>
           DELETE TOURNAMENT
         </button><br /><br />
         {matches.map((match, i) => {

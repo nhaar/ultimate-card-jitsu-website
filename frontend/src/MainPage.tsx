@@ -239,7 +239,7 @@ export function TournamentMatchElement ({ match, displayId }: { match: Tournamen
   const playerInfo = useContext(PlayerInfoContext)
   const players = match.runners.map((runner) => {
     if (runner === null) {
-      return '??????'
+      return 'Sensei'
     } else {
       const name = playerInfo[runner]
       if (displayId === true) {
@@ -262,7 +262,7 @@ export function TournamentMatchElement ({ match, displayId }: { match: Tournamen
       <div>{players[0]}</div>
       <div />
       <div>{players[1]}</div>
-      <div className='candombe emblem-yellow' style={{ textShadow: '1px 1px 1px #000, -1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000' }}>VS</div>
+      <div className='candombe emblem-yellow' style={{ fontSize: "12pt", textShadow: '1px 1px 1px #000, -1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000' }}>VS</div>
       <div>{players[2]}</div>
       <div />
       <div>{players[3]}</div>
@@ -409,14 +409,16 @@ function TournamentFinalStandings (): JSX.Element {
     return (
       <div key={i} className='is-flex emblem-pink-bg p-4' style={style}>
         <div
-          className='mr-5' style={{
+          className='mr-5 black-shadow' style={{
             fontSize: '32px'
           }}
         >
           {getOrdinalNumber(i + 1)}
         </div>
-        <div style={{
-          fontSize: '24px'
+        <div className="black-shadow" style={{
+          fontSize: '24px',
+          marginTop: "auto",
+          marginBottom: "auto"
         }}
         >
           {playerInfo[player]}

@@ -37,12 +37,12 @@ export default function LoginPage (): JSX.Element {
           width: '300px'
         }}
         >
-          <input className='input mb-3' type='text' value={username} onChange={e => setUsername(e.target.value)} placeholder='Username' />
+          <input className='input mb-3 burbank' type='text' value={username} onChange={e => setUsername(e.target.value)} placeholder='Username' />
 
-          <input className='input mb-3' type='password' value={password} onChange={e => setPassword(e.target.value)} placeholder='Password' />
+          <input className='input mb-3 burbank' type='password' value={password} onChange={e => setPassword(e.target.value)} placeholder='Password' />
 
           <button
-            className='button mb-4' onClick={handleClickLogin} style={{
+            className='button mb-4 burbank' onClick={handleClickLogin} style={{
               width: '100%'
             }}
           >LOG IN

@@ -163,13 +163,13 @@ function EditProfilePage ({ usePFP }: {
         }}
       >
         <div className='mt-4 mb-1'>Display Name (change this before the tournament starts)</div>
-        <input className='input mb-5' type='text' value={username} onChange={(e) => setUsername(e.target.value)} />
+        <input className='input mb-5 burbank' placeholder="Display Name" type='text' value={username} onChange={(e) => setUsername(e.target.value)} />
         <div className='mb-1'>(OPTIONAL) Pronouns to refer to you</div>
-        <input className='input mb-5' type='text' value={pronouns} onChange={(e) => setPronouns(e.target.value)} />
+        <input className='input mb-5 burbank' placeholder="Pronouns" type='text' value={pronouns} onChange={(e) => setPronouns(e.target.value)} />
         {usePFP && <div className='mb-1'>(OPTIONAL) Profile picture</div>}
         {usePFP && <input className='mb-1' type='file' accept='image/*' onChange={receiveFile} />}
         {usePFP && <img className='mb-5' src={pfp} />}
-        <button className='button mb-6' onClick={saveEdit}>SAVE CHANGES</button>
+        <button className='button mb-6 burbank' onClick={saveEdit}>SAVE CHANGES</button>
       </div>
     </div>
   )
@@ -189,7 +189,6 @@ export default function UserPage ({ role }: {
       setCPImaginedCredentials(credentials)
     })()
   }, [])
-
   const username = getCookie('name') ?? 'Player'
   const urlParams = new URLSearchParams(window.location.search)
   const pageType = urlParams.get('p')
@@ -237,6 +236,12 @@ export default function UserPage ({ role }: {
       </div>
 
       )
+  var adminDest = ""
+  if (role === UserRole.Admin) {
+    adminDest = "/admin"
+  } else if (role === UserRole.CPIAdmin) {
+    adminDest = "/cpiadmin-assign"
+  }
 
   return (
     <div className='has-text-primary burbank'>
@@ -257,10 +262,10 @@ export default function UserPage ({ role }: {
       {/* Admin button only for people with admin-like permissions */}
       {(role === UserRole.Admin || role === UserRole.CPIAdmin) &&
         <div className='box' style={{ fontSize: '14pt' }}>
-          <Haiku first='Administrators' second='No fancy haiku for you' third='Go do your job already' />
+          <Haiku first='Administrators' second='No fancy haiku for you' third='Go do your job now' />
           <div className='is-flex is-justify-content-center mt-2'>
             <button
-              className='button is-danger burbank' onClick={() => { window.location.href = '/admin' }} style={{
+              className='button is-danger burbank' onClick={() => { window.location.href = adminDest}} style={{
                 width: '200px'
               }}
             >ADMIN PAGE

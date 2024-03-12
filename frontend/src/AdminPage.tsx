@@ -14,7 +14,7 @@ export default function AdminPage (): JSX.Element {
       <a href='account-create'>CREATE ACCOUNTS</a><br />
       <a href='cpimagined-credentials'>CREDENTIALS HANDLER</a><br />
       <a href='cpiadmin-assign'>ASSIGN CPI ADMINS</a><br />
-      <button className='button' onClick={performLogout}>Logout</button>
+      <button className='button burbank' onClick={performLogout}>LOG OUT</button>
     </div>
   )
 }

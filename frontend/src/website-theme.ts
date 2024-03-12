@@ -1,5 +1,12 @@
 import config from './config.json'
 
+export enum WebsiteThemes {
+  Normal,
+  Fire,
+  Water,
+  Snow
+}
+
 export function getWebsiteTheme (): WebsiteThemes {
   switch (config.TOURNAMENT_TYPE) {
     case 'normal': return WebsiteThemes.Normal
@@ -8,11 +15,4 @@ export function getWebsiteTheme (): WebsiteThemes {
     case 'snow': return WebsiteThemes.Snow
     default: throw new Error('invalid website theme supplied in JSON')
   }
-}
-
-export enum WebsiteThemes {
-  Normal,
-  Fire,
-  Water,
-  Snow
 }
