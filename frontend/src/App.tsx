@@ -23,6 +23,7 @@ import AccountCreator from './AccountCreator'
 import CPImaginedCredentialsHandler from './CPImaginedCredentialsHandler'
 import UpcomingMatchesPopout from './UpcomingMatchesPopout'
 import CPIAdminAssigner from './CPIAdminAssigner'
+import AdminPage from './AdminPage'
 import Haiku from './Haiku'
 import { WebsiteThemes, getWebsiteTheme } from './website-theme'
 
@@ -192,6 +193,10 @@ export default function App (): JSX.Element {
     }
     case '/cpiadmin-assign': {
       Page = <CPIAdminAssigner />
+      break
+    }
+    case '/admin': {
+      Page = <AdminPage />
       break
     }
     default: {

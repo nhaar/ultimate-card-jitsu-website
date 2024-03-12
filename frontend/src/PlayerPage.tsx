@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { setCookie } from './utils'
 import LoginPage from './LoginPage'
 import UserPage from './UserPage'
-import AdminPage from './AdminPage'
 import { UserRole, getMyUserRole } from './api'
 
 /** Prompts the user if they want to logout or not, and does it if agreed */
@@ -31,13 +30,8 @@ export default function PlayerPage (): JSX.Element {
     case UserRole.None: {
       return <LoginPage />
     }
-    case UserRole.User: {
-      return <UserPage />
-    }
-    // currently lumping together, but they don't have the same features
-    case UserRole.CPIAdmin:
-    case UserRole.Admin: {
-      return <AdminPage />
+    default: {
+      return <UserPage role={userRole} />
     }
   }
 }

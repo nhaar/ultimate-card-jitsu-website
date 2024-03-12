@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { formatCookies, getCookie } from './utils'
-import { editUserInfo, EditUserResponse, getAccountInfo, getCPImaginedCredentials } from './api'
+import { editUserInfo, EditUserResponse, getAccountInfo, getCPImaginedCredentials, UserRole } from './api'
 import Haiku from './Haiku'
 import { performLogout } from './PlayerPage'
 import { UcjWS } from './ws'
@@ -176,9 +176,12 @@ function EditProfilePage ({ usePFP }: {
 }
 
 /**
- * Handles the page where non admin players can perform actions. Not to be confused with PlayerPage which handles all types of users
+ * Handles the page where players can perform actions. Not to be confused with PlayerPage which includes the login screen. (these namings are confusing and bad)
  */
-export default function UserPage (): JSX.Element {
+export default function UserPage ({ role }: {
+  /** This user's role. */
+  role: UserRole
+}): JSX.Element {
   const [cpImaginedCredentials, setCPImaginedCredentials] = useState<{ username: string, password: string } | null>(null)
   useEffect(() => {
     void (async () => {
@@ -251,6 +254,19 @@ export default function UserPage (): JSX.Element {
       >
         <Haiku first='Welcome grasshopper' second={'In here there\'s much you can do'} third='Take a look below' />
       </div>
+      {/* Admin button only for people with admin-like permissions */}
+      {(role === UserRole.Admin || role === UserRole.CPIAdmin) &&
+        <div className='box' style={{ fontSize: '14pt' }}>
+          <Haiku first='Administrators' second='No fancy haiku for you' third='Go do your job already' />
+          <div className='is-flex is-justify-content-center mt-2'>
+            <button
+              className='button is-danger burbank' onClick={() => { window.location.href = '/admin' }} style={{
+                width: '200px'
+              }}
+            >ADMIN PAGE
+            </button>
+          </div>
+        </div>}
       <div className='box' style={{ fontSize: '14pt' }}>
         <Haiku first='Personality' second='Is important for ninjas' third='You may edit it here' />
         <div className='is-flex is-justify-content-center mt-2'>
