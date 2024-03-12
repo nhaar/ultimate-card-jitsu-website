@@ -273,7 +273,8 @@ export default function PlayerWatchPage (): JSX.Element {
   return (
     <div className='is-flex is-flex-direction-row'>
       <div className='is-relative'>
-        <img ref={foldRef} style={foldStyle} src={FoldImage} />
+        {/* for some reason, the width gets set to 0 in production? (trying to fix it here) */}
+        <img ref={foldRef} style={foldStyle} src={FoldImage} width={'100%'} />
         {mainVideo}
       </div>
       <div
