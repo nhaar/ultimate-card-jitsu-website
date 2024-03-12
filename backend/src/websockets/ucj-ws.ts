@@ -1,6 +1,7 @@
 import crypto = require('crypto')
 
 import { WebSocket, WebSocketServer } from 'ws'
+import User from '../database/user'
 
 /** Class that stores the information for the tournament updater websocket system */
 export default class TournamentUpdater {
@@ -30,6 +31,10 @@ interface Player {
 /** Class handles storing screen share information */
 class ScreenShareManager {
   connectedPlayers: Player[]
+
+  /** All players (ids) that the administrator has signaled they want to see the stream from */
+  playersBeingWatched: string[]
+
   /** Websocket of admin watching the screens, or `undefined` if it hasn't been set yet */
   adminWS?: UcjWS
   /** A map of all player ids and the last time they have sent any data */
@@ -43,6 +48,7 @@ class ScreenShareManager {
   constructor (wss: UcjWSS) {
     this.wss = wss
     this.connectedPlayers = []
+    this.playersBeingWatched = []
     this.purgeInterval = setInterval(() => {
       if (this.removeInactivePlayers()) {
         this.sendPlayersToAdmin()
@@ -67,6 +73,24 @@ class ScreenShareManager {
 
   removePlayer (id: string): void {
     this.connectedPlayers = this.connectedPlayers.filter(player => player.id !== id)
+
+    // logically will also be removed from being watched if it is being removed in general
+    this.playersBeingWatched = this.playersBeingWatched.filter(player => player !== id)
+  }
+
+  /** Add this player to the list of players being watched */
+  makePlayerWatched (id: string): void {
+    this.playersBeingWatched.push(id)
+  }
+
+  /** Remove the given player from the list of players being watched */
+  makePlayerUnwatched (id: string): void {
+    this.playersBeingWatched.push(id)
+  }
+
+  /** Check if a player is being watched based on its ID */
+  isPlayerBeingWatched (id: string): boolean {
+    return this.playersBeingWatched.includes(id)
   }
 
   updatePlayerActivity (id: string): void {
@@ -99,6 +123,8 @@ interface WSData {
   type: string
   /** Any value */
   value: any
+  /** Session token, if sending a message with authentication */
+  token?: string
 }
 
 /** Wrapper class for a websocket connected from the website */
@@ -172,6 +198,20 @@ export class UcjWSS {
       const streamWS = new UcjWS(ws)
       this.socketMap.set(streamWS.id, streamWS)
       wsFunc(streamWS)
+    })
+  }
+
+  /** Performs any given action if the data object in a message allows to be authenticated as an administrator */
+  static doIfAdmin (data: WSData, fn: () => void): void {
+    if (data.token === undefined) {
+      return
+    }
+    void User.getUserByToken(data.token).then(user => {
+      void user?.isAdmin().then(isAdmin => {
+        if (isAdmin) {
+          fn()
+        }
+      })
     })
   }
 }

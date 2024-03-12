@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 
 import './styles/video-styles.css'
 import FoldImage from './images/fold.png'
-import { formatCookies } from './utils'
 import VideoPlayer, { CropInfo, VideoCache } from './VideoPlayer'
 import { UcjWS } from './ws'
 import { WebsiteThemes, getWebsiteTheme } from './website-theme'
@@ -38,10 +37,8 @@ export default function PlayerWatchPage (): JSX.Element {
   const [socket] = useState<UcjWS>(() => {
     const socket = new UcjWS()
 
-    const token = formatCookies(document.cookie).token
-
     socket.onOpen(() => {
-      socket.send('connect-admin', token)
+      socket.sendAdmin('connect-admin')
     })
 
     socket.onMessage((data) => {
@@ -143,6 +140,9 @@ export default function PlayerWatchPage (): JSX.Element {
   }, [incomingPlayers])
 
   function addToQueue (id: string): void {
+    // signal that we want to watch stream
+    socket.sendAdmin('watch-player', id)
+
     const u = [...unqueuedPlayers]
     const unqueueIndex = u.findIndex((p) => p.id === id)
     const player = u[unqueueIndex]
@@ -153,6 +153,9 @@ export default function PlayerWatchPage (): JSX.Element {
 
   /** Remove a player from the queue */
   function removeFromQueue (id: string): void {
+    // signal we no longer want to watch the stream
+    socket.sendAdmin('unwatch-player', id)
+
     const u = [...unqueuedPlayers]
     const q = [...queuedPlayers]
     const removingIndex = q.findIndex(p => p.id === id)

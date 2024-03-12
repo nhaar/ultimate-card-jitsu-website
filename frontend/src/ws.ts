@@ -1,4 +1,5 @@
 import config from './config.json'
+import { getCookie } from './utils'
 
 /** Object is how the data should be passed through the websockets */
 interface WSData {
@@ -6,6 +7,8 @@ interface WSData {
   type: string
   /** Any value being passed */
   value: any
+  /** Token for authentication, if needed */
+  token?: string
 }
 
 /** Class for a client websocket to communicate with the websocket server */
@@ -30,11 +33,23 @@ export class UcjWS {
     this.ws.addEventListener('open', callback)
   }
 
-  /** Send data through the websocket, with a type and a value */
-  send (type: string, value: any = undefined): void {
+  /** Base function that will send a message to the web socket server */
+  private sendBase (type: string, value: any, token?: string): void {
     this.ws.send(JSON.stringify({
       type,
-      value
+      value,
+      token
     }))
+  }
+
+  /** Send data through the websocket, with a type and a value, and no authentication */
+  send (type: string, value: any = undefined, token = undefined): void {
+    this.sendBase(type, value, token)
+  }
+
+  /** Send data through the websocket with authentication */
+  sendAdmin (type: string, value: any = undefined): void {
+    const token = getCookie('token') ?? ''
+    this.sendBase(type, value, token)
   }
 }

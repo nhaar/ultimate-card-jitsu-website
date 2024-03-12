@@ -33,20 +33,21 @@ wss.onConnection((ws) => {
       /** In this event, the frontend sends a blob object (encoded), and here we direct it to the admin's socket. */
       case 'stream-data': {
         wss.screenshare.updatePlayerActivity(data.value.id)
-        if (wss.screenshare.adminWS !== undefined) {
-          wss.screenshare.adminWS.send('stream-data', data.value)
+
+        // to avoid sending too much data and potentially overloading the backend
+        // we only send back if the data is truly being demanded
+        if (wss.screenshare.isPlayerBeingWatched(data.value.id)) {
+          if (wss.screenshare.adminWS !== undefined) {
+            wss.screenshare.adminWS.send('stream-data', data.value)
+          }
         }
         break
       }
       /** Frontend sends request to connect new admin, with authorization token in the body. */
       case 'connect-admin': {
-        void User.getUserByToken(data.value).then(user => {
-          void user?.isAdmin().then(isAdmin => {
-            if (isAdmin) {
-              wss.screenshare.adminWS = ws
-              wss.screenshare.sendPlayersToAdmin()
-            }
-          })
+        UcjWSS.doIfAdmin(data, () => {
+          wss.screenshare.adminWS = ws
+          wss.screenshare.sendPlayersToAdmin()
         })
         break
       }
@@ -68,18 +69,28 @@ wss.onConnection((ws) => {
       }
       /** Tournament control admin sending request to be able to send updates */
       case 'connect-updater': {
-        void User.getUserByToken(data.value).then(user => {
-          void user?.isAdmin().then(isAdmin => {
-            if (isAdmin) {
-              wss.tournamentUpdater.adminWS = ws
-            }
-          })
+        UcjWSS.doIfAdmin(data, () => {
+          wss.tournamentUpdater.adminWS = ws
         })
         break
       }
       /** Main page sending request to receive updates */
       case 'watch-tournament': {
         wss.tournamentUpdater.addViewer(ws.id)
+        break
+      }
+      /** Player watch admin signals that this player's video is important */
+      case 'watch-player': {
+        UcjWSS.doIfAdmin(data, () => {
+          wss.screenshare.makePlayerWatched(data.value)
+        })
+        break
+      }
+      /** Player watch admin signals that this player's video is no longer important */
+      case 'unwatch-player': {
+        UcjWSS.doIfAdmin(data, () => {
+          wss.screenshare.makePlayerUnwatched(data.value)
+        })
         break
       }
     }
