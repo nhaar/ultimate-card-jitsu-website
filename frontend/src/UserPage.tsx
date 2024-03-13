@@ -262,7 +262,7 @@ export default function UserPage ({ role }: {
       {/* Admin button only for people with admin-like permissions */}
       {(role === UserRole.Admin || role === UserRole.CPIAdmin) &&
         <div className='box' style={{ fontSize: '14pt' }}>
-          <Haiku first='Administrators' second='No fancy haiku for you' third='Go do your job now' />
+          <Haiku first='Administrators' second='No fancy haiku for you' third='Go do your job already' />
           <div className='is-flex is-justify-content-center mt-2'>
             <button
               className='button is-danger burbank' onClick={() => { window.location.href = adminDest }} style={{

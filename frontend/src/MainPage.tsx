@@ -239,7 +239,7 @@ export function TournamentMatchElement ({ match, displayId }: { match: Tournamen
   const playerInfo = useContext(PlayerInfoContext)
   const players = match.runners.map((runner) => {
     if (runner === null) {
-      return 'Sensei'
+      return '??????'
     } else {
       const name = playerInfo[runner]
       if (displayId === true) {
