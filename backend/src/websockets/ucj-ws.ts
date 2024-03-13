@@ -141,7 +141,7 @@ class UcjWS {
   }
 
   /** Send a message with a type and value */
-  send (type: string, value: any): void {
+  send (type: string, value: any = undefined): void {
     this.ws.send(JSON.stringify({
       type,
       value

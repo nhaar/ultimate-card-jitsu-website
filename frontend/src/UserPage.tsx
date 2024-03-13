@@ -7,13 +7,26 @@ import { UcjWS } from './ws'
 
 /** Page where the players can share screen */
 function ScreensharePage (): JSX.Element {
+  // using a ref because of it's "pointer" behavior being needed in the environment it's being called
+  const amBeingWatched = useRef<boolean>(false)
   /** WebSocket connection as a player */
   const [socket] = useState<UcjWS>(() => {
     const socket = new UcjWS()
 
     socket.onMessage((data) => {
-      if (data.type === 'me') {
-        setMe(data.value)
+      switch (data.type) {
+        case 'me': {
+          setMe(data.value)
+          break
+        }
+        case 'watch': {
+          amBeingWatched.current = true
+          break
+        }
+        case 'unwatch': {
+          amBeingWatched.current = false
+          break
+        }
       }
     })
 
@@ -31,11 +44,14 @@ function ScreensharePage (): JSX.Element {
     const mediaRecorder = new MediaRecorder(stream)
     mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0) {
-        // converting blob to base 64 string so it can be passed through the websocket with all the other information
-        const reader = new FileReader()
-        reader.readAsDataURL(e.data)
-        reader.onloadend = () => {
-          socket.send('stream-data', { blob: reader.result, type: e.data.type, id: me })
+        // to save resources, will only convert and send data when being observed
+        if (amBeingWatched.current) {
+          // converting blob to base 64 string so it can be passed through the websocket with all the other information
+          const reader = new FileReader()
+          reader.readAsDataURL(e.data)
+          reader.onloadend = () => {
+            socket.send('stream-data', { blob: reader.result, type: e.data.type, id: me })
+          }
         }
       }
       mediaRecorder.stop()

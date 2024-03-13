@@ -83,6 +83,10 @@ wss.onConnection((ws) => {
       case 'watch-player': {
         UcjWSS.doIfAdmin(data, () => {
           wss.screenshare.makePlayerWatched(data.value)
+
+          // it should never be undefined, but not raising exception to avoid breaking server during performance
+          const playerSocket = wss.socketMap.get(data.value)
+          playerSocket?.send('watch')
         })
         break
       }
@@ -90,6 +94,10 @@ wss.onConnection((ws) => {
       case 'unwatch-player': {
         UcjWSS.doIfAdmin(data, () => {
           wss.screenshare.makePlayerUnwatched(data.value)
+          
+          // same as in watch player
+          const playerSocket = wss.socketMap.get(data.value)
+          playerSocket?.send('unwatch')
         })
         break
       }
