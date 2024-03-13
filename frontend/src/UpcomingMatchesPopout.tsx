@@ -38,8 +38,14 @@ export default function UpcomingMatchesPopout (): JSX.Element {
     setMatches(matches)
   }
 
+  // for reasons beyond me, I have to use this value so that it's exactly halfway through
+  const absolutePosition = '49.349vw'
+
   return (
-    <div className='has-text-primary burbank is-flex is-justify-content-center'>
+    <div className='has-text-primary burbank' style={{
+      // slightly bigger because the popup is that big
+      minHeight: '150vh'
+    }}>
       <PlayerInfoContext.Provider value={playerInfo}>
         <TournamentContext.Provider value={{
           playerInfo,
@@ -52,8 +58,18 @@ export default function UpcomingMatchesPopout (): JSX.Element {
           isFirstPhase: true
         }}
         >
-          <UpcomingMatches matches={matches} matchTotal={4} isMini />
-          <UpcomingMatches matches={matches} startMatch={4} matchTotal={4} isComingUpLater isMini />
+          <div style={{
+            position: 'absolute',
+            right: absolutePosition
+          }}>
+            <UpcomingMatches matches={matches} matchTotal={4} isMini />
+          </div>
+          <div style={{
+            position: 'absolute',
+            left: absolutePosition
+          }}>
+            <UpcomingMatches matches={matches} startMatch={4} matchTotal={4} isComingUpLater isMini />
+          </div>
         </TournamentContext.Provider>
       </PlayerInfoContext.Provider>
     </div>
