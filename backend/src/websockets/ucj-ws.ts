@@ -38,7 +38,7 @@ class ScreenShareManager {
   /** Websocket of admin watching the screens, or `undefined` if it hasn't been set yet */
   adminWS?: UcjWS
   /** A map of all player ids and the last time they have sent any data */
-  activityData: { [id: string]: Date } = {}
+  activityData: Map<string, Date>
   /** Interval that periodically checks if any players should be removed from the queue */
   purgeInterval: NodeJS.Timeout
 
@@ -49,6 +49,7 @@ class ScreenShareManager {
     this.wss = wss
     this.connectedPlayers = []
     this.playersBeingWatched = []
+    this.activityData = new Map<string, Date>()
     this.purgeInterval = setInterval(() => {
       if (this.removeInactivePlayers()) {
         this.sendPlayersToAdmin()
@@ -76,6 +77,8 @@ class ScreenShareManager {
 
     // logically will also be removed from being watched if it is being removed in general
     this.playersBeingWatched = this.playersBeingWatched.filter(player => player !== id)
+
+    this.activityData.delete(id)
   }
 
   /** Add this player to the list of players being watched */
@@ -94,7 +97,7 @@ class ScreenShareManager {
   }
 
   updatePlayerActivity (id: string): void {
-    this.activityData[id] = new Date()
+    this.activityData.set(id, new Date())
   }
 
   /**
@@ -104,7 +107,12 @@ class ScreenShareManager {
   removeInactivePlayers (): boolean {
     const now = new Date()
     const inactivePlayers = Object.keys(this.activityData).filter(id => {
-      const lastActivity = this.activityData[id]
+      const lastActivity = this.activityData.get(id)
+      
+      // true ensures this player will be removed
+      if (lastActivity === undefined) {
+        return true
+      }
       const diff = now.getTime() - lastActivity.getTime()
       return diff > 10000
     })

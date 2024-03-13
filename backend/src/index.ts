@@ -106,6 +106,9 @@ wss.onConnection((ws) => {
 
   ws.onClose(() => {
     wss.tournamentUpdater.removeViewer(ws.id)
+    wss.screenshare.removePlayer(ws.id)
+    // to immediately remove player when removed
+    wss.screenshare.sendPlayersToAdmin()
   })
 })
 
