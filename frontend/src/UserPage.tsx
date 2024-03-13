@@ -163,9 +163,9 @@ function EditProfilePage ({ usePFP }: {
         }}
       >
         <div className='mt-4 mb-1'>Display Name (change this before the tournament starts)</div>
-        <input className='input mb-5 burbank' placeholder="Display Name" type='text' value={username} onChange={(e) => setUsername(e.target.value)} />
+        <input className='input mb-5 burbank' placeholder='Display Name' type='text' value={username} onChange={(e) => setUsername(e.target.value)} />
         <div className='mb-1'>(OPTIONAL) Pronouns to refer to you</div>
-        <input className='input mb-5 burbank' placeholder="Pronouns" type='text' value={pronouns} onChange={(e) => setPronouns(e.target.value)} />
+        <input className='input mb-5 burbank' placeholder='Pronouns' type='text' value={pronouns} onChange={(e) => setPronouns(e.target.value)} />
         {usePFP && <div className='mb-1'>(OPTIONAL) Profile picture</div>}
         {usePFP && <input className='mb-1' type='file' accept='image/*' onChange={receiveFile} />}
         {usePFP && <img className='mb-5' src={pfp} />}
@@ -236,11 +236,11 @@ export default function UserPage ({ role }: {
       </div>
 
       )
-  var adminDest = ""
+  let adminDest = ''
   if (role === UserRole.Admin) {
-    adminDest = "/admin"
+    adminDest = '/admin'
   } else if (role === UserRole.CPIAdmin) {
-    adminDest = "/cpiadmin-assign"
+    adminDest = '/cpiadmin-assign'
   }
 
   return (
@@ -265,7 +265,7 @@ export default function UserPage ({ role }: {
           <Haiku first='Administrators' second='No fancy haiku for you' third='Go do your job now' />
           <div className='is-flex is-justify-content-center mt-2'>
             <button
-              className='button is-danger burbank' onClick={() => { window.location.href = adminDest}} style={{
+              className='button is-danger burbank' onClick={() => { window.location.href = adminDest }} style={{
                 width: '200px'
               }}
             >ADMIN PAGE

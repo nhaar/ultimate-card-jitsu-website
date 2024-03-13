@@ -262,7 +262,7 @@ export function TournamentMatchElement ({ match, displayId }: { match: Tournamen
       <div>{players[0]}</div>
       <div />
       <div>{players[1]}</div>
-      <div className='candombe emblem-yellow' style={{ fontSize: "12pt", textShadow: '1px 1px 1px #000, -1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000' }}>VS</div>
+      <div className='candombe emblem-yellow' style={{ fontSize: '12pt', textShadow: '1px 1px 1px #000, -1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000' }}>VS</div>
       <div>{players[2]}</div>
       <div />
       <div>{players[3]}</div>
@@ -415,11 +415,12 @@ function TournamentFinalStandings (): JSX.Element {
         >
           {getOrdinalNumber(i + 1)}
         </div>
-        <div className="black-shadow" style={{
-          fontSize: '24px',
-          marginTop: "auto",
-          marginBottom: "auto"
-        }}
+        <div
+          className='black-shadow' style={{
+            fontSize: '24px',
+            marginTop: 'auto',
+            marginBottom: 'auto'
+          }}
         >
           {playerInfo[player]}
         </div>

@@ -77,7 +77,7 @@ function PretournamentControlRoom (): JSX.Element {
         className='burbank black-shadow'
       >DATE CHANGE
       </span><br />
-      <input className="input burbank" style={{width: "fit-content"}} type='datetime-local' value={date} onChange={(e) => setDate(e.target.value)} /><br /><br />
+      <input className='input burbank' style={{ width: 'fit-content' }} type='datetime-local' value={date} onChange={(e) => setDate(e.target.value)} /><br /><br />
       <button className='button burbank' style={{ marginRight: '1%' }} onClick={changeDate}>SET DATE</button>
       <button className='button is-danger burbank' onClick={removeDate}>REMOVE DATE</button><br /><br />
       <div>
@@ -178,7 +178,7 @@ function ControllerWithDecider<T> ({ Child, childProps, playerCount, runners, up
   }
   const decider = (
     <div>
-      <textarea className='input burbank'style={{width: "fit-content", height: "19vh"}} placeholder="Input player IDs in descending order of placement, press enter after each player" value={standingDecider} onChange={(e) => setStandingDecider(e.target.value)} />
+      <textarea className='input burbank' style={{ width: 'fit-content', height: '19vh' }} placeholder='Input player IDs in descending order of placement, press enter after each player' value={standingDecider} onChange={(e) => setStandingDecider(e.target.value)} />
       <button className='button burbank' style={{ marginLeft: '1%' }} onClick={decideStandings}>DECIDE</button>
     </div>
   )
@@ -233,7 +233,7 @@ function TournamentMatchController ({ match, index, decider }: {
       </div>
     )
   } else {
-    matchElement = <div><div className='burbank black-shadow'>FINISHED</div><br/></div>
+    matchElement = <div><div className='burbank black-shadow'>FINISHED</div><br /></div>
   }
 
   return (
@@ -321,7 +321,7 @@ function ActiveTournamentControlRoom (): JSX.Element {
         await deleteTournament()
         await resetTournamentDate()
         sendUpdate({ updateState: true })
-        window.location.reload();
+        window.location.reload()
       })()
     }
   }
