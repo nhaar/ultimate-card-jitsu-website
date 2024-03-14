@@ -791,7 +791,7 @@ class Tournament {
       phaseString = 'START'
     }
 
-    return `${phaseString}, MATCH #${matchNumber}`
+    return `${phaseString}: MATCH #${matchNumber}`
   }
 
   /**
