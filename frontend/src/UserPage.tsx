@@ -256,7 +256,7 @@ export default function UserPage ({ role }: {
   if (role === UserRole.Admin) {
     adminDest = '/admin'
   } else if (role === UserRole.CPIAdmin) {
-    adminDest = "/cpimagined-credentials"
+    adminDest = '/cpimagined-credentials'
   }
 
   return (
