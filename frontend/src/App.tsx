@@ -9,8 +9,6 @@ import FaviconFire from './images/faviconfire.ico'
 import FaviconNormal from './images/faviconnormal.ico'
 import BackgroundNormal from './images/backgroundnormal.png'
 import BackgroundFire from './images/backgroundfire.png'
-import BackgroundWater from './images/backgroundwater.png'
-import BackgroundSnow from './images/backgroundsnow.png'
 import LogoFire from './images/logofire.png'
 import LogoNormal from './images/logonormal.png'
 

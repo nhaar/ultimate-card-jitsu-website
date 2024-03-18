@@ -27,12 +27,22 @@ export async function getAllPlayers (): Promise<string[]> {
 }
 
 /**
- * Creates a tournament with the given player names
+ * Creates a FIRE tournament with the given player names
  * @param players
  * @returns `true` if the tournament was created successfully, `false` otherwise
  */
-export async function createTournament (players: string[]): Promise<boolean> {
-  const response = await postJSON('api/tournament/create', { players })
+export async function createFireTournament (players: string[]): Promise<boolean> {
+  const response = await postJSON('api/tournament/create-fire', { players })
+  return response.ok
+}
+
+/**
+ * Creates a normal tournament with the given player names
+ * @param players 
+ * @returns `true` if the tournament was created succesfully, `false` otherwise
+ */
+export async function createNormalTournament (players: string[]): Promise<boolean> {
+  const response = await postJSON('api/tournament/create-normal', { players })
   return response.ok
 }
 

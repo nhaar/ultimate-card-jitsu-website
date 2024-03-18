@@ -3,7 +3,7 @@ import { Request, Response } from 'express'
 
 import User from '../database/user'
 import { asyncWrapper, formatCookies } from '../utils/utils'
-import Tournament from '../database/tournament'
+import FireTournament from '../database/fire-tournament'
 
 const router = express.Router()
 
@@ -157,7 +157,7 @@ router.post('/edit', replyWithUser(async (user: User, res: Response, req: Reques
   if (typeof (username) === 'string') {
     const previousName = await user.getUserName()
     if (username !== previousName) {
-      if (await Tournament.tournamentExists()) {
+      if (await FireTournament.tournamentExists()) {
         res.status(418).json({ error: 'tournament in progress' })
         return
       } else if (await user.isNameAvailable(username)) {

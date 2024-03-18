@@ -1,10 +1,11 @@
 import { useContext, useEffect, useState } from 'react'
-import { TournamentMatch, TournamentTies, createTournament, deleteTournament, getAllPlayers, getPlayerInfo, getTies, getTournamentMatches, isTournamentActive, resetTournamentDate, rollbackTournament, setTournamentDate, settleTie, updateMatchScore } from './api'
+import { TournamentMatch, TournamentTies, createFireTournament, deleteTournament, getAllPlayers, getPlayerInfo, getTies, getTournamentMatches, isTournamentActive, resetTournamentDate, rollbackTournament, setTournamentDate, settleTie, updateMatchScore } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import { getCookie } from './utils'
 import { TournamentUpdate, TournamentUpdateContext } from './context/TournamentContext'
 import { TournamentMatchElement } from './MainPage'
 import { UcjWS } from './ws'
+import { WebsiteThemes, getWebsiteTheme } from './website-theme'
 
 /** Component responsible for the control room when a tournament is not active */
 function PretournamentControlRoom (): JSX.Element {
@@ -41,9 +42,52 @@ function PretournamentControlRoom (): JSX.Element {
     setUnselectedPlayers([...unselectedPlayers, player])
   }
 
+  /**
+   * Move a player up or down (going up means close to beginning)
+   * @param index Index of the player
+   * @param isUp `true` if moving up, `false` if moving down
+   */
+  function movePlayer (index: number, isUp: boolean): void {
+    const s = [...selectedPlayers]
+    const player = s.splice(index, 1)[0]
+    const indexDelta = isUp ? -1 : 1
+    s.splice(index + indexDelta, 0, player)
+    setSelectedPlayers(s)
+  }
+
+  /**
+   * Moves a player up
+   * @param index Index of the player
+   */
+  function movePlayerUp (index: number): void {
+    if (index === 0) {
+      return
+    }
+    movePlayer(index, true)
+  }
+
+  /**
+   * Moves a player down
+   * @param index Index of the player
+   */
+  function movePlayerDown (index: number): void {
+    if (index === selectedPlayers.length - 1) {
+      return
+    }
+    movePlayer(index, false)
+  }
+
   /** Handles clicking for creating a tournament */
   async function handleCreateTournament (): Promise<void> {
-    const ok = await createTournament(selectedPlayers)
+    let ok = false
+    switch (getWebsiteTheme()) {
+      case WebsiteThemes.Fire:
+        ok = await createFireTournament(selectedPlayers)
+        break
+      default:
+        throw new Error('Not implemented')
+    }
+
     window.alert(ok ? 'Tournament created!' : 'Failed to create tournament')
     if (ok) {
       sendUpdate({ updateState: true, playerInfo: true })
@@ -94,7 +138,7 @@ function PretournamentControlRoom (): JSX.Element {
           <button className='button burbank' key={player} onClick={() => selectPlayer(player)}>{player}</button>
         ))}
       </div><br />
-      <div>
+      <div className='is-flex is-flex-direction-column '>
         <span
           className='burbank black-shadow' style={{
             fontSize: '14pt',
@@ -104,9 +148,31 @@ function PretournamentControlRoom (): JSX.Element {
           }}
         >SELECTED
         </span>
-        {selectedPlayers.map((player) => (
-          <button className='button burbank' key={player} onClick={() => unselectPlayer(player)}>{player}</button>
-        ))}
+        <div style={{
+          backgroundColor: 'black'
+        }}
+        >
+          This here allows to move the players, used for seeding. Seeding is only important for REGULAR CARD-JITSU
+        </div>
+        {selectedPlayers.map((player, i) => {
+          const moveWidthStyle: React.CSSProperties = {
+            width: '100px'
+          }
+          const moveUpText = i === 0 ? '' : 'MOVE UP'
+          const moveDownText = i === selectedPlayers.length - 1 ? '' : 'MOVE DOWN'
+          return (
+            <div key={i}>
+              <span style={{
+                color: 'black'
+              }}
+              ># {i + 1}
+              </span>
+              <button className='button burbank' onClick={() => movePlayerUp(i)} style={moveWidthStyle}>{moveUpText}</button>
+              <button className='button burbank' onClick={() => movePlayerDown(i)} style={moveWidthStyle}>{moveDownText}</button>
+              <button className='button burbank' onClick={() => unselectPlayer(player)}>{player}</button>
+            </div>
+          )
+        })}
       </div><br /><br />
       <button className='button burbank' onClick={() => { void handleCreateTournament() }}>CREATE TOURNAMENT</button>
     </div>

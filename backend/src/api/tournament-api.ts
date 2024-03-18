@@ -2,46 +2,63 @@ import express = require('express')
 import { Request, Response } from 'express'
 import { asyncWrapper, isStringNumber } from '../utils/utils'
 import User from '../database/user'
-import Tournament, { PlayerInfo, TournamentPhase } from '../database/tournament'
+import FireTournament, { PlayerInfo, TournamentPhase } from '../database/fire-tournament'
+import NormalTournament from '../database/normal-tournament'
 
 const router = express.Router()
 
-router.post('/create', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
-  const { players }: { players: string[] } = req.body
+/**
+ * Get a function that can be used as a base endpoint response for creating a tournament
+ * @param minimumPlayers Minimum number of players allowed in tournament
+ * @param createCallback Function that takes the array of player info and creates the tournament in the database
+ * @returns The function that can be used
+ */
+function getCreateTournamentResponse (minimumPlayers: number, createCallback: (...playerInfo: PlayerInfo[]) => Promise<void>): ((req: Request, res: Response) => void) {
+  return asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+    const { players }: { players: string[] } = req.body
 
-  if (!Array.isArray(players)) {
-    res.status(400).json({ error: 'players must be an array' })
-    return
-  }
-  if (!players.every((player) => typeof (player) === 'string')) {
-    res.status(400).json({ error: 'players must be an array of strings' })
-    return
-  }
-  if (players.length < 4) {
-    res.status(400).json({ error: 'not enough players' })
-    return
-  }
-
-  const playerInfo: PlayerInfo[] = []
-  for (const player of players) {
-    const user = await User.getUserByName(player)
-    if (user === null) {
-      res.status(400).json({ error: `user ${player} does not exist` })
+    if (!Array.isArray(players)) {
+      res.status(400).json({ error: 'players must be an array' })
       return
     }
-    playerInfo.push({
-      name: player,
-      id: user.id
-    })
-  }
+    if (!players.every((player) => typeof (player) === 'string')) {
+      res.status(400).json({ error: 'players must be an array of strings' })
+      return
+    }
+    if (players.length < minimumPlayers) {
+      res.status(400).json({ error: 'not enough players' })
+      return
+    }
 
-  await Tournament.createTournament(...playerInfo)
+    const playerInfo: PlayerInfo[] = []
+    for (const player of players) {
+      const user = await User.getUserByName(player)
+      if (user === null) {
+        res.status(400).json({ error: `user ${player} does not exist` })
+        return
+      }
+      playerInfo.push({
+        name: player,
+        id: user.id
+      })
+    }
 
-  res.sendStatus(200)
+    await createCallback(...playerInfo)
+
+    res.sendStatus(200)
+  })
+}
+
+router.post('/create-fire', User.checkAdminMiddleware, getCreateTournamentResponse(4, async (...playerInfo: PlayerInfo[]): Promise<void> => {
+  await FireTournament.createTournament(playerInfo)
+}))
+
+router.post('/create-normal', User.checkAdminMiddleware, getCreateTournamentResponse(4, async (...playerInfo: PlayerInfo[]): Promise<void> => {
+  await NormalTournament.createTournament(playerInfo)
 }))
 
 router.get('/matches', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
-  const tournament = await Tournament.getTournament()
+  const tournament = await FireTournament.getTournament()
   if (tournament === undefined) {
     res.sendStatus(400)
     return
@@ -66,7 +83,7 @@ router.post('/update-score', User.checkAdminMiddleware, asyncWrapper(async (req:
     return
   }
 
-  const tournament = await Tournament.getTournament()
+  const tournament = await FireTournament.getTournament()
   if (tournament === undefined) {
     res.sendStatus(400)
     return
@@ -81,7 +98,7 @@ router.post('/update-score', User.checkAdminMiddleware, asyncWrapper(async (req:
 }))
 
 router.get('/tie', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
-  const tournament = await Tournament.getTournament()
+  const tournament = await FireTournament.getTournament()
   if (tournament === undefined) {
     res.sendStatus(400)
     return
@@ -93,12 +110,12 @@ router.get('/tie', asyncWrapper(async (req: Request, res: Response): Promise<voi
 }))
 
 router.get('/active', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
-  const exists = await Tournament.tournamentExists()
+  const exists = await FireTournament.tournamentExists()
   res.json({ active: exists }).status(200)
 }))
 
 router.get('/date', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-  const date = await Tournament.getTournamentDate()
+  const date = await FireTournament.getTournamentDate()
   res.json({ date }).status(200)
 }))
 
@@ -117,7 +134,7 @@ router.post('/settle-tie', User.checkAdminMiddleware, asyncWrapper(async (req: R
     return
   }
 
-  const tournament = await Tournament.getTournament()
+  const tournament = await FireTournament.getTournament()
   if (tournament === undefined) {
     res.sendStatus(400)
     return
@@ -128,7 +145,7 @@ router.post('/settle-tie', User.checkAdminMiddleware, asyncWrapper(async (req: R
 }))
 
 router.get('/players-info', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
-  const tournament = await Tournament.getTournament()
+  const tournament = await FireTournament.getTournament()
   if (tournament === undefined) {
     res.sendStatus(400)
     return
@@ -138,7 +155,7 @@ router.get('/players-info', asyncWrapper(async (req: Request, res: Response): Pr
 }))
 
 router.post('/rollback', User.checkAdminMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-  const tournament = await Tournament.getTournament()
+  const tournament = await FireTournament.getTournament()
   if (tournament === undefined) {
     res.sendStatus(400)
     return
@@ -151,7 +168,7 @@ router.post('/rollback', User.checkAdminMiddleware, asyncWrapper(async (_: Reque
 /** Helper function to create the response to asking for rankings of a phase */
 const rankingResponse = (phase: TournamentPhase): ((req: Request, res: Response) => void) => {
   return asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-    const tournament = await Tournament.getTournament()
+    const tournament = await FireTournament.getTournament()
     if (tournament === undefined) {
       res.sendStatus(400)
       return
@@ -167,7 +184,7 @@ router.get('/start-rankings', rankingResponse(TournamentPhase.Start))
 router.get('/final-rankings', rankingResponse(TournamentPhase.Final))
 
 router.get('/current-phase', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-  const tournament = await Tournament.getTournament()
+  const tournament = await FireTournament.getTournament()
   if (tournament === undefined) {
     res.sendStatus(400)
     return
@@ -177,7 +194,7 @@ router.get('/current-phase', asyncWrapper(async (_: Request, res: Response): Pro
 }))
 
 router.get('/is-finished', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-  const tournament = await Tournament.getTournament()
+  const tournament = await FireTournament.getTournament()
   if (tournament === undefined) {
     res.sendStatus(400)
     return
@@ -187,7 +204,7 @@ router.get('/is-finished', asyncWrapper(async (_: Request, res: Response): Promi
 }))
 
 router.post('/delete', User.checkAdminMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-  await Tournament.deleteTournament()
+  await FireTournament.deleteTournament()
   res.sendStatus(200)
 }))
 
@@ -201,17 +218,17 @@ router.post('/set-date', User.checkAdminMiddleware, asyncWrapper(async (req: Req
     res.status(400).json({ error: 'date must be a number' })
     return
   }
-  await Tournament.setTournamentDate(date)
+  await FireTournament.setTournamentDate(date)
   res.sendStatus(200)
 }))
 
 router.post('/reset-date', User.checkAdminMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-  await Tournament.removeTournamentDate()
+  await FireTournament.removeTournamentDate()
   res.sendStatus(200)
 }))
 
 router.get('/get-display-phase', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-  const tournament = await Tournament.getTournament()
+  const tournament = await FireTournament.getTournament()
 
   if (tournament === undefined) {
     res.status(200).send({
@@ -227,7 +244,7 @@ router.get('/get-display-phase', asyncWrapper(async (_: Request, res: Response):
 }))
 
 router.get('/final-standings', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-  const tournament = await Tournament.getTournament()
+  const tournament = await FireTournament.getTournament()
 
   if (tournament === undefined) {
     res.sendStatus(400)
