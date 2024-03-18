@@ -94,7 +94,7 @@ wss.onConnection((ws) => {
       case 'unwatch-player': {
         UcjWSS.doIfAdmin(data, () => {
           wss.screenshare.makePlayerUnwatched(data.value)
-          
+
           // same as in watch player
           const playerSocket = wss.socketMap.get(data.value)
           playerSocket?.send('unwatch')

@@ -221,4 +221,44 @@ router.post('/make-cpi-admin', User.checkAdminMiddleware, asyncWrapper(async (re
   res.sendStatus(200)
 }))
 
+router.post('/update-discord', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+  const { siteUsername, discordUsername } = req.body
+
+  if (typeof (siteUsername) !== 'string' || typeof (discordUsername) !== 'string') {
+    res.sendStatus(400)
+    return
+  }
+
+  const user = await User.getUserByName(siteUsername)
+  if (user === null) {
+    res.sendStatus(400)
+    return
+  }
+
+  await user.updateDiscord(discordUsername)
+  res.sendStatus(200)
+}))
+
+router.post('/get-discord', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+  const { username } = req.body
+
+  if (typeof (username) !== 'string') {
+    res.sendStatus(400)
+    return
+  }
+  const user = await User.getUserByName(username)
+  if (user === null) {
+    res.sendStatus(400)
+    return
+  }
+
+  const discord = await user.getDiscord()
+  res.status(200).send({ discord })
+}))
+
+router.get('/discordless-users', User.checkAdminMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
+  const users = await User.getDiscordlessUsers()
+  res.status(200).send({ users })
+}))
+
 export default router

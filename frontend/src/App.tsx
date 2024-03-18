@@ -24,6 +24,7 @@ import CPImaginedCredentialsHandler from './CPImaginedCredentialsHandler'
 import UpcomingMatchesPopout from './UpcomingMatchesPopout'
 import CPIAdminAssigner from './CPIAdminAssigner'
 import AdminPage from './AdminPage'
+import DiscordAssigner from './DiscordAssigner'
 import Haiku from './Haiku'
 import { WebsiteThemes, getWebsiteTheme } from './website-theme'
 
@@ -197,6 +198,10 @@ export default function App (): JSX.Element {
     }
     case '/admin': {
       Page = <AdminPage />
+      break
+    }
+    case '/discord-assign': {
+      Page = <DiscordAssigner />
       break
     }
     default: {

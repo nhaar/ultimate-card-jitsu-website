@@ -108,7 +108,7 @@ class ScreenShareManager {
     const now = new Date()
     const inactivePlayers = Object.keys(this.activityData).filter(id => {
       const lastActivity = this.activityData.get(id)
-      
+
       // true ensures this player will be removed
       if (lastActivity === undefined) {
         return true

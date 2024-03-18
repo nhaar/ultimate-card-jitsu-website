@@ -355,3 +355,28 @@ export async function getUserCPIImaginedCredentials (username: string): Promise<
 
   return response as CPImaginedCredentials
 }
+
+/** Get a username's discord */
+export async function getUserDiscord (username: string): Promise<string> {
+  const response = await postAndGetJSON('api/user/get-discord', { username })
+  if (response === null) {
+    return ''
+  }
+
+  return (response as { discord: string }).discord
+}
+
+/** Update an user's discord */
+export async function updateUserDiscord (siteUsername: string, discordUsername: string): Promise<boolean> {
+  const response = await postJSON('api/user/update-discord', { siteUsername, discordUsername })
+  return response.ok
+}
+
+/** Get a list of all users without a discord name (list of username) */
+export async function getDiscordlessUsers (): Promise<string[]> {
+  const response = await getJSON('api/user/discordless-users')
+  if (response === null) {
+    return []
+  }
+  return (response as { users: string[] }).users
+}

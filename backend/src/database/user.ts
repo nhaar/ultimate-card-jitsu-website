@@ -214,4 +214,22 @@ export default class User {
     const res = await db.getQuery('SELECT username FROM players WHERE cpimagined_user IS NULL OR cpimagined_user = \'\' OR cpimagined_pass IS NULL OR cpimagined_pass = \'\'', [])
     return res.rows.map((row: any) => row.username)
   }
+
+  /** Update this user's discord username */
+  async updateDiscord (discord: string): Promise<void> {
+    await this.updateColumn('discord', discord)
+  }
+
+  /** Get this user's discord username */
+  async getDiscord (): Promise<string> {
+    const res = await this.db.getQuery('SELECT discord FROM players WHERE id = $1', [this.id])
+    return res.rows[0].discord ?? ''
+  }
+
+  /** Get a list of all users with no discord in their account (list of username) */
+  static async getDiscordlessUsers (): Promise<string[]> {
+    const db = new Database()
+    const res = await db.getQuery('SELECT username FROM players WHERE discord IS NULL OR discord = \'\'', [])
+    return res.rows.map((row: any) => row.username)
+  }
 }

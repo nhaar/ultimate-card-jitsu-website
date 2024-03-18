@@ -14,9 +14,12 @@ export default class Database {
     })
   }
 
+  /** Name of user table */
+  static readonly USER_TABLE = 'players'
+
   async initTables (): Promise<void> {
     await this.pool.query(`
-      CREATE TABLE IF NOT EXISTS players (
+      CREATE TABLE IF NOT EXISTS ${Database.USER_TABLE} (
         id SERIAL PRIMARY KEY,
         username TEXT NOT NULL,
         password TEXT NOT NULL,
@@ -29,13 +32,18 @@ export default class Database {
       );
     `)
 
-    void this.pool.query(`
+    await this.pool.query(`
+      ALTER TABLE ${Database.USER_TABLE}
+      ADD COLUMN IF NOT EXISTS discord TEXT
+    `)
+
+    await this.pool.query(`
       CREATE TABLE IF NOT EXISTS tournament (
         data JSONB
       );
     `)
 
-    void this.pool.query(`
+    await this.pool.query(`
       CREATE TABLE IF NOT EXISTS tournament_date (
         date TEXT
       );
