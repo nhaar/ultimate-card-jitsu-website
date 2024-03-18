@@ -2,8 +2,10 @@ import express = require('express')
 import { Request, Response } from 'express'
 import { asyncWrapper, isStringNumber } from '../utils/utils'
 import User from '../database/user'
-import FireTournament, { PlayerInfo, TournamentPhase } from '../database/fire-tournament'
+import { PlayerInfo } from '../database/tournament'
+import FireTournament, { TournamentPhase } from '../database/fire-tournament'
 import NormalTournament from '../database/normal-tournament'
+
 
 const router = express.Router()
 
