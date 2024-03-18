@@ -6,13 +6,19 @@ import { PlayerInfo } from './fire-tournament'
 interface TournamentObject {
   // left optional because when this is stored as a backup it doesn't have this property, to avoid circular backup and exponential growth of memory
   backups?: string[]
+  /** Info from all players in the tournament */
+  players: PlayerInfo[]
   tournamentSpecific: any
+
 }
 
 /** Base class for an ongoing tournament. */
 export default abstract class Tournament {
   /** Contains multiple backups of the tournament as serialized JSON, with the first element being the most recent one */
   backups: string[] = []
+
+  /** Info for all players in the tournament */
+  players: PlayerInfo[] = []
 
   /** Creates the tournament from the JSON object in the database (that is, already parsed here as an object) */
   constructor (tournamentObject: TournamentObject)
@@ -23,8 +29,10 @@ export default abstract class Tournament {
   constructor (value: TournamentObject | PlayerInfo[]) {
     if (this.isTournamentObject(value)) {
       this.backups = value.backups ?? []
+      this.players = value.players
       this.createFromSpecificData(value.tournamentSpecific)
     } else {
+      this.players = value
       this.createFromPlayers(value)
     }
   }
@@ -58,6 +66,7 @@ export default abstract class Tournament {
   serializeData (withBackups: boolean): string {
     const data: TournamentObject = {
       backups: withBackups ? this.backups : undefined,
+      players: this.players,
       tournamentSpecific: this.getSpecificData()
     }
     return JSON.stringify(data)
@@ -100,9 +109,29 @@ export default abstract class Tournament {
         }
       }
     }
+    if (!Array.isArray(value.players) || value.players.every(Tournament.isPlayerInfo) === false) {
+      return false
+    }
     if (!this.isSpecificTournamentObject(value.tournamentSpecific)) {
       return false
     }
+    return true
+  }
+
+  /**
+   * Checks if a value is a player info object
+   * @param obj Value to check
+   * @returns `true` if it is
+   */
+  static isPlayerInfo (obj: any): obj is PlayerInfo {
+    if (!isObject(obj)) {
+      return false
+    }
+
+    if (typeof (obj.id) !== 'number' || typeof (obj.name) !== 'string') {
+      return false
+    }
+
     return true
   }
 }

@@ -33,8 +33,6 @@ interface Bracket {
   start: TournamentPhaseData
   /** Matches of the final */
   final: TournamentPhaseData
-  /** Info from all players in the tournament */
-  players: PlayerInfo[]
 }
 
 /** Object that stores a singular player's stats within a phase */
@@ -80,8 +78,7 @@ export enum TournamentPhase {
 class FireTournament extends Tournament {
   bracket: Bracket = {
     start: { matches: [] },
-    final: { matches: [] },
-    players: []
+    final: { matches: [] }
   }
 
   static readonly FIRST_PLACE_POINTS = 4
@@ -115,8 +112,7 @@ class FireTournament extends Tournament {
       },
       final: {
         matches: FireTournament.generateFinalPhaseMatches()
-      },
-      players
+      }
     }
   }
 
@@ -193,18 +189,6 @@ class FireTournament extends Tournament {
     return matches
   }
 
-  static isPlayerInfo (obj: any): obj is PlayerInfo {
-    if (typeof (obj) !== 'object' || obj === null || Array.isArray(obj)) {
-      return false
-    }
-
-    if (typeof (obj.id) !== 'number' || typeof (obj.name) !== 'string') {
-      return false
-    }
-
-    return true
-  }
-
   static isMatch (obj: any): obj is Match {
     if (typeof (obj) !== 'object' || obj === null || Array.isArray(obj)) {
       return false
@@ -252,9 +236,7 @@ class FireTournament extends Tournament {
     if (!FireTournament.isTournamentPhase(obj.start) || !FireTournament.isTournamentPhase(obj.final)) {
       return false
     }
-    if (!Array.isArray(obj.players) || obj.players.every(FireTournament.isPlayerInfo) === false) {
-      return false
-    }
+
     return true
   }
 
@@ -417,7 +399,7 @@ class FireTournament extends Tournament {
   /** Get an array containing all ID of all players in a phase of the tournament */
   getPlayerIds (phase: TournamentPhase): number[] {
     if (phase === TournamentPhase.Start) {
-      return this.bracket.players.map(player => player.id)
+      return this.players.map(player => player.id)
     } else {
       // all finalists should be in any of the matches of the final
 
@@ -689,7 +671,7 @@ class FireTournament extends Tournament {
   /** Returns a map of all players in the tournament from their IDs to their name */
   getPlayerInfo (): { [id: number]: string } {
     const playerInfo: { [id: number]: string } = {}
-    for (const player of this.bracket.players) {
+    for (const player of this.players) {
       playerInfo[player.id] = player.name
     }
     return playerInfo
