@@ -1,6 +1,13 @@
 import { isObject } from '../utils/utils'
 import Database from './database'
-import { PlayerInfo } from './fire-tournament'
+
+/** All player data */
+export interface PlayerInfo {
+  /** Id as in the database */
+  id: number
+  /** Name for readability only */
+  name: string
+}
 
 /** Interface for the object that's stored as a JSON in the database */
 interface TournamentObject {

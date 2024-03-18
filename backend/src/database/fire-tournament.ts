@@ -1,18 +1,12 @@
 import { isObject, isStringNumber } from '../utils/utils'
 import Database from './database'
-import Tournament from './tournament'
+import Tournament, { PlayerInfo } from './tournament'
 
 interface PlayerPoints {
   [key: number]: number
 }
 
-/** All player data */
-export interface PlayerInfo {
-  /** Id as in the database */
-  id: number
-  /** Name for readability only */
-  name: string
-}
+
 
 interface Match {
   /** Array with all player IDs in the match, or of `null`, if they are not yet decided */
@@ -22,6 +16,7 @@ interface Match {
   // eg [2, 0, 1, 3] means index 2 of runners finished first, and so forth
   standings: number[]
 }
+
 
 interface TournamentPhaseData {
   matches: Match[]

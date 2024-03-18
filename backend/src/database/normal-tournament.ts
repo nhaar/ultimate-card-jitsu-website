@@ -1,5 +1,4 @@
-import { PlayerInfo } from './fire-tournament'
-import Tournament from './tournament'
+import Tournament, { PlayerInfo } from './tournament'
 
 /** Class for an ongoing tournament of Card-Jitsu */
 export default class NormalTournament extends Tournament {
