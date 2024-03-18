@@ -55,21 +55,16 @@ function changeFavicon (theme: WebsiteThemes): void {
 
 function changeBackground (theme: WebsiteThemes): void {
   let image: string
+  let overlayClass: string
   switch (theme) {
     case WebsiteThemes.Normal: {
       image = BackgroundNormal
+      overlayClass = 'normal-background-overlay'
       break
     }
     case WebsiteThemes.Fire: {
       image = BackgroundFire
-      break
-    }
-    case WebsiteThemes.Water: {
-      image = BackgroundWater
-      break
-    }
-    case WebsiteThemes.Snow: {
-      image = BackgroundSnow
+      overlayClass = 'fire-background-overlay'
       break
     }
     default: {
@@ -77,6 +72,7 @@ function changeBackground (theme: WebsiteThemes): void {
     }
   }
   document.body.style.backgroundImage = `url(${image})`
+  document.body.classList.add(overlayClass)
 }
 
 export function determineLogo (theme: WebsiteThemes): string {
