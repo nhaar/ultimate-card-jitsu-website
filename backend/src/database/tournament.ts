@@ -34,27 +34,16 @@ export default abstract class Tournament {
   constructor (players: PlayerInfo[])
 
   constructor (value: TournamentObject | PlayerInfo[]) {
+    // Because of how the constructor works, derived classes must manually implement solutions to reading the given value, they must follow
+    // the derived class constructor should account for when the data is the player info array or when it's data from the
+    // database
     if (this.isTournamentObject(value)) {
       this.backups = value.backups ?? []
       this.players = value.players
-      this.createFromSpecificData(value.tournamentSpecific)
     } else {
       this.players = value
-      this.createFromPlayers(value)
     }
   }
-
-  /**
-   * Method that implements a way of creating the tournament data using the parsed data object stored in the database
-   * @param specific An object that will have a format dependant of each tournament
-   */
-  abstract createFromSpecificData (specific: any): void
-
-  /**
-   * Method that implements a way of creating the tournament from scratch, containing only the players that will be used.
-   * @param players Info of all players. If the tournament is seeded, this expected to be starting from the lowest seed to the highest
-   */
-  abstract createFromPlayers (players: PlayerInfo[]): void
 
   /**
    * Method that implements a way of checking if an object is of the interface used for the "tournament specific" part of the data

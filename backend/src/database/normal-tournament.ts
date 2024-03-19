@@ -233,7 +233,6 @@ class StarterLoserMatch {
   }
 }
 
-
 class EvenLoserMatch {
   winnerPlayer: number | null
   loserOrigin: OddLoserMatch
@@ -343,21 +342,21 @@ class LoserBracket {
 
 /** Class for an ongoing tournament of Card-Jitsu */
 export default class NormalTournament extends Tournament {
-  winnersBracket?: WinnerBracket
-  losersBracket?: LoserBracket
+  winnersBracket: WinnerBracket
+  losersBracket: LoserBracket
   grandFinals: GrandFinals = { winnerBracketPlayer: null, loserBracketPlayer: null }
 
-  override createFromSpecificData (specific: any): void {
-    this.winnersBracket = WinnerBracket.fromData(specific.winnersBracket)
-    this.losersBracket = LoserBracket.fromData(specific.losersBracket)
-    this.grandFinals = specific.grandFinals
-  }
-
-  override createFromPlayers (players: PlayerInfo[]): void {
-    const tournamentPlayers = new NormalTournamentPlayers(players)
-    this.winnersBracket = WinnerBracket.fromPlayers(tournamentPlayers)
-    this.losersBracket = LoserBracket.fromSize(tournamentPlayers.size)
-    // default value for grand finals needs not be touched
+  constructor (value: any) {
+    super(value)
+    if (Array.isArray(value)) {
+      const tournamentPlayers = new NormalTournamentPlayers(this.players)
+      this.winnersBracket = WinnerBracket.fromPlayers(tournamentPlayers)
+      this.losersBracket = LoserBracket.fromSize(tournamentPlayers.size)
+    } else {
+      this.winnersBracket = WinnerBracket.fromData(value.tournamentSpecific.winnersBracket)
+      this.losersBracket = LoserBracket.fromData(value.tournamentSpecific.losersBracket)
+      this.grandFinals = value.tournamentSpecific.grandFinals
+    }
   }
 
   override isSpecificTournamentObject (tournamentSpecific: any): boolean {
@@ -365,9 +364,6 @@ export default class NormalTournament extends Tournament {
   }
 
   override getSpecificData (): any {
-    if (this.winnersBracket === undefined || this.losersBracket === undefined) {
-      throw new Error('Impossible')
-    }
     return {
       winnersBracket: this.winnersBracket.getData(),
       losersBracket: this.losersBracket.getData(),
