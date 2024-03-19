@@ -6,8 +6,6 @@ interface PlayerPoints {
   [key: number]: number
 }
 
-
-
 interface Match {
   /** Array with all player IDs in the match, or of `null`, if they are not yet decided */
   runners: Array<number | null>
@@ -16,7 +14,6 @@ interface Match {
   // eg [2, 0, 1, 3] means index 2 of runners finished first, and so forth
   standings: number[]
 }
-
 
 interface TournamentPhaseData {
   matches: Match[]
@@ -71,10 +68,7 @@ export enum TournamentPhase {
 
 /** Class that handles an ongoing tournament of Card-Jitsu Fire */
 class FireTournament extends Tournament {
-  bracket: Bracket = {
-    start: { matches: [] },
-    final: { matches: [] }
-  }
+  bracket?: Bracket
 
   static readonly FIRST_PLACE_POINTS = 4
   static readonly SECOND_PLACE_POINTS = 3
@@ -295,11 +289,17 @@ class FireTournament extends Tournament {
   }
 
   getMatches (): Match[] {
+    if (this.bracket === undefined) {
+      throw new Error('Impossible')
+    }
     return [...this.bracket.start.matches, ...this.bracket.final.matches]
   }
 
   /** Get all the matches in a given phase of the tournament */
   getPhaseMatches (phase: TournamentPhase): Match[] {
+    if (this.bracket === undefined) {
+      throw new Error('Impossible')
+    }
     if (phase === TournamentPhase.Start) {
       return this.bracket.start.matches
     } else {
@@ -314,6 +314,9 @@ class FireTournament extends Tournament {
    * @returns
    */
   async updateScore (matchIndex: number, standings: number[]): Promise<undefined | number> {
+    if (this.bracket === undefined) {
+      throw new Error('Impossible')
+    }
     if (standings.length !== 4) {
       return 1
     }
@@ -393,6 +396,9 @@ class FireTournament extends Tournament {
 
   /** Get an array containing all ID of all players in a phase of the tournament */
   getPlayerIds (phase: TournamentPhase): number[] {
+    if (this.bracket === undefined) {
+      throw new Error('Impossible')
+    }
     if (phase === TournamentPhase.Start) {
       return this.players.map(player => player.id)
     } else {
@@ -452,6 +458,9 @@ class FireTournament extends Tournament {
    * Checks whether the first phase matches have been completed, without tie settling
    */
   areFirstPhaseMatchesComplete (): boolean {
+    if (this.bracket === undefined) {
+      throw new Error('Impossible')
+    }
     for (const match of this.bracket.start.matches) {
       if (match.standings.length === 0) {
         return false
@@ -572,6 +581,9 @@ class FireTournament extends Tournament {
 
   /** Updates the matches in the final */
   updateFinalists (): void {
+    if (this.bracket === undefined) {
+      throw new Error('Impossible')
+    }
     const sortedPlayers = this.getRankings(TournamentPhase.Start)
     const finalists = sortedPlayers.slice(0, 4).map(player => player[0].player)
 
@@ -643,11 +655,17 @@ class FireTournament extends Tournament {
    * Check if the final phase (second phase) of the tournament has started
    */
   hasFinalStarted (): boolean {
+    if (this.bracket === undefined) {
+      throw new Error('Impossible')
+    }
     return this.bracket.final.matches[0].runners.every(runner => runner !== null)
   }
 
   /** Check if the final phase has ended (and thus the tournament, apart from tie settling) */
   hasFinalEnded (): boolean {
+    if (this.bracket === undefined) {
+      throw new Error('Impossible')
+    }
     return this.bracket.final.matches.every(match => match.standings.length > 0)
   }
 

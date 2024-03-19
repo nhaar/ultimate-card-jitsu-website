@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react'
-import { TournamentMatch, TournamentTies, createFireTournament, deleteTournament, getAllPlayers, getPlayerInfo, getTies, getTournamentMatches, isTournamentActive, resetTournamentDate, rollbackTournament, setTournamentDate, settleTie, updateMatchScore } from './api'
+import { TournamentMatch, TournamentTies, createFireTournament, createNormalTournament, deleteTournament, getAllPlayers, getPlayerInfo, getTies, getTournamentMatches, isTournamentActive, resetTournamentDate, rollbackTournament, setTournamentDate, settleTie, updateMatchScore } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import { getCookie } from './utils'
 import { TournamentUpdate, TournamentUpdateContext } from './context/TournamentContext'
@@ -83,6 +83,9 @@ function PretournamentControlRoom (): JSX.Element {
     switch (getWebsiteTheme()) {
       case WebsiteThemes.Fire:
         ok = await createFireTournament(selectedPlayers)
+        break
+      case WebsiteThemes.Normal:
+        ok = await createNormalTournament(selectedPlayers)
         break
       default:
         throw new Error('Not implemented')

@@ -38,7 +38,7 @@ export async function createFireTournament (players: string[]): Promise<boolean>
 
 /**
  * Creates a normal tournament with the given player names
- * @param players 
+ * @param players
  * @returns `true` if the tournament was created succesfully, `false` otherwise
  */
 export async function createNormalTournament (players: string[]): Promise<boolean> {

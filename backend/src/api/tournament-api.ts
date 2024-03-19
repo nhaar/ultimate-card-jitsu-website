@@ -6,7 +6,6 @@ import { PlayerInfo } from '../database/tournament'
 import FireTournament, { TournamentPhase } from '../database/fire-tournament'
 import NormalTournament from '../database/normal-tournament'
 
-
 const router = express.Router()
 
 /**
