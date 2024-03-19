@@ -37,10 +37,10 @@ interface WinnerBracketData {
 
 /** A match of the losers bracket in the very first round, which is exceptional because both players come from the winners bracket. */
 interface StarterLoserMatchData {
-  /** Player coming from the winners bracket from the "left", or `null` if it hasn't been decided yet.  */
-  left: number | null
+  /** Player coming from the winners bracket from the "left", or `null` if it hasn't been decided yet. `undefined` is for "BYE"s */
+  left: number | null | undefined
   /** Same as left, but in the "other side of the branch". */
-  right: number | null
+  right: number | null | undefined
   /** Scores, with the left one being the first. */
   results?: MatchResults
 }
@@ -50,7 +50,7 @@ interface EvenLoserMatchData {
   /** Player coming from the winners bracket, or `null` if it hasn't been decided yet. */
   winnerPlayer: number | null
   /** Loser bracket match where the winner gets to play in this match. */
-  loserOrigin: OddLoserMatchData
+  loserOrigin: OddLoserMatchData | StarterLoserMatchData
   /** Scores, with the winner player being the first. */
   results?: MatchResults
 }
@@ -96,15 +96,50 @@ class NormalTournamentPlayers {
   }
 }
 
-/** Class that handles a winner match. */
-class WinnerMatch {
-  left: WinnerMatch | number | null
-  right: WinnerMatch | number | null
+/** Base class for all types of matches */
+abstract class Match {
   results?: MatchResults
 
+  /** Get the winner of this match as an ID, or `null` if it hasn't been decided yet */
+  getWinner (): number | null {
+    if (this.results === undefined) {
+      return null
+    }
+
+    // they must be number, otherwise results shouldn't be here
+    const matchup = this.getMatchup()
+    if (typeof matchup[0] !== 'number' || typeof matchup[1] !== 'number') {
+      throw new Error('No matchup but has scores')
+    }
+
+    return this.results.scores[0] > this.results.scores[1] ? matchup[0] : matchup[1]
+  }
+
+  /** Method that implements a way to get the matchup of two IDs, or `null` if either hasn't been decided */
+  abstract getMatchup (): [number | null, number | null]
+}
+
+/** Class that handles a winner match. */
+class WinnerMatch extends Match {
+  left: WinnerMatch | number | null
+  right: WinnerMatch | number | null
+  parent: WinnerMatch | null
+  loserDestination: StarterLoserMatch | EvenLoserMatch | null
+
   constructor (left: WinnerMatch | number | null, right: WinnerMatch | number | null) {
+    super()
     this.left = left
     this.right = right
+    this.parent = null
+    this.loserDestination = null
+  }
+
+  /** Makes both children reference this as a parent */
+  setAsParentInChildren (): void {
+    if (this.left instanceof WinnerMatch && this.right instanceof WinnerMatch) {
+      this.left.parent = this
+      this.right.parent = this
+    }
   }
 
   /**
@@ -146,7 +181,9 @@ class WinnerMatch {
     } else {
       const left = WinnerMatch.fromPlayers(players, leftSeed, depth + 1)
       const right = WinnerMatch.fromPlayers(players, rightSeed, depth + 1)
-      return new WinnerMatch(left, right)
+      const match = new WinnerMatch(left, right)
+      match.setAsParentInChildren()
+      return match
     }
   }
 
@@ -177,6 +214,14 @@ class WinnerMatch {
       }
     }
   }
+
+  override getMatchup (): [number | null, number | null] {
+    if (this.left instanceof WinnerMatch) {
+      return [this.left.getWinner(), (this.right as WinnerMatch).getWinner()]
+    }
+
+    return [this.left, this.right as (null | number)]
+  }
 }
 
 /** Class that handles a winner bracket. */
@@ -206,16 +251,36 @@ class WinnerBracket {
       final: this.final.getData()
     }
   }
+
+  /** Get the first round of the winner's bracket */
+  getFirstRound (): WinnerRound {
+    let queue = []
+    let current = [this.final]
+
+    while (true) {
+      for (const match of current) {
+        if (!(match.left instanceof WinnerMatch)) {
+          return new WinnerRound(current)
+        }
+        queue.push(match.left)
+        queue.push(match.right as WinnerMatch)
+      }
+      current = queue
+      queue = []
+    }
+  }
 }
 
-// class has no logic. Might be able to use just the interface
-class StarterLoserMatch {
-  left: number | null
-  right: number | null
+class StarterLoserMatch extends Match {
+  left: number | null | undefined
+  right: number | null | undefined
+  parent: EvenLoserMatch | null
 
   constructor () {
+    super()
     this.left = null
     this.right = null
+    this.parent = null
   }
 
   getData (): StarterLoserMatchData {
@@ -231,15 +296,23 @@ class StarterLoserMatch {
     match.right = data.right
     return match
   }
+
+  override getMatchup (): [number | null, number | null] {
+    return [this.left ?? null, this.right ?? null]
+  }
 }
 
-class EvenLoserMatch {
+class EvenLoserMatch extends Match {
   winnerPlayer: number | null
-  loserOrigin: OddLoserMatch
+  loserOrigin: OddLoserMatch | StarterLoserMatch
+  parent: OddLoserMatch | null
+  results?: MatchResults
 
-  constructor (loserOrigin: OddLoserMatch) {
+  constructor (loserOrigin: OddLoserMatch | StarterLoserMatch) {
+    super()
     this.winnerPlayer = null
     this.loserOrigin = loserOrigin
+    this.parent = null
   }
 
   /** Creates children matches assuming that this is a match in the given round of the losers bracket. */
@@ -247,12 +320,28 @@ class EvenLoserMatch {
     if (round % 2 === 1) {
       throw new Error('Must be even.')
     }
-    return new EvenLoserMatch(OddLoserMatch.fromRound(round - 1))
+    if (round === 2) {
+      const origin = new StarterLoserMatch()
+      const match = new EvenLoserMatch(origin)
+      origin.parent = match
+      return match
+    } else {
+      const origin = OddLoserMatch.fromRound(round - 1)
+      const match = new EvenLoserMatch(origin)
+      origin.parent = match
+      return match
+    }
   }
 
   static fromData (data: EvenLoserMatchData): EvenLoserMatch {
-    const loserOrigin = OddLoserMatch.fromData(data.loserOrigin)
+    let loserOrigin
+    if (data.loserOrigin.left === null || typeof (data.loserOrigin.left) === 'number') {
+      loserOrigin = StarterLoserMatch.fromData(data.loserOrigin as StarterLoserMatchData)
+    } else {
+      loserOrigin = OddLoserMatch.fromData(data.loserOrigin as OddLoserMatchData)
+    }
     const match = new EvenLoserMatch(loserOrigin)
+    loserOrigin.parent = match
     match.winnerPlayer = data.winnerPlayer
     return match
   }
@@ -263,15 +352,23 @@ class EvenLoserMatch {
       loserOrigin: this.loserOrigin.getData()
     }
   }
+
+  override getMatchup (): [number | null, number | null] {
+    return [this.winnerPlayer, this.loserOrigin.getWinner()]
+  }
 }
 
-class OddLoserMatch {
-  left: EvenLoserMatch | StarterLoserMatch
-  right: EvenLoserMatch | StarterLoserMatch
+class OddLoserMatch extends Match {
+  left: EvenLoserMatch
+  right: EvenLoserMatch
+  parent: EvenLoserMatch | null
+  results?: MatchResults
 
-  constructor (left: EvenLoserMatch | StarterLoserMatch, right: EvenLoserMatch | StarterLoserMatch) {
+  constructor (left: EvenLoserMatch, right: EvenLoserMatch) {
+    super()
     this.left = left
     this.right = right
+    this.parent = null
   }
 
   /** Create a match for the given round, with appropriate children matches */
@@ -279,28 +376,21 @@ class OddLoserMatch {
     if (round % 2 === 0) {
       throw new Error('Must be odd.')
     }
-    if (round === 1) {
-      const left = new StarterLoserMatch()
-      const right = new StarterLoserMatch()
-      return new OddLoserMatch(left, right)
-    } else {
-      const left = EvenLoserMatch.fromRound(round - 1)
-      const right = EvenLoserMatch.fromRound(round - 1)
-      return new OddLoserMatch(left, right)
-    }
+    const left = EvenLoserMatch.fromRound(round - 1)
+    const right = EvenLoserMatch.fromRound(round - 1)
+    const match = new OddLoserMatch(left, right)
+    left.parent = match
+    right.parent = match
+    return match
   }
 
   static fromData (data: OddLoserMatchData): OddLoserMatch {
-    let left
-    let right
-    if ((data.left as any).winnerPlayer === undefined) {
-      left = StarterLoserMatch.fromData(data.left as StarterLoserMatch)
-      right = StarterLoserMatch.fromData(data.right as StarterLoserMatch)
-    } else {
-      left = EvenLoserMatch.fromData(data.left as EvenLoserMatchData)
-      right = EvenLoserMatch.fromData(data.right as EvenLoserMatchData)
-    }
-    return new OddLoserMatch(left, right)
+    const left = EvenLoserMatch.fromData(data.left as EvenLoserMatchData)
+    const right = EvenLoserMatch.fromData(data.right as EvenLoserMatchData)
+    const match = new OddLoserMatch(left, right)
+    left.parent = match
+    right.parent = match
+    return match
   }
 
   getData (): OddLoserMatchData {
@@ -308,6 +398,10 @@ class OddLoserMatch {
       left: this.left.getData(),
       right: this.left.getData()
     }
+  }
+
+  override getMatchup (): [number | null, number | null] {
+    return [this.left.getWinner(), this.right.getWinner()]
   }
 }
 
@@ -338,6 +432,146 @@ class LoserBracket {
       final: this.final.getData()
     }
   }
+
+  getFirstRound (): OddLoserRound {
+    let evenCurrent: EvenLoserMatch[] = [this.final]
+    let oddCurrent: OddLoserMatch[] = []
+    let queue = []
+
+    while (true) {
+      for (const match of evenCurrent) {
+        queue.push(match.loserOrigin)
+      }
+      if (queue[0] instanceof StarterLoserMatch) {
+        return new OddLoserRound(queue as StarterLoserMatch[])
+      }
+      oddCurrent = queue as OddLoserMatch[]
+      queue = []
+      for (const match of oddCurrent) {
+        queue.push(match.left)
+        queue.push(match.right)
+      }
+      evenCurrent = queue
+      queue = []
+    }
+  }
+}
+
+// interface TournamentMatch {
+//   player1Id: number | null
+//   played2Id: number | null
+//   player1Name: string
+//   player2Name: string
+// }
+
+/** Class for a round in the winners bracket */
+class WinnerRound {
+  matches: WinnerMatch[]
+
+  constructor (matches: WinnerMatch[]) {
+    this.matches = matches
+  }
+
+  /** Check if this is the last round (final's round) */
+  isEnd (): boolean {
+    return this.matches.length === 1
+  }
+
+  getNextRound (): WinnerRound {
+    const nextMatches: WinnerMatch[] = []
+    for (let i = 0; i < this.matches.length; i += 2) {
+      const match = this.matches[i]
+      if (match.parent === null) {
+        throw new Error('Parent must not be null')
+      }
+      nextMatches.push(match.parent)
+    }
+
+    return new WinnerRound(nextMatches)
+  }
+}
+
+/** Odd loser bracket round */
+class OddLoserRound {
+  matches: StarterLoserMatch[] | OddLoserMatch[]
+
+  constructor (matches: StarterLoserMatch[] | OddLoserMatch[]) {
+    this.matches = matches
+  }
+
+  getNextRound (): EvenLoserRound {
+    const matches: EvenLoserMatch[] = []
+    for (const match of this.matches) {
+      if (match.parent === null) {
+        throw new Error('Should not be null')
+      }
+      matches.push(match.parent)
+    }
+
+    return new EvenLoserRound(matches)
+  }
+}
+
+/** Even loser bracket round */
+class EvenLoserRound {
+  matches: EvenLoserMatch[]
+
+  constructor (matches: EvenLoserMatch[]) {
+    this.matches = matches
+  }
+
+  /**
+   * Get a version of this round with the inner order "flipped". This is used to do optimized matchmaking. The idea is basically flip this in order to minimize repetition in the loser bracket from the winner's bracket.
+   * @param roundIndex Number of the current round - 1 (thus, 0-indexed)
+   * @returns
+   */
+  flip (roundIndex: number): EvenLoserRound {
+    const newRound = new EvenLoserRound(this.matches)
+    const binary = roundIndex.toString(2).split('').reverse().join('')
+    for (let i = 0; i < binary.length; i++) {
+      if (binary[i] === '1') {
+        newRound.flipFraction(i)
+      }
+    }
+
+    return newRound
+  }
+
+  /**
+   * Reverse the matches to a certain power. Eg, if power = 0, then we have "1" subarray, which means we just revert the whole thing. If power = 2, then we have 2**2 = 4 subarrays. So, we split the matches in 4 slices and revert each of those slices.
+   * @param power
+   * @returns
+   */
+  flipFraction (power: number): void {
+    const partsNumber = Math.pow(2, power)
+    const subarraySize = this.matches.length / partsNumber
+    if (subarraySize < 1) {
+      return
+    }
+
+    const subarrays = []
+
+    for (let i = 0; i < partsNumber; i++) {
+      subarrays.push(this.matches.slice(i * partsNumber, i * partsNumber + subarraySize))
+    }
+    this.matches = []
+    for (const subarray of subarrays) {
+      this.matches.push(...subarray.reverse())
+    }
+  }
+
+  getNextRound (): OddLoserRound {
+    const nextMatches: OddLoserMatch[] = []
+    for (let i = 0; i < this.matches.length; i += 2) {
+      const match = this.matches[i]
+      if (match.parent === null) {
+        throw new Error('Parent must not be null')
+      }
+      nextMatches.push(match.parent)
+    }
+
+    return new OddLoserRound(nextMatches)
+  }
 }
 
 /** Class for an ongoing tournament of Card-Jitsu */
@@ -357,6 +591,97 @@ export default class NormalTournament extends Tournament {
       this.losersBracket = LoserBracket.fromData(value.tournamentSpecific.losersBracket)
       this.grandFinals = value.tournamentSpecific.grandFinals
     }
+  }
+
+  /** Add the loser destination to the winner bracket matches. */
+  linkLoserDestinations (): void {
+    let wRound = this.winnersBracket.getFirstRound()
+    const lStart = this.losersBracket.getFirstRound()
+
+    // link first round
+    wRound.matches.forEach((match, i) => {
+      match.loserDestination = lStart.matches[Math.floor(i / 2)] as StarterLoserMatch
+    })
+
+    wRound = wRound.getNextRound()
+    let lRound = lStart.getNextRound()
+
+    let round = 1
+    while (!wRound.isEnd()) {
+      const rotatedLoserRound = lRound.flip(round)
+      for (let i = 0; i < wRound.matches.length; i++) {
+        wRound.matches[i].loserDestination = rotatedLoserRound.matches[i]
+      }
+
+      wRound = wRound.getNextRound()
+      lRound = lRound.getNextRound().getNextRound()
+      round++
+    }
+
+    // finals
+    wRound.matches[0].loserDestination = lRound.matches[0]
+  }
+
+  /**
+   * Iterate through every match in the order they are (should be) played
+   * @param callback Callback to be applied to each match, taking as arguments the match itself and the match number
+   */
+  iterate (callback: (match: WinnerMatch | OddLoserMatch | EvenLoserMatch | StarterLoserMatch, n: number) => void): void {
+    let wRound = this.winnersBracket.getFirstRound()
+    let lOdd = this.losersBracket.getFirstRound()
+    let lEven
+
+    let number = 1
+    for (const match of wRound.matches) {
+      callback(match, number)
+      number++
+    }
+    for (const match of lOdd.matches) {
+      callback(match, number)
+      number++
+    }
+    wRound = wRound.getNextRound()
+    let isStart = true
+    while (true) {
+      for (const match of wRound.matches) {
+        callback(match, number)
+        number++
+      }
+      if (isStart) {
+        isStart = false
+      } else {
+        if (lEven === undefined) {
+          throw new Error('Impossible')
+        }
+        for (const match of lEven.matches.reverse()) {
+          callback(match, number)
+          number++
+        }
+        if (wRound.isEnd()) {
+          break
+        }
+        lOdd = lEven.getNextRound()
+      }
+      for (const match of lOdd.matches) {
+        callback(match, number)
+        number++
+      }
+
+      wRound = wRound.getNextRound()
+      lEven = lOdd.getNextRound()
+    }
+  }
+
+  getMatches (): any[] {
+    const matches: Array<{ matchup: [number | null, number | null], number: number }> = []
+    this.iterate((match, n) => {
+      matches.push({
+        matchup: match.getMatchup(),
+        number: n
+      })
+    })
+
+    return matches
   }
 
   override isSpecificTournamentObject (tournamentSpecific: any): boolean {
