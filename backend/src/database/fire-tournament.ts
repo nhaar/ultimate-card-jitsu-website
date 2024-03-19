@@ -656,16 +656,7 @@ class FireTournament extends Tournament {
     } else {
       return this.hasFinalEnded() && this.containsTie()
     }
-  }
-
-  /** Returns a map of all players in the tournament from their IDs to their name */
-  getPlayerInfo (): { [id: number]: string } {
-    const playerInfo: { [id: number]: string } = {}
-    for (const player of this.players) {
-      playerInfo[player.id] = player.name
-    }
-    return playerInfo
-  }
+}
 
   /**
    * Updates date for the start of the tournament
