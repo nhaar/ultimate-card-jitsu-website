@@ -37,18 +37,12 @@ interface WinnerBracketData {
 
 /** A match of the losers bracket in the very first round, which is exceptional because both players come from the winners bracket. */
 interface StarterLoserMatchData {
-  /** Player coming from the winners bracket from the "left", or `undefined` if it hasn't been decided yet. `null` is for "BYE"s */
-  left?: number | null
-  /** Same as left, but in the "other side of the branch". */
-  right?: number | null
   /** Scores, with the left one being the first. */
   results?: MatchResults
 }
 
 /** A match of the losers bracket for even rounds. They consist of one player coming from a previous loser match and another player coming from the winners bracket after losing.  */
 interface EvenLoserMatchData {
-  /** Player coming from the winners bracket, or `undefined` if it hasn't been decided yet. */
-  winnerPlayer?: number
   /** Loser bracket match where the winner gets to play in this match. */
   loserOrigin: OddLoserMatchData | StarterLoserMatchData
   /** Scores, with the winner player being the first. */
@@ -102,14 +96,21 @@ abstract class Match {
   /** Number of this match in the order the tournament should be played. */
   number?: number
 
-  /** Get the winner of this match as an ID, or `undefined` if it hasn't been decided yet */
-  getWinner (): number | undefined {
+  /** Get the winner of this match as an ID, or `undefined` if it hasn't been decided yet, or `null` if it is coming from a double BYE match */
+  getWinner (): number | undefined | null {
+    const matchup = this.getMatchup()
+    const [left, right] = matchup
+    if (left === null) {
+      return right
+    }
+    if (right === null) {
+      return left
+    }
     if (this.results === undefined) {
       return undefined
     }
-
+    
     // they must be number, otherwise results shouldn't be here
-    const matchup = this.getMatchup()
     if (typeof matchup[0] !== 'number' || typeof matchup[1] !== 'number') {
       throw new Error('No matchup but has scores')
     }
@@ -133,6 +134,27 @@ abstract class Match {
       throw new Error('Scores tie is not allowed')
     }
     this.results = { scores: [left, right] }
+  }
+
+  /** Checks if the matchup contains a "BYE" (ghost) player */
+  hasBye (): boolean {
+    return this.getMatchup().some(m => m === null)
+  }
+
+  /**
+   * Get the loser of this match, if it has been decided. In the presence of "BYE" players, the other player is automatically
+   * the winner
+   * @returns 
+   */
+  getLoser (): number | null | undefined {
+    const [left, right] = this.getMatchup()
+    if (left === null || right === null) {
+      return null
+    }
+    if (this.results === undefined) {
+      return undefined
+    }
+    return this.results.scores[0] > this.results.scores[1] ? right : left
   }
 }
 
@@ -303,8 +325,6 @@ class WinnerBracket {
 }
 
 class StarterLoserMatch extends Match {
-  left?: number | null
-  right?: number | null
   parent: EvenLoserMatch | null
   leftWinnerOrigin: WinnerMatch | null
   rightWinnerorigin: WinnerMatch | null
@@ -318,25 +338,25 @@ class StarterLoserMatch extends Match {
 
   getData (): StarterLoserMatchData {
     return {
-      left: this.left,
-      right: this.right
+      results: this.results
     }
   }
 
   static fromData (data: StarterLoserMatchData): StarterLoserMatch {
     const match = new StarterLoserMatch()
-    match.left = data.left
-    match.right = data.right
     return match
   }
 
   override getMatchup (): [number | null | undefined, number | null | undefined] {
-    return [this.left, this.right]
+    if (this.leftWinnerOrigin === null || this.rightWinnerorigin === null) {
+      throw new Error('Should have initialized')
+    }
+
+    return [this.leftWinnerOrigin.getLoser(), this.rightWinnerorigin.getLoser()]
   }
 }
 
 class EvenLoserMatch extends Match {
-  winnerPlayer?: number
   winnerOrigin: WinnerMatch | null
   loserOrigin: OddLoserMatch | StarterLoserMatch
   parent: OddLoserMatch | null
@@ -369,26 +389,55 @@ class EvenLoserMatch extends Match {
 
   static fromData (data: EvenLoserMatchData): EvenLoserMatch {
     let loserOrigin
-    if (data.loserOrigin.left === null || typeof (data.loserOrigin.left) === 'number') {
+    if ((data.loserOrigin as any).left === undefined) {
       loserOrigin = StarterLoserMatch.fromData(data.loserOrigin as StarterLoserMatchData)
     } else {
       loserOrigin = OddLoserMatch.fromData(data.loserOrigin as OddLoserMatchData)
     }
     const match = new EvenLoserMatch(loserOrigin)
     loserOrigin.parent = match
-    match.winnerPlayer = data.winnerPlayer
     return match
   }
 
   getData (): EvenLoserMatchData {
     return {
-      winnerPlayer: this.winnerPlayer,
       loserOrigin: this.loserOrigin.getData()
     }
   }
 
   override getMatchup (): [number | null | undefined, number | null | undefined] {
-    return [this.winnerPlayer, this.loserOrigin.getWinner()]
+    if (this.winnerOrigin === null) {
+      throw new Error('Did not link winners match')
+    }
+    return [this.winnerOrigin.getLoser(), this.loserOrigin.getWinner()]
+  }
+
+  /**
+   * Get the number of the origin match that doesn't contain an automatic victory "BYE" player
+   * @returns 
+   */
+  getNonByeOriginNumber (): number {
+    let matchToWin
+    // if there are TWO BYEs, then must trace back two steps behind to the match that has NO byes
+    // with balanced matchmaking, this is the only time this would ever be a problem
+    // console.log(match.loserOrigin)
+    if (this.loserOrigin.hasBye()) {
+      const loserOrigin = this.loserOrigin as StarterLoserMatch
+      const leftPath = loserOrigin.leftWinnerOrigin as WinnerMatch
+      const rightPath = loserOrigin.rightWinnerorigin as WinnerMatch
+      if (leftPath.hasBye()) {
+        matchToWin = rightPath.number
+      } else {
+        matchToWin = leftPath.number
+      }
+    } else {
+      matchToWin = this.loserOrigin.number
+    }
+
+    if (matchToWin === undefined) {
+      throw new Error('Impossible')
+    }
+    return matchToWin
   }
 }
 
@@ -436,6 +485,33 @@ class OddLoserMatch extends Match {
 
   override getMatchup (): [number | null | undefined, number | null | undefined] {
     return [this.left.getWinner(), this.right.getWinner()]
+  }
+
+  /**
+   * Get the number of the origin match going beyond matches with automati wins (BYEs)
+   * @param isLeft Whether or not the origin is from the left
+   * @returns 
+   */
+  getNonByeOriginNumber (isLeft: boolean): number {
+    let origin
+    if (isLeft) {
+      if (this.left.hasBye()) {
+        origin = this.left.winnerOrigin?.number
+      } else {
+        origin = this.left.number
+      }
+    } else {
+      if (this.right.hasBye()) {
+        origin = this.right.winnerOrigin?.number
+      } else {
+        origin = this.right.number
+      }
+    }
+
+    if (origin === undefined) {
+      throw new Error('Impossible')
+    }
+    return origin
   }
 }
 
@@ -496,7 +572,8 @@ interface TournamentMatch {
   player2Id?: number | null
   player1Name: string
   player2Name: string
-  n: number
+  n: number,
+  i: number
 }
 
 /** Class for a round in the winners bracket */
@@ -659,19 +736,30 @@ export default class NormalTournament extends Tournament {
 
   /**
    * Iterate through every match in the order they are (should be) played
-   * @param callback Callback to be applied to each match, taking as arguments the match itself and the match number
+   * @param callback Callback to be applied to each match, taking as arguments the match itself and the match number, and the match number counting BYE matches
    */
-  iterate (callback: (match: WinnerMatch | OddLoserMatch | EvenLoserMatch | StarterLoserMatch, n: number) => void): void {
+  iterate (callback: (match: WinnerMatch | OddLoserMatch | EvenLoserMatch | StarterLoserMatch, n: number, on: number) => void): void {
     let wRound = this.winnersBracket.getFirstRound()
     let lOdd = this.losersBracket.getFirstRound()
     let lEven
 
     let number = 1
+    let i = 1
     let isStart = true
+    
+    const useCallback = (match: WinnerMatch | OddLoserMatch | EvenLoserMatch | StarterLoserMatch): void =>  {
+      const hasBye = match.hasBye()
+      const n = hasBye ? -1 : number
+      if (!hasBye) {
+        number++
+      }
+      callback(match, n, i)
+      i++
+    }
+
     while (true) {
       for (const match of wRound.matches) {
-        callback(match, number)
-        number++
+        useCallback(match)
       }
       if (isStart) {
         isStart = false
@@ -680,8 +768,7 @@ export default class NormalTournament extends Tournament {
           throw new Error('Impossible')
         }
         for (const match of lEven.matches.reverse()) {
-          callback(match, number)
-          number++
+          useCallback(match)
         }
         if (wRound.isEnd()) {
           break
@@ -689,8 +776,7 @@ export default class NormalTournament extends Tournament {
         lOdd = lEven.getNextRound()
       }
       for (const match of lOdd.matches) {
-        callback(match, number)
-        number++
+        useCallback(match)
       }
 
       wRound = wRound.getNextRound()
@@ -709,7 +795,7 @@ export default class NormalTournament extends Tournament {
     const playerMap = this.getPlayerInfo()
 
     const matches: Array<TournamentMatch> = []
-    this.iterate((match, n) => {
+    this.iterate((match, n, on) => {
       const matchup = match.getMatchup()
       let playerNames
       if (match instanceof WinnerMatch || match instanceof OddLoserMatch) {
@@ -717,11 +803,21 @@ export default class NormalTournament extends Tournament {
           if (id === null) {
             return 'BYE'
           } else if (id === undefined) {
+            let matchOrigin
             if (i === 0) {
-              return `Winner of ${(match.left as WinnerMatch | EvenLoserMatch).number}.`
+              if (match instanceof WinnerMatch) {
+                matchOrigin = (match.left as WinnerMatch).number
+              } else {
+                matchOrigin = match.getNonByeOriginNumber(true)
+              }
             } else {
-              return `Winner of ${(match.right as WinnerMatch | EvenLoserMatch).number}.`
+              if (match instanceof WinnerMatch) {
+                matchOrigin = (match.right as WinnerMatch).number
+              } else {
+                matchOrigin = match.getNonByeOriginNumber(false)
+              }
             }
+            return `Winner of ${matchOrigin}.`
           } else {
             return playerMap[id]
           }
@@ -748,10 +844,11 @@ export default class NormalTournament extends Tournament {
               }
               return `Loser of ${number}.`
             } else {
-              return `Winner of ${match.loserOrigin.number}.`
+              return `Winner of ${match.getNonByeOriginNumber()}.`
             }
           } else if (id === null) {
-            throw new Error('Impossible')
+            // if this is `null`, it means there's TWO games of `null` in a row
+            return ''
           } else {
             return playerMap[id]
           }
@@ -764,7 +861,8 @@ export default class NormalTournament extends Tournament {
         player2Id: matchup[1],
         player1Name: playerNames[0],
         player2Name: playerNames[1],
-        n
+        n,
+        i: on
       })
     })
 
