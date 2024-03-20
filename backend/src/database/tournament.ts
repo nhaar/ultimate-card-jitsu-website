@@ -97,10 +97,10 @@ export default abstract class Tournament {
       return false
     }
     if (value.backups !== undefined) {
-      if (!Array.isArray(value)) {
+      if (!Array.isArray(value.backups)) {
         return false
       } else {
-        if (!value.every(v => typeof (v) === 'string')) {
+        if (value.backups.every((v: any) => ((typeof v) === 'string')) === false) {
           return false
         }
       }

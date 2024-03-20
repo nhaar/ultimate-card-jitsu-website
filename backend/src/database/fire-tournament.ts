@@ -603,28 +603,6 @@ class FireTournament extends Tournament {
     await this.save()
   }
 
-  /** Rollback the tournament to the last backup in the database */
-  async rollback (): Promise<void> {
-    // last backup should be the current state, so discard it, and use the next one
-    this.backups.shift()
-    const backuptoUse = this.backups[0]
-
-    // no backups, don't do anything
-    if (backuptoUse === undefined) {
-      return
-    }
-
-    const backedupTournament = JSON.parse(backuptoUse)
-    if (!this.isTournamentObject(backedupTournament)) {
-      throw new Error('invalid backup')
-    }
-    backedupTournament.backups = [...this.backups]
-    const newTournament = new FireTournament(backedupTournament)
-
-    // skip backup because it would be the same as the latest snapshot
-    await newTournament.save(false)
-  }
-
   override getSpecificData (): any {
     return {
       bracket: this.bracket,
@@ -656,7 +634,7 @@ class FireTournament extends Tournament {
     } else {
       return this.hasFinalEnded() && this.containsTie()
     }
-}
+  }
 
   /**
    * Updates date for the start of the tournament

@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react'
-import { TournamentMatch, TournamentTies, createFireTournament, createNormalTournament, deleteTournament, getAllPlayers, getPlayerInfo, getTies, getTournamentMatches, isTournamentActive, resetTournamentDate, rollbackTournament, setTournamentDate, settleTie, updateMatchScore } from './api'
+import { NormalTournamentMatch, TournamentMatch, TournamentTies, createFireTournament, createNormalTournament, decideNormalMatch, deleteTournament, getAllPlayers, getNormalTournament, getPlayerInfo, getTies, getTournamentMatches, isTournamentActive, resetTournamentDate, rollbackTournament, setTournamentDate, settleTie, updateMatchScore } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import { getCookie } from './utils'
 import { TournamentUpdate, TournamentUpdateContext } from './context/TournamentContext'
@@ -338,37 +338,15 @@ function TournamentTieController ({ points, players, decider }: {
 
 /** Component for the control room while the tournament is ongoing */
 function ActiveTournamentControlRoom (): JSX.Element {
-  const [matches, setMatches] = useState<TournamentMatch[]>([])
-  const [ties, setTies] = useState<TournamentTies | null>(null)
   const [playerInfo, setPlayerInfo] = useState<{ [id: number]: string }>({})
   const sendUpdate = useContext(TournamentUpdateContext)
 
   // to fetch things, means that needs to restart page to see changes
   useEffect(() => {
     void (async () => {
-      setMatches(await getTournamentMatches())
-      setTies(await getTies())
       setPlayerInfo(await getPlayerInfo())
     })()
   }, [])
-
-  // to display all the pending ties
-  const tieComponents = []
-  if (ties?.exists === true) {
-    for (const points in ties.ties) {
-      const players = ties.ties[points]
-      if (players.length !== 0) {
-        tieComponents.push(<ControllerWithDecider<{ points: number, players: number[] }>
-          Child={TournamentTieController} childProps={{ players, points: Number(points) }} playerCount={players.length} runners={players} updateCallback={async (standings) => {
-            return await settleTie(Number(points), standings)
-          }}
-                           />)
-      } else {
-        continue
-      }
-    }
-  }
-
   /** Handle clicking to rollback the tournament */
   function clickRollbackTournament (): void {
     void (async () => {
@@ -395,6 +373,18 @@ function ActiveTournamentControlRoom (): JSX.Element {
     }
   }
 
+  let controlRoomElement
+  switch (getWebsiteTheme()) {
+    case WebsiteThemes.Fire:
+      controlRoomElement = <ActiveFireTournamentControlRoom />
+      break
+    case WebsiteThemes.Normal:
+      controlRoomElement = <ActiveNormalTournamentControlRoom />
+      break
+    default:
+      throw new Error('Not implemented')
+  }
+
   return (
     <div style={{ padding: '2%' }}>
       <PlayerInfoContext.Provider value={playerInfo}>
@@ -404,35 +394,159 @@ function ActiveTournamentControlRoom (): JSX.Element {
         <button style={{ marginLeft: '1%' }} className='button is-danger burbank' onClick={clickDeleteTournament}>
           DELETE TOURNAMENT
         </button><br /><br />
-        {matches.map((match, i) => {
-          const players = []
-          let hasNull = false
-          for (const player of match.runners) {
-            if (player === null) {
-              hasNull = true
-              break
-            } else {
-              players.push(player)
-            }
-          }
-
-          if (hasNull) {
-            return undefined
-          }
-
-          return (
-            <ControllerWithDecider<{ match: TournamentMatch, index: number }>
-              key={i} Child={TournamentMatchController} childProps={{ match, index: i }} playerCount={4} runners={players} updateCallback={async (standings) => {
-                return await updateMatchScore(i, standings)
-              }}
-            />
-          )
-        })}
-        <div>
-          <br /><br /><br />
-          {tieComponents}
-        </div>
+        {controlRoomElement}
       </PlayerInfoContext.Provider>
+    </div>
+  )
+}
+
+/** Interface for a matchup in a normal card-jitsu tournament */
+interface NormalTournamentMatchup {
+  // both players are their IDs
+  player1: number
+  player2: number
+  /** Match number */
+  n: number
+}
+
+/** Component that lets decide the scores for a match of normal card-jitsu */
+function NormalMatchDecider ({ match }: { match: NormalTournamentMatchup }): JSX.Element {
+  const [leftScore, setLeftScore] = useState<string>('0')
+  const [rightScore, setRightScore] = useState<string>('0')
+  const playerInfo = useContext(PlayerInfoContext)
+
+  function handleDecide (): void {
+    const l = Number(leftScore)
+    const r = Number(rightScore)
+    if (l === r) {
+      window.alert('Scores must not be the same')
+      return
+    } else if (isNaN(l) || isNaN(r)) {
+      window.alert('NaN score')
+      return
+    }
+
+    void decideNormalMatch(match.n, Number(leftScore), Number(rightScore)).then((ok) => {
+      if (ok) {
+        window.alert('Match updated!')
+        window.location.reload()
+      } else {
+        window.alert('Epic fail')
+      }
+    })
+  }
+
+  return (
+    <div
+      className='is-flex' style={{
+        backgroundColor: 'black'
+      }}
+    >
+      <div>Match #{match.n}</div>
+      <div>
+        <div className='is-flex'>
+          <div>Left - {playerInfo[match.player1]}</div>
+          <input type='number' value={leftScore} onChange={e => setLeftScore(e.target.value)} />
+        </div>
+        <div className='is-flex'>
+          <div>Right - {playerInfo[match.player2]} </div>
+          <input type='number' value={rightScore} onChange={e => setRightScore(e.target.value)} />
+        </div>
+      </div>
+      <button className='button is-danger' onClick={handleDecide}>DECIDE</button>
+    </div>
+  )
+}
+
+/** Component for the tournament control room for regular card-jitsu */
+function ActiveNormalTournamentControlRoom (): JSX.Element {
+  const [matches, setMatches] = useState<NormalTournamentMatch[]>([])
+
+  useEffect(() => {
+    void getNormalTournament().then(setMatches)
+  }, [])
+
+  const matchComponents = matches.map((m, i) => {
+    if (typeof m.player1 !== 'number' || typeof m.player2 !== 'number' || m.results !== undefined) {
+      return undefined
+    }
+
+    return (
+      <NormalMatchDecider
+        key={i} match={{
+          player1: m.player1,
+          player2: m.player2,
+          n: m.n
+        }}
+      />
+    )
+  })
+
+  return (
+    <div>{matchComponents}</div>
+  )
+}
+
+/** Component for the control for Card-Jitsu Fire */
+function ActiveFireTournamentControlRoom (): JSX.Element {
+  const [matches, setMatches] = useState<TournamentMatch[]>([])
+  const [ties, setTies] = useState<TournamentTies | null>(null)
+
+  // to fetch things, means that needs to restart page to see changes
+  useEffect(() => {
+    void (async () => {
+      setMatches(await getTournamentMatches())
+      setTies(await getTies())
+    })()
+  }, [])
+
+  // to display all the pending ties
+  const tieComponents = []
+  if (ties?.exists === true) {
+    for (const points in ties.ties) {
+      const players = ties.ties[points]
+      if (players.length !== 0) {
+        tieComponents.push(<ControllerWithDecider<{ points: number, players: number[] }>
+          Child={TournamentTieController} childProps={{ players, points: Number(points) }} playerCount={players.length} runners={players} updateCallback={async (standings) => {
+            return await settleTie(Number(points), standings)
+          }}
+                           />)
+      } else {
+        continue
+      }
+    }
+  }
+
+  return (
+    <div style={{ padding: '2%' }}>
+      {matches.map((match, i) => {
+        const players = []
+        let hasNull = false
+        for (const player of match.runners) {
+          if (player === null) {
+            hasNull = true
+            break
+          } else {
+            players.push(player)
+          }
+        }
+
+        if (hasNull) {
+          return undefined
+        }
+
+        return (
+          <ControllerWithDecider<{ match: TournamentMatch, index: number }>
+            key={i} Child={TournamentMatchController} childProps={{ match, index: i }} playerCount={4} runners={players} updateCallback={async (standings) => {
+              return await updateMatchScore(i, standings)
+            }}
+          />
+        )
+      })}
+      <div>
+        <br /><br /><br />
+        {tieComponents}
+      </div>
     </div>
   )
 }

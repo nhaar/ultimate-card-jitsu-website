@@ -5,6 +5,7 @@ import User from '../database/user'
 import { PlayerInfo } from '../database/tournament'
 import FireTournament, { TournamentPhase } from '../database/fire-tournament'
 import NormalTournament from '../database/normal-tournament'
+import AnyTournament from '../database/any-tournament'
 
 const router = express.Router()
 
@@ -65,6 +66,29 @@ router.get('/matches', asyncWrapper(async (req: Request, res: Response): Promise
     return
   }
   res.json(tournament.getMatches()).status(200)
+}))
+
+router.get('/normal-tournament', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
+  const tournament = await NormalTournament.getTournament()
+  if (tournament === undefined) {
+    res.sendStatus(400)
+    return
+  }
+
+  res.json(tournament.getMatches()).status(200)
+}))
+
+router.post('/update-normal-score', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+  const { matchNumber, leftScore, rightScore } = req.body
+
+  const tournament = await NormalTournament.getTournament()
+  if (tournament === undefined) {
+    res.sendStatus(400)
+    return
+  }
+
+  await tournament.decideMatch(matchNumber, leftScore, rightScore)
+  res.sendStatus(200)
 }))
 
 router.post('/update-score', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
@@ -146,7 +170,7 @@ router.post('/settle-tie', User.checkAdminMiddleware, asyncWrapper(async (req: R
 }))
 
 router.get('/players-info', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
-  const tournament = await FireTournament.getTournament()
+  const tournament = await AnyTournament.get()
   if (tournament === undefined) {
     res.sendStatus(400)
     return
@@ -156,7 +180,7 @@ router.get('/players-info', asyncWrapper(async (req: Request, res: Response): Pr
 }))
 
 router.post('/rollback', User.checkAdminMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-  const tournament = await FireTournament.getTournament()
+  const tournament = await AnyTournament.get()
   if (tournament === undefined) {
     res.sendStatus(400)
     return

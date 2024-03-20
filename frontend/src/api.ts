@@ -390,3 +390,38 @@ export async function getDiscordlessUsers (): Promise<string[]> {
   }
   return (response as { users: string[] }).users
 }
+
+/** Contains possible results for a 1v1 match with multiple games. */
+interface MatchResults {
+  scores: [number, number]
+}
+
+/** All information for a match in a normal tournament */
+export interface NormalTournamentMatch {
+  player1?: number | string
+  player2?: number | string
+  results?: MatchResults
+  n: number
+}
+
+/** Get all the data of a normal tournament. */
+export async function getNormalTournament (): Promise<NormalTournamentMatch[]> {
+  const response = await getJSON('api/tournament/normal-tournament')
+  if (response === null) {
+    return []
+  } else {
+    return response as NormalTournamentMatch[]
+  }
+}
+
+/**
+ * Decide the score of a match in a normal card-jitsu tournament
+ * @param matchNumber Number of the match
+ * @param leftScore "Left" player's score
+ * @param rightScore "Right" player's score
+ * @returns `true` if the update was successful
+ */
+export async function decideNormalMatch (matchNumber: number, leftScore: number, rightScore: number): Promise<boolean> {
+  const response = await postJSON('api/tournament/update-normal-score', { matchNumber, leftScore, rightScore })
+  return response.ok
+}

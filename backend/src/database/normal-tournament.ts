@@ -1,4 +1,5 @@
 import { isObject } from '../utils/utils'
+import Database from './database'
 import Tournament, { PlayerInfo } from './tournament'
 
 /** Interface for a basic score reporting. */
@@ -109,7 +110,7 @@ abstract class Match {
     if (this.results === undefined) {
       return undefined
     }
-    
+
     // they must be number, otherwise results shouldn't be here
     if (typeof matchup[0] !== 'number' || typeof matchup[1] !== 'number') {
       throw new Error('No matchup but has scores')
@@ -144,7 +145,7 @@ abstract class Match {
   /**
    * Get the loser of this match, if it has been decided. In the presence of "BYE" players, the other player is automatically
    * the winner
-   * @returns 
+   * @returns
    */
   getLoser (): number | null | undefined {
     const [left, right] = this.getMatchup()
@@ -228,11 +229,16 @@ class WinnerMatch extends Match {
 
   static fromData (data: WinnerMatchData): WinnerMatch {
     if ((typeof (data.left) === 'number' || data.left === null) && (typeof (data.right) === 'number' || data.right === null)) {
-      return new WinnerMatch(data.left, data.right)
+      const match = new WinnerMatch(data.left, data.right)
+      match.results = data.results
+      return match
     } else if (isObject(data.left) && isObject(data.right)) {
       const left = WinnerMatch.fromData(data.left as WinnerMatchData)
       const right = WinnerMatch.fromData(data.right as WinnerMatchData)
-      return new WinnerMatch(left, right)
+      const match = new WinnerMatch(left, right)
+      match.results = data.results
+      match.setAsParentInChildren()
+      return match
     } else {
       throw new Error('Improper winner match data')
     }
@@ -242,14 +248,16 @@ class WinnerMatch extends Match {
     if (this.left instanceof WinnerMatch && this.right instanceof WinnerMatch) {
       return {
         left: this.left.getData(),
-        right: this.right.getData()
+        right: this.right.getData(),
+        results: this.results
       }
     } else if (this.left instanceof WinnerMatch || this.right instanceof WinnerMatch) {
       throw new Error('Improper winner match')
     } else {
       return {
         left: this.left,
-        right: this.right
+        right: this.right,
+        results: this.results
       }
     }
   }
@@ -262,7 +270,7 @@ class WinnerMatch extends Match {
     return [this.left, this.right as (null | number)]
   }
 
-  linkStarterLoserMatch (loser: StarterLoserMatch, isLeft: boolean) {
+  linkStarterLoserMatch (loser: StarterLoserMatch, isLeft: boolean): void {
     this.loserDestination = loser
     if (isLeft) {
       loser.leftWinnerOrigin = this
@@ -271,7 +279,7 @@ class WinnerMatch extends Match {
     }
   }
 
-  linkEvenLoserMatch (loser: EvenLoserMatch) {
+  linkEvenLoserMatch (loser: EvenLoserMatch): void {
     this.loserDestination = loser
     loser.winnerOrigin = this
   }
@@ -344,6 +352,7 @@ class StarterLoserMatch extends Match {
 
   static fromData (data: StarterLoserMatchData): StarterLoserMatch {
     const match = new StarterLoserMatch()
+    match.results = data.results
     return match
   }
 
@@ -396,12 +405,14 @@ class EvenLoserMatch extends Match {
     }
     const match = new EvenLoserMatch(loserOrigin)
     loserOrigin.parent = match
+    match.results = data.results
     return match
   }
 
   getData (): EvenLoserMatchData {
     return {
-      loserOrigin: this.loserOrigin.getData()
+      loserOrigin: this.loserOrigin.getData(),
+      results: this.results
     }
   }
 
@@ -414,7 +425,7 @@ class EvenLoserMatch extends Match {
 
   /**
    * Get the number of the origin match that doesn't contain an automatic victory "BYE" player
-   * @returns 
+   * @returns
    */
   getNonByeOriginNumber (): number {
     let matchToWin
@@ -473,13 +484,15 @@ class OddLoserMatch extends Match {
     const match = new OddLoserMatch(left, right)
     left.parent = match
     right.parent = match
+    match.results = data.results
     return match
   }
 
   getData (): OddLoserMatchData {
     return {
       left: this.left.getData(),
-      right: this.left.getData()
+      right: this.right.getData(),
+      results: this.results
     }
   }
 
@@ -490,7 +503,7 @@ class OddLoserMatch extends Match {
   /**
    * Get the number of the origin match going beyond matches with automati wins (BYEs)
    * @param isLeft Whether or not the origin is from the left
-   * @returns 
+   * @returns
    */
   getNonByeOriginNumber (isLeft: boolean): number {
     let origin
@@ -567,13 +580,14 @@ class LoserBracket {
   }
 }
 
+/** Object contains all information for a certain match. */
 interface TournamentMatch {
-  player1Id?: number | null
-  player2Id?: number | null
-  player1Name: string
-  player2Name: string
-  n: number,
-  i: number
+  /** The plyers are either a number (the player ID, if it is KNOWN), a descriptive string saying which match needs to be won/lost to get there, or left blank if neither of those */
+  player1?: number | string
+  player2?: number | string
+  results?: MatchResults
+  /** Match number, in the order the matches should be done.It is `-1` if the match is a filler match containing BYEs. */
+  n: number
 }
 
 /** Class for a round in the winners bracket */
@@ -703,6 +717,7 @@ export default class NormalTournament extends Tournament {
       this.losersBracket = LoserBracket.fromData(value.tournamentSpecific.losersBracket)
       this.grandFinals = value.tournamentSpecific.grandFinals
     }
+    this.linkLoserDestinations()
   }
 
   /** Add the loser destination to the winner bracket matches. */
@@ -746,8 +761,8 @@ export default class NormalTournament extends Tournament {
     let number = 1
     let i = 1
     let isStart = true
-    
-    const useCallback = (match: WinnerMatch | OddLoserMatch | EvenLoserMatch | StarterLoserMatch): void =>  {
+
+    const useCallback = (match: WinnerMatch | OddLoserMatch | EvenLoserMatch | StarterLoserMatch): void => {
       const hasBye = match.hasBye()
       const n = hasBye ? -1 : number
       if (!hasBye) {
@@ -790,18 +805,18 @@ export default class NormalTournament extends Tournament {
     })
   }
 
+  /** Get all the matches of the tournament in order. */
   getMatches (): TournamentMatch[] {
     this.addMatchNumbers()
-    const playerMap = this.getPlayerInfo()
 
-    const matches: Array<TournamentMatch> = []
+    const matches: TournamentMatch[] = []
     this.iterate((match, n, on) => {
       const matchup = match.getMatchup()
-      let playerNames
+      let players
       if (match instanceof WinnerMatch || match instanceof OddLoserMatch) {
-        playerNames = matchup.map((id, i) => {
+        players = matchup.map((id, i) => {
           if (id === null) {
-            return 'BYE'
+            return undefined
           } else if (id === undefined) {
             let matchOrigin
             if (i === 0) {
@@ -817,25 +832,30 @@ export default class NormalTournament extends Tournament {
                 matchOrigin = match.getNonByeOriginNumber(false)
               }
             }
+            if (matchOrigin === undefined) {
+              throw new Error('Match number should not be undefined')
+            }
             return `Winner of ${matchOrigin}.`
           } else {
-            return playerMap[id]
+            return id
           }
         })
       } else if (match instanceof StarterLoserMatch) {
-        playerNames = matchup.map((id, i) => {
+        players = matchup.map((id, i) => {
           if (id === undefined) {
             const number = i === 0 ? match.leftWinnerOrigin?.number : match.rightWinnerorigin?.number
             if (number === undefined) {
               throw new Error('Impossible')
             }
             return `Loser of ${number}.`
+          } else if (id === null) {
+            return undefined
           } else {
-            return ''
+            return id
           }
         })
       } else if (match instanceof EvenLoserMatch) {
-        playerNames = matchup.map((id, i) => {
+        players = matchup.map((id, i) => {
           if (id === undefined) {
             if (i === 0) {
               const number = match.winnerOrigin?.number
@@ -848,21 +868,19 @@ export default class NormalTournament extends Tournament {
             }
           } else if (id === null) {
             // if this is `null`, it means there's TWO games of `null` in a row
-            return ''
+            return undefined
           } else {
-            return playerMap[id]
+            return id
           }
         })
       } else {
         throw new Error('Impossible')
       }
       matches.push({
-        player1Id: matchup[0],
-        player2Id: matchup[1],
-        player1Name: playerNames[0],
-        player2Name: playerNames[1],
+        player1: players[0],
+        player2: players[1],
         n,
-        i: on
+        results: match.results
       })
     })
 
@@ -885,5 +903,32 @@ export default class NormalTournament extends Tournament {
     const tournament = new NormalTournament(players)
     await tournament.save()
     return tournament
+  }
+
+  static async getTournament (): Promise<NormalTournament | undefined> {
+    const db = new Database()
+    const query = await db.getQuery('SELECT * FROM tournament', [])
+    if (query.rows.length === 0) {
+      return undefined
+    } else {
+      return new NormalTournament(query.rows[0].data)
+    }
+  }
+
+  /**
+   * Decide a match's results
+   * @param matchNumber Number of the match
+   * @param leftScore Score of the "left" player
+   * @param rightScore Score of the "right" player
+   */
+  async decideMatch (matchNumber: number, leftScore: number, rightScore: number): Promise<void> {
+    this.iterate((m, n) => {
+      if (n === matchNumber) {
+        console.log('n', n)
+        m.decide(leftScore, rightScore)
+      }
+    })
+
+    await this.save()
   }
 }
