@@ -9,15 +9,9 @@ interface MatchResults {
 }
 
 /** Represents grand finals, which in a double elimination bracket contains the winner of both brackets. In the results, the first score is for the winner bracket player. */
-interface GrandFinals {
-  /** ID of player that won winner bracket, or `undefined` if not decided */
-  winnerBracketPlayer?: number
-  /** ID of player that won loser bracket, or `undefined` if not decided */
-  loserBracketPlayer?: number
+interface GrandFinalsData {
   /** Results for the first match of the grand finals */
-  firstMatch?: MatchResults
-  /** Results for the second match, if it happened */
-  secondMatch?: MatchResults
+  results?: MatchResults
 }
 
 /** A match of the winner bracket. */
@@ -91,6 +85,10 @@ class NormalTournamentPlayers {
   }
 }
 
+interface GrandFinalsRematchData {
+  results?: MatchResults
+}
+
 /** Base class for all types of matches */
 abstract class Match {
   results?: MatchResults
@@ -156,6 +154,51 @@ abstract class Match {
       return undefined
     }
     return this.results.scores[0] > this.results.scores[1] ? right : left
+  }
+}
+
+/** Class for the grand finals rematch, which only happens if the loser bracket winner beats the winner bracket winner */
+class GrandFinalsRematch extends Match {
+  /** Reference to the grand finals */
+  grandFinals: GrandFinals
+
+  constructor (grandFinals: GrandFinals) {
+    super()
+    this.grandFinals = grandFinals
+  }
+
+  override getMatchup(): [number | null | undefined, number | null | undefined] {
+    return this.grandFinals.getMatchup()
+  }
+
+  getData (): GrandFinalsRematchData {
+    return {
+      results: this.results
+    }
+  }
+}
+
+/** Class for the grand finals, a match between winner of each bracket */
+class GrandFinals extends Match {
+  /** Reference to the winner final */
+  winnerFinal: WinnerMatch
+  /** Reference to the loser final */
+  loserFinal: EvenLoserMatch
+
+  constructor (winnerFinal: WinnerMatch, loserFinal: EvenLoserMatch) {
+    super()
+    this.winnerFinal = winnerFinal
+    this.loserFinal = loserFinal
+  }
+
+  override getMatchup(): [number | null | undefined, number | null | undefined] {
+    return [this.winnerFinal.getWinner(), this.loserFinal.getWinner()] 
+  }
+
+  getData (): GrandFinalsData {
+    return {
+      results: this.results
+    }
   }
 }
 
@@ -703,7 +746,8 @@ class EvenLoserRound {
 export default class NormalTournament extends Tournament {
   winnersBracket: WinnerBracket
   losersBracket: LoserBracket
-  grandFinals: GrandFinals = { }
+  grandFinals: GrandFinals
+  grandFinalsRematch: GrandFinalsRematch
 
   constructor (value: any) {
     super(value)
@@ -711,10 +755,15 @@ export default class NormalTournament extends Tournament {
       const tournamentPlayers = new NormalTournamentPlayers(this.players)
       this.winnersBracket = WinnerBracket.fromPlayers(tournamentPlayers)
       this.losersBracket = LoserBracket.fromSize(tournamentPlayers.size)
+      this.grandFinals = new GrandFinals(this.winnersBracket.final, this.losersBracket.final)
+      this.grandFinalsRematch = new GrandFinalsRematch(this.grandFinals)
     } else {
       this.winnersBracket = WinnerBracket.fromData(value.tournamentSpecific.winnersBracket)
       this.losersBracket = LoserBracket.fromData(value.tournamentSpecific.losersBracket)
-      this.grandFinals = value.tournamentSpecific.grandFinals
+      this.grandFinals = new GrandFinals(this.winnersBracket.final, this.losersBracket.final)
+      this.grandFinals.results = value.tournamentSpecific.grandFinals.results
+      this.grandFinalsRematch = new GrandFinalsRematch(this.grandFinals)
+      this.grandFinalsRematch.results = value.tournamentSpecific.grandFinalsRematch.results
     }
     this.linkLoserDestinations()
   }
@@ -752,7 +801,7 @@ export default class NormalTournament extends Tournament {
    * Iterate through every match in the order they are (should be) played
    * @param callback Callback to be applied to each match, taking as arguments the match itself and the match number, and the match number counting BYE matches
    */
-  iterate (callback: (match: WinnerMatch | OddLoserMatch | EvenLoserMatch | StarterLoserMatch, n: number, on: number) => void): void {
+  iterate (callback: (match: Match, n: number, on: number) => void): void {
     let wRound = this.winnersBracket.getFirstRound()
     let lOdd = this.losersBracket.getFirstRound()
     let lEven
@@ -761,7 +810,7 @@ export default class NormalTournament extends Tournament {
     let i = 1
     let isStart = true
 
-    const useCallback = (match: WinnerMatch | OddLoserMatch | EvenLoserMatch | StarterLoserMatch): void => {
+    const useCallback = (match: Match): void => {
       const hasBye = match.hasBye()
       const n = hasBye ? -1 : number
       if (!hasBye) {
@@ -796,6 +845,9 @@ export default class NormalTournament extends Tournament {
       wRound = wRound.getNextRound()
       lEven = lOdd.getNextRound()
     }
+
+    useCallback(this.grandFinals)
+    useCallback(this.grandFinalsRematch)
   }
 
   addMatchNumbers (): void {
@@ -809,78 +861,126 @@ export default class NormalTournament extends Tournament {
     this.addMatchNumbers()
 
     const matches: TournamentMatch[] = []
+    let didGrandFinals = false
     this.iterate((match, n, on) => {
       const matchup = match.getMatchup()
-      let players
-      if (match instanceof WinnerMatch || match instanceof OddLoserMatch) {
-        players = matchup.map((id, i) => {
-          if (id === null) {
-            return undefined
-          } else if (id === undefined) {
-            let matchOrigin
+      if (match instanceof GrandFinals) {
+        const [player1, player2] = matchup
+        if (player1 === null || player2 === null) {
+          throw new Error('Impossible BYE in grand finals')
+        }
+        const firstPlayers = [player1, player2].map((p, i) => {
+          if (p === undefined) {
             if (i === 0) {
-              if (match instanceof WinnerMatch) {
-                matchOrigin = (match.left as WinnerMatch).number
-              } else {
-                matchOrigin = match.getNonByeOriginNumber(true)
-              }
+              return `Winner of Winner Bracket`
             } else {
-              if (match instanceof WinnerMatch) {
-                matchOrigin = (match.right as WinnerMatch).number
+              return `Winner of Loser Bracket`
+            }
+          } else {
+            return p
+          }
+        })
+
+        matches.push({
+          player1: firstPlayers[0],
+          player2: firstPlayers[1],
+          n,
+          results: match.results
+        })
+
+        // if this is already decided, we add a new one to represent the second one
+        if (match.results !== undefined) {
+          didGrandFinals = true
+        }
+      } else if (match instanceof GrandFinalsRematch) {
+        if (didGrandFinals) {
+          const [player1, player2] = matchup
+          if (player1 === undefined || player2 === undefined) {
+            throw new Error('Impossible, got to rematch without doing having rematch players')
+          }
+          if (player1 === null || player2 === null) {
+            throw new Error('Impossible, BYE got to grand finals rematch')
+          }
+
+          matches.push({
+            player1,
+            player2,
+            n,
+            results: match.results
+          })
+        }
+      } else {
+        let players
+        if (match instanceof WinnerMatch || match instanceof OddLoserMatch) {
+          players = matchup.map((id, i) => {
+            if (id === null) {
+              return undefined
+            } else if (id === undefined) {
+              let matchOrigin
+              if (i === 0) {
+                if (match instanceof WinnerMatch) {
+                  matchOrigin = (match.left as WinnerMatch).number
+                } else {
+                  matchOrigin = match.getNonByeOriginNumber(true)
+                }
               } else {
-                matchOrigin = match.getNonByeOriginNumber(false)
+                if (match instanceof WinnerMatch) {
+                  matchOrigin = (match.right as WinnerMatch).number
+                } else {
+                  matchOrigin = match.getNonByeOriginNumber(false)
+                }
               }
+              if (matchOrigin === undefined) {
+                throw new Error('Match number should not be undefined')
+              }
+              return `Winner of ${matchOrigin}.`
+            } else {
+              return id
             }
-            if (matchOrigin === undefined) {
-              throw new Error('Match number should not be undefined')
-            }
-            return `Winner of ${matchOrigin}.`
-          } else {
-            return id
-          }
-        })
-      } else if (match instanceof StarterLoserMatch) {
-        players = matchup.map((id, i) => {
-          if (id === undefined) {
-            const number = i === 0 ? match.leftWinnerOrigin?.number : match.rightWinnerorigin?.number
-            if (number === undefined) {
-              throw new Error('Impossible')
-            }
-            return `Loser of ${number}.`
-          } else if (id === null) {
-            return undefined
-          } else {
-            return id
-          }
-        })
-      } else if (match instanceof EvenLoserMatch) {
-        players = matchup.map((id, i) => {
-          if (id === undefined) {
-            if (i === 0) {
-              const number = match.winnerOrigin?.number
+          })
+        } else if (match instanceof StarterLoserMatch) {
+          players = matchup.map((id, i) => {
+            if (id === undefined) {
+              const number = i === 0 ? match.leftWinnerOrigin?.number : match.rightWinnerorigin?.number
               if (number === undefined) {
                 throw new Error('Impossible')
               }
               return `Loser of ${number}.`
+            } else if (id === null) {
+              return undefined
             } else {
-              return `Winner of ${match.getNonByeOriginNumber()}.`
+              return id
             }
-          } else if (id === null) {
-            // if this is `null`, it means there's TWO games of `null` in a row
-            return undefined
-          } else {
-            return id
-          }
+          })
+        } else if (match instanceof EvenLoserMatch) {
+          players = matchup.map((id, i) => {
+            if (id === undefined) {
+              if (i === 0) {
+                const number = match.winnerOrigin?.number
+                if (number === undefined) {
+                  throw new Error('Impossible')
+                }
+                return `Loser of ${number}.`
+              } else {
+                return `Winner of ${match.getNonByeOriginNumber()}.`
+              }
+            } else if (id === null) {
+              // if this is `null`, it means there's TWO games of `null` in a row
+              return undefined
+            } else {
+              return id
+            }
+          })
+        } else {
+          throw new Error('Impossible')
+        }
+        matches.push({
+          player1: players[0],
+          player2: players[1],
+          n,
+          results: match.results
         })
-      } else {
-        throw new Error('Impossible')
       }
-      matches.push({
-        player1: players[0],
-        player2: players[1],
-        n,
-        results: match.results
-      })
     })
 
     return matches
@@ -894,7 +994,8 @@ export default class NormalTournament extends Tournament {
     return {
       winnersBracket: this.winnersBracket.getData(),
       losersBracket: this.losersBracket.getData(),
-      grandFinals: this.grandFinals
+      grandFinals: this.grandFinals.getData(),
+      grandFinalsRematch: this.grandFinalsRematch.getData()
     }
   }
 
@@ -921,9 +1022,17 @@ export default class NormalTournament extends Tournament {
    * @param rightScore Score of the "right" player
    */
   async decideMatch (matchNumber: number, leftScore: number, rightScore: number): Promise<void> {
+    let isRematchSkip = false
     this.iterate((m, n) => {
       if (n === matchNumber) {
+        if (m instanceof GrandFinals) {
+          // winner bracket winner won
+          isRematchSkip = leftScore > rightScore
+        }
         m.decide(leftScore, rightScore)
+      } else if (isRematchSkip && m instanceof GrandFinalsRematch) {
+        // rematch is not needed
+        m.decide(1, 0)
       }
     })
 

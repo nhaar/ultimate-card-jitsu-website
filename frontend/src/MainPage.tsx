@@ -504,6 +504,12 @@ function getRoundName (round: number, size: number, isLoser: boolean): string {
     if (round === 1) {
       return 'Start Round'
     }
+    if (distance === -2) {
+      return 'Grand Finals (rematch)'
+    }
+    if (distance === -1) {
+      return 'Grand Finals'
+    }
     if (distance === 0) {
       return 'Winners Final'
     }
@@ -664,6 +670,14 @@ function DoubleEliminationBracket (): JSX.Element {
         loserBracket.push(round)
       }
     }
+
+    const grandFinals = matches[match]
+    winnerBracket.push([grandFinals])
+    // only add rematch if needed
+    if (grandFinals.results !== undefined) {
+      winnerBracket.push([matches[match + 1]])
+    }
+
 
     return (
       <div style={{
