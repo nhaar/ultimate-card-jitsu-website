@@ -431,7 +431,6 @@ class EvenLoserMatch extends Match {
     let matchToWin
     // if there are TWO BYEs, then must trace back two steps behind to the match that has NO byes
     // with balanced matchmaking, this is the only time this would ever be a problem
-    // console.log(match.loserOrigin)
     if (this.loserOrigin.hasBye()) {
       const loserOrigin = this.loserOrigin as StarterLoserMatch
       const leftPath = loserOrigin.leftWinnerOrigin as WinnerMatch
@@ -924,7 +923,6 @@ export default class NormalTournament extends Tournament {
   async decideMatch (matchNumber: number, leftScore: number, rightScore: number): Promise<void> {
     this.iterate((m, n) => {
       if (n === matchNumber) {
-        console.log('n', n)
         m.decide(leftScore, rightScore)
       }
     })

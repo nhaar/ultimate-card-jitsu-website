@@ -1,13 +1,14 @@
 import { useContext, useEffect, useState } from 'react'
 
 import config from './config.json'
-import { Ranking, TournamentMatch, TournamentPhase, getPlayerInfo, getRankings, getTournamentDate, getTournamentFinalStandings, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
+import { NormalTournamentMatch, Ranking, TournamentMatch, TournamentPhase, getNormalTournament, getPlayerInfo, getRankings, getTournamentDate, getTournamentFinalStandings, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
 import Haiku from './Haiku'
-import { TournamentContext, TournamentState } from './context/TournamentContext'
+import { FireTournamentContext, NormalTournamentContext, TournamentContext, TournamentState } from './context/TournamentContext'
 import CountdownTimer from './CountdownTimer'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import { getOrdinalNumber } from './utils'
 import { UcjWS } from './ws'
+import { WebsiteThemes, getWebsiteTheme } from './website-theme'
 
 /**
  * Adds a twitch embed with an element that has the given HTML id
@@ -340,15 +341,325 @@ export function UpcomingMatches ({ matches, startMatch, matchTotal, isComingUpLa
   )
 }
 
+/** Component that renders the fire tournament's page */
+function FireTournamentPage (): JSX.Element {
+  const { isFirstPhase, ranking, upcomingMatches } = useContext(FireTournamentContext)
+  const rankingElement = isFirstPhase ? <FirstPhaseRankings ranking={ranking} /> : <FinalPhaseRankings ranking={ranking} />
+
+  return (
+    <div>
+      <div className='is-flex is-justify-content-center mt-6'>
+        {rankingElement}
+      </div>
+      <div className='is-flex is-justify-content-center mt-6 mb-5'>
+        <UpcomingMatches matches={upcomingMatches} />
+      </div>
+    </div>
+  )
+}
+
+/** Round in a normal card-jitsu tournament */
+type Round = NormalTournamentMatch[]
+/** A bracket in the normal card-jitsu tournament, either the losers or winners */
+type Bracket = Round[]
+
+/** Component that renders a player in a match and performance */
+function PlayerInMatch ({ player, score, isBottom, lineHeight, height, borderRadius }: {
+  /** Player ID, if a player is here, `undefined` if it's a BYE or a string description of how to get here. */
+  player: number | undefined | string
+  /** Score of this player or nothing if no score */
+  score?: number
+  /** Whether this is the bottom (right) player */
+  isBottom?: true
+  /** Constant indicates the height of the line that separates players */
+  lineHeight: number
+  /** Constant indicates the height of this component */
+  height: number
+  /** String with the border radius used by the player box as a whole */
+  borderRadius: string
+}): JSX.Element {
+  const playerInfo = useContext(PlayerInfoContext)
+
+  function getName (player: number | undefined | string): string {
+    if (typeof player === 'number') {
+      return playerInfo[player]
+    } else if (player === undefined) {
+      return 'BYE'
+    } else {
+      return player
+    }
+  }
+
+  const scoreStyle: React.CSSProperties = {
+    backgroundColor: 'red',
+    position: 'absolute',
+    right: '0',
+    width: '20px',
+    height: '100%',
+    textAlign: 'center'
+  }
+  let topPosition
+  if (isBottom === true) {
+    scoreStyle.borderBottomRightRadius = borderRadius
+    topPosition = lineHeight
+  } else {
+    scoreStyle.borderTopRightRadius = borderRadius
+    topPosition = 0
+  }
+  const scoreDisplay = score === undefined
+    ? (
+      <div />
+      )
+    : (
+      <div style={scoreStyle}>
+        {score}
+      </div>
+      )
+
+  return (
+    <div
+      className='is-flex pl-3' style={{
+        position: 'relative',
+        height: `${height}px`,
+        top: `${topPosition}px`
+      }}
+    >
+      <div style={{
+        width: '200px'
+      }}
+      >{getName(player)}
+      </div>
+      {scoreDisplay}
+    </div>
+  )
+}
+
+/**
+ * Get what this round is named
+ * @param round Round number, starts at 1
+ * @param size Size of the tournament
+ * @param isLoser Whether or not it is in the loser bracket
+ * @returns
+ */
+function getRoundName (round: number, size: number, isLoser: boolean): string {
+  const distance = size - round
+  if (isLoser) {
+    return 'Loser'
+  } else {
+    if (round === 1) {
+      return 'Start Round'
+    }
+    if (distance === 0) {
+      return 'Winners Final'
+    }
+    if (distance === 1) {
+      return 'Winners Semi-Finals'
+    }
+    if (distance === 2) {
+      return 'Winners Quarter-Finals'
+    }
+    if (distance === 3) {
+      return 'Winners Eight-Finals'
+    }
+    return 'Winner'
+  }
+}
+
+/** Component that renders a bracket in double elimination tournaments */
+function BracketView ({ bracket, size, isLoser }: {
+  /** All rounds in the tournament */
+  bracket: Bracket
+  /** Size of the tournament */
+  size: number
+  /** Whether or not this is the losers bracket */
+  isLoser: boolean }): JSX.Element {
+  const rounds = bracket.map((r, i) => {
+    const splitLineHeight = 2 // pixels
+    const totalHeight = 50
+    const playerHeight = (50 - 2) / 2
+    const borderRadius = '3px'
+    const roundNameHeight = '32px'
+    return (
+      <div key={i}>
+        <div
+          className='my-1 is-flex' style={{
+            backgroundColor: 'gray',
+            color: 'white',
+            width: '100%',
+            textAlign: 'center',
+            height: roundNameHeight,
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
+        >
+          {getRoundName(i + 1, size, isLoser)}
+        </div>
+        <div style={{
+          display: 'grid',
+          gridTemplateRows: `repeat(${r.length}, 1fr)`,
+          rowGap: '10px',
+          flex: 'grow',
+          height: `calc(100% - ${roundNameHeight})`
+        }}
+        >
+          {r.map((m, i) => {
+            return (
+              <div
+                key={i} className='is-flex' style={{
+                  fontSize: '16px',
+                  height: '100%',
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+              >
+                <div
+                  className='mr-1' style={{
+                    color: 'black',
+                    width: '20px'
+                  }}
+                >
+                  {m.n}
+                </div>
+                <div style={{
+                  backgroundColor: 'black',
+                  borderRadius,
+                  height: `${totalHeight}px`,
+                  position: 'relative'
+                }}
+                >
+                  {/* this is the player split line */}
+                  <div style={{
+                    position: 'absolute',
+                    top: `${playerHeight}px`,
+                    height: `${splitLineHeight}px`,
+                    width: '100%',
+                    backgroundColor: 'gray'
+                  }}
+                  />
+                  <PlayerInMatch player={m.player1} score={m.results?.scores[0]} lineHeight={splitLineHeight} height={playerHeight} borderRadius={borderRadius} />
+                  <PlayerInMatch player={m.player2} score={m.results?.scores[1]} isBottom lineHeight={splitLineHeight} height={playerHeight} borderRadius={borderRadius} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  })
+
+  return (
+    <div
+      className='is-flex mb-6' style={{
+        columnGap: '20px'
+      }}
+    >
+      {rounds}
+    </div>
+  )
+}
+
+/** Component that renders the full view of a double elimination bracket for a regulard card-jitsu tournament */
+function DoubleEliminationBracket (): JSX.Element {
+  const { matches } = useContext(NormalTournamentContext)
+  const playerInfo = useContext(PlayerInfoContext)
+  const [size, setSize] = useState<number>(0)
+
+  useEffect(() => {
+    setSize(Math.ceil(Math.log2(Object.keys(playerInfo).length)))
+  }, [playerInfo])
+
+  if (size > 0) {
+    const winnerBracket: Bracket = []
+    const loserBracket: Bracket = []
+
+    // in this part here we have to order the rounds accordingly
+
+    let match = 0
+    let round: Round = []
+    let end = 0
+    let matchNumber = Math.pow(2, size - 1)
+    for (let j = 0; j < size; j++) {
+      round = []
+      end = match + matchNumber
+      for (let i = match; i < end; i++) {
+        round.push(matches[i])
+        match++
+      }
+      winnerBracket.push(round)
+      // skip for the first round
+      if (j !== 0) {
+        round = []
+        // this one's inverted
+        end = match
+        for (let i = match + matchNumber - 1; i >= end; i--) {
+          round.push(matches[i])
+          match++
+        }
+        loserBracket.push(round)
+      }
+      // skip for the last round
+      if (j !== size - 1) {
+        round = []
+        matchNumber /= 2
+        end = match + matchNumber
+        for (let i = match; i < end; i++) {
+          round.push(matches[i])
+          match++
+        }
+        loserBracket.push(round)
+      }
+    }
+
+    return (
+      <div style={{
+        width: '80vw',
+        overflow: 'scroll'
+      }}
+      >
+        <BracketView bracket={winnerBracket} size={size} isLoser={false} />
+        <BracketView bracket={loserBracket} size={size} isLoser />
+      </div>
+    )
+  }
+
+  return (
+    <div />
+  )
+}
+
+/** Component for the tournament page for a regular card-jitsu tournament */
+function NormalTournamentPage (): JSX.Element {
+  return (
+    <div>
+      <div style={{
+        fontSize: '36px'
+      }}
+      >
+        <Haiku first='The tournament view' second='We can see who is winning' third='And those who are not' />
+      </div>
+      <DoubleEliminationBracket />
+    </div>
+  )
+}
+
 /** Component that handles rendering the page when the tournament is on-going */
 function InTournamentPage (): JSX.Element {
-  const { isFirstPhase, ranking, upcomingMatches } = useContext(TournamentContext)
-
   useEffect(() => {
     addTwitchEmbed('twitch-embed')
   }, [])
 
-  const rankingElement = isFirstPhase ? <FirstPhaseRankings ranking={ranking} /> : <FinalPhaseRankings ranking={ranking} />
+  let tournamentPage
+
+  switch (getWebsiteTheme()) {
+    case WebsiteThemes.Normal:
+      tournamentPage = <NormalTournamentPage />
+      break
+    case WebsiteThemes.Fire:
+      tournamentPage = <FireTournamentPage />
+      break
+    default:
+      throw new Error('Not implemented')
+  }
 
   return (
     <div
@@ -365,13 +676,8 @@ function InTournamentPage (): JSX.Element {
         >
           THE TOURNAMENT HAS STARTED!
         </div>
-        <div className='is-flex is-justify-content-center' id='twitch-embed' />
-        <div className='is-flex is-justify-content-center mt-6'>
-          {rankingElement}
-        </div>
-        <div className='is-flex is-justify-content-center mt-6 mb-5'>
-          <UpcomingMatches matches={upcomingMatches} />
-        </div>
+        <div className='is-flex is-justify-content-center mb-6' id='twitch-embed' />
+        {tournamentPage}
       </div>
     </div>
   )
@@ -468,11 +774,16 @@ function PostTournamentPage (): JSX.Element {
 /** Component for the main page */
 export default function MainPage (): JSX.Element {
   const [tournamentState, setTournamentState] = useState<TournamentState>(TournamentState.Unknown)
+  const [playerInfo, setPlayerInfo] = useState<{ [id: number]: string }>({})
+  const [tournamentDate, setTournamentDate] = useState<Date | null | undefined>(undefined)
+
+  // fire tournament only data
   const [isFirstPhase, setIsFirstPhase] = useState<boolean>(true)
   const [upcomingMatches, setUpcomingMatches] = useState<TournamentMatch[]>([])
   const [ranking, setRanking] = useState<Ranking>([])
-  const [playerInfo, setPlayerInfo] = useState<{ [id: number]: string }>({})
-  const [tournamentDate, setTournamentDate] = useState<Date | null | undefined>(undefined)
+
+  // normal tournament only data
+  const [matches, setMatches] = useState<NormalTournamentMatch[]>([])
 
   // initializing page
   useEffect(() => {
@@ -530,10 +841,19 @@ export default function MainPage (): JSX.Element {
 
   /** Update the tournament info that depends on scores */
   async function updateTournamentScoreDependentInfo (): Promise<void> {
-    const isFirstPhase = await isCurrentPhaseFirstPhase()
-    setIsFirstPhase(isFirstPhase)
-    setUpcomingMatches(await getTournamentMatches())
-    setRanking(await getRankings(isFirstPhase ? TournamentPhase.Start : TournamentPhase.Final))
+    switch (getWebsiteTheme()) {
+      case WebsiteThemes.Fire: {
+        const isFirstPhase = await isCurrentPhaseFirstPhase()
+        setIsFirstPhase(isFirstPhase)
+        setUpcomingMatches(await getTournamentMatches())
+        setRanking(await getRankings(isFirstPhase ? TournamentPhase.Start : TournamentPhase.Final))
+        break
+      }
+      case WebsiteThemes.Normal: {
+        setMatches(await getNormalTournament())
+        break
+      }
+    }
   }
 
   /** Update the player info */
@@ -591,19 +911,39 @@ export default function MainPage (): JSX.Element {
     }
   }
 
+  let contextProvider
+  switch (getWebsiteTheme()) {
+    case WebsiteThemes.Normal:
+      contextProvider = (
+        <NormalTournamentContext.Provider value={{
+          matches
+        }}
+        >
+          {baseElement}
+        </NormalTournamentContext.Provider>
+      )
+      break
+    case WebsiteThemes.Fire:
+      contextProvider = (
+        <FireTournamentContext.Provider value={{ ranking, isFirstPhase, upcomingMatches }}>
+          {baseElement}
+        </FireTournamentContext.Provider>
+      )
+      break
+    default:
+      throw new Error('Not implemented')
+  }
+
   return (
     <PlayerInfoContext.Provider value={playerInfo}>
       <TournamentContext.Provider value={{
         state: tournamentState,
         setState: setTournamentState,
         date: tournamentDate,
-        ranking,
-        playerInfo,
-        isFirstPhase,
-        upcomingMatches
+        playerInfo
       }}
       >
-        {baseElement}
+        {contextProvider}
       </TournamentContext.Provider>
     </PlayerInfoContext.Provider>
   )

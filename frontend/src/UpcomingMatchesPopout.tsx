@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { TournamentMatch, getPlayerInfo, getTournamentMatches } from './api'
-import { TournamentContext, TournamentState } from './context/TournamentContext'
+import { FireTournamentContext, TournamentContext, TournamentState } from './context/TournamentContext'
 import { UpcomingMatches } from './MainPage'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import { UcjWS } from './ws'
@@ -51,29 +51,35 @@ export default function UpcomingMatchesPopout (): JSX.Element {
       <PlayerInfoContext.Provider value={playerInfo}>
         <TournamentContext.Provider value={{
           playerInfo,
-          upcomingMatches: matches,
 
           // default values, not used
           state: TournamentState.Unknown,
-          date: null,
-          ranking: [],
-          isFirstPhase: true
+          date: null
         }}
         >
-          <div style={{
-            position: 'absolute',
-            right: absolutePosition
+          <FireTournamentContext.Provider value={{
+            upcomingMatches: matches,
+
+            // default values, not used
+            isFirstPhase: true,
+            ranking: []
           }}
           >
-            <UpcomingMatches matches={matches} matchTotal={4} isMini />
-          </div>
-          <div style={{
-            position: 'absolute',
-            left: absolutePosition
-          }}
-          >
-            <UpcomingMatches matches={matches} startMatch={4} matchTotal={4} isComingUpLater isMini />
-          </div>
+            <div style={{
+              position: 'absolute',
+              right: absolutePosition
+            }}
+            >
+              <UpcomingMatches matches={matches} matchTotal={4} isMini />
+            </div>
+            <div style={{
+              position: 'absolute',
+              left: absolutePosition
+            }}
+            >
+              <UpcomingMatches matches={matches} startMatch={4} matchTotal={4} isComingUpLater isMini />
+            </div>
+          </FireTournamentContext.Provider>
         </TournamentContext.Provider>
       </PlayerInfoContext.Provider>
     </div>

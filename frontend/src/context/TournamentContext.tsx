@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import { Ranking, TournamentMatch } from '../api'
+import { NormalTournamentMatch, Ranking, TournamentMatch } from '../api'
 
 /** Stage of the tournament */
 export enum TournamentState {
@@ -22,14 +22,8 @@ export interface TournamentInfo {
   setState?: React.Dispatch<React.SetStateAction<TournamentState>>
   /** The date it will start. Should be `null` if there is no date decided, or `undefined` if it hasn't been fetched yet. */
   date: Date | null | undefined
-  /** Ranking of the current phase of the tournament */
-  ranking: Ranking
   /** Info of all players in tournament */
   playerInfo: { [id: number]: string }
-  /** Whether or not tournament is in first phase (is always `true`, unless the tournament is running and not in first phase) */
-  isFirstPhase: boolean
-  /** Array with upcoming matches in the tournament */
-  upcomingMatches: TournamentMatch[]
 }
 
 /** A package of information telling what needs to be updated. */
@@ -50,10 +44,30 @@ export interface TournamentUpdate {
 export const TournamentContext = createContext<TournamentInfo>({
   state: TournamentState.Unknown,
   date: undefined,
-  ranking: [],
-  playerInfo: {},
+  playerInfo: {}
+})
+
+interface FireTournamentInfo {
+  /** Ranking of the current phase of the tournament */
+  ranking: Ranking
+  /** Whether or not tournament is in first phase (is always `true`, unless the tournament is running and not in first phase) */
+  isFirstPhase: boolean
+  /** Array with upcoming matches in the tournament */
+  upcomingMatches: TournamentMatch[]
+}
+
+export const FireTournamentContext = createContext<FireTournamentInfo>({
   isFirstPhase: true,
+  ranking: [],
   upcomingMatches: []
+})
+
+interface NormalTournamentInfo {
+  matches: NormalTournamentMatch[]
+}
+
+export const NormalTournamentContext = createContext<NormalTournamentInfo>({
+  matches: []
 })
 
 // need to use this because of parsing error with ts-standard
