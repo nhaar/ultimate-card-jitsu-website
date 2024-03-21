@@ -3,7 +3,7 @@ import { useContext, useEffect, useState } from 'react'
 import config from './config.json'
 import { NormalTournamentMatch, Ranking, TournamentMatch, TournamentPhase, getNormalTournament, getPlayerInfo, getRankings, getTournamentDate, getTournamentFinalStandings, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
 import Haiku from './Haiku'
-import { FireTournamentContext, NormalTournamentContext, TournamentContext, TournamentState } from './context/TournamentContext'
+import { FireTournamentContext, NormalTournamentContext, TournamentContext, TournamentState, UpcomingMatchup } from './context/TournamentContext'
 import CountdownTimer from './CountdownTimer'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import { getOrdinalNumber } from './utils'
@@ -236,19 +236,19 @@ function FinalPhaseRankings ({ ranking }: { ranking: Ranking }): JSX.Element {
 }
 
 /** Component that renders a match's players */
-export function TournamentMatchElement ({ match, displayId }: { match: TournamentMatch, displayId?: boolean }): JSX.Element {
+export function TournamentMatchElement ({ match, displayId }: { match: UpcomingMatchup, displayId?: boolean }): JSX.Element {
   const playerInfo = useContext(PlayerInfoContext)
-  const players = match.runners.map((runner) => {
-    if (runner === null) {
-      return '??????'
+
+  let players = match.players.map((p) => {
+    if (typeof p === 'number') {
+      return playerInfo[p]
     } else {
-      const name = playerInfo[runner]
-      if (displayId === true) {
-        return `${runner} - ${name}`
-      }
-      return name
+      return p
     }
   })
+  if (match.players.length !== 4) {
+    players = ['', players[0], players[1], '']
+  }
 
   return (
     <div style={{
@@ -274,7 +274,7 @@ export function TournamentMatchElement ({ match, displayId }: { match: Tournamen
 
 /** Component that renders the upcoming matches */
 export function UpcomingMatches ({ matches, startMatch, matchTotal, isComingUpLater, isMini }: {
-  matches: TournamentMatch[]
+  matches: UpcomingMatchup[]
   /** First match to be displayed, 0-indexed, leave out for 0 */
   startMatch?: number
   /** Total number of matches, leave out for all matches */
@@ -297,32 +297,42 @@ export function UpcomingMatches ({ matches, startMatch, matchTotal, isComingUpLa
       return
     }
 
-    // only include matches that haven't been played (i.e. have no standings)
-    if (match.standings.length === 0) {
-      added++
-      matchComponents.push((
-        <div className='mb-5'>
-          <h2
-            className='emblem-yellow' style={{
-              textAlign: 'center',
-              textShadow: '2px 2px 2px #000, -2px 2px 2px #000, -2px -2px 2px #000, 2px -2px 2px #000'
-            }}
-          >Match {index + 1}
-          </h2>
-          <div className='is-flex is-justify-content-center'>
-            <TournamentMatchElement match={match} />
-          </div>
+    added++
+    matchComponents.push((
+      <div className='mb-5'>
+        <h2
+          className='emblem-yellow' style={{
+            textAlign: 'center',
+            textShadow: '2px 2px 2px #000, -2px 2px 2px #000, -2px -2px 2px #000, 2px -2px 2px #000'
+          }}
+        >Match {match.n}
+        </h2>
+        <div className='is-flex is-justify-content-center'>
+          <TournamentMatchElement match={match} />
         </div>
-      ))
-    }
+      </div>
+    ))
   })
 
   const title = isComingUpLater === true ? 'Coming Up Later' : 'Upcoming Matches'
   const width = isMini === true ? undefined : '50%'
 
+  let bgClass
+
+  switch (getWebsiteTheme()) {
+    case WebsiteThemes.Fire:
+      bgClass = 'emblem-pink-bg'
+      break
+    case WebsiteThemes.Normal:
+      bgClass = 'hideout-gray-bg'
+      break
+    default:
+      throw new Error('Not implemented')
+  }
+
   return (
     <div
-      className='emblem-pink-bg p-4' style={{
+      className={`${bgClass} p-4`} style={{
         borderRadius: '10px',
         width
       }}
@@ -341,9 +351,54 @@ export function UpcomingMatches ({ matches, startMatch, matchTotal, isComingUpLa
   )
 }
 
+/** Transform the fetched card-jitsu fire matches into upcoming matchups */
+export function upcomifyFireMatches (matches: TournamentMatch[]): UpcomingMatchup[] {
+  const upcoming: UpcomingMatchup[] = []
+
+  let i = 0
+  for (const match of matches) {
+    // only include matches that haven't been played (i.e. have no standings)
+    if (match.standings.length === 0) {
+      upcoming.push({
+        players: match.runners.map((id) => {
+          if (id === null) {
+            return '??????'
+          } else {
+            return id
+          }
+        }),
+        n: i + 1
+      })
+    }
+    i++
+  }
+
+  return upcoming
+}
+
+/** Transform the fetched regular card-jitsu matches into upcoming matchups */
+export function upcomifyNormalMatches (matches: NormalTournamentMatch[]): UpcomingMatchup[] {
+  const upcoming: UpcomingMatchup[] = []
+  for (const match of matches) {
+    if (match.results !== undefined) {
+      continue
+    }
+    if (match.player1 === undefined || match.player2 === undefined) {
+      continue
+    }
+    const players = [match.player1, match.player2]
+    upcoming.push({
+      players,
+      n: match.n
+    })
+  }
+  return upcoming
+}
+
 /** Component that renders the fire tournament's page */
 function FireTournamentPage (): JSX.Element {
-  const { isFirstPhase, ranking, upcomingMatches } = useContext(FireTournamentContext)
+  const { isFirstPhase, ranking } = useContext(FireTournamentContext)
+  const { upcoming } = useContext(TournamentContext)
   const rankingElement = isFirstPhase ? <FirstPhaseRankings ranking={ranking} /> : <FinalPhaseRankings ranking={ranking} />
 
   return (
@@ -352,7 +407,7 @@ function FireTournamentPage (): JSX.Element {
         {rankingElement}
       </div>
       <div className='is-flex is-justify-content-center mt-6 mb-5'>
-        <UpcomingMatches matches={upcomingMatches} />
+        <UpcomingMatches matches={upcoming} />
       </div>
     </div>
   )
@@ -629,8 +684,10 @@ function DoubleEliminationBracket (): JSX.Element {
 
 /** Component for the tournament page for a regular card-jitsu tournament */
 function NormalTournamentPage (): JSX.Element {
+  const { upcoming } = useContext(TournamentContext)
+
   return (
-    <div>
+    <div className='is-flex is-justify-content-center is-flex-direction-column is-align-items-center mb-6'>
       <div style={{
         fontSize: '36px'
       }}
@@ -638,6 +695,8 @@ function NormalTournamentPage (): JSX.Element {
         <Haiku first='The tournament view' second='We can see who is winning' third='And those who are not' />
       </div>
       <DoubleEliminationBracket />
+      <div className='my-5' />
+      <UpcomingMatches matches={upcoming} />
     </div>
   )
 }
@@ -776,10 +835,10 @@ export default function MainPage (): JSX.Element {
   const [tournamentState, setTournamentState] = useState<TournamentState>(TournamentState.Unknown)
   const [playerInfo, setPlayerInfo] = useState<{ [id: number]: string }>({})
   const [tournamentDate, setTournamentDate] = useState<Date | null | undefined>(undefined)
+  const [upcomingMatches, setUpcomingMatches] = useState<UpcomingMatchup[]>([])
 
   // fire tournament only data
   const [isFirstPhase, setIsFirstPhase] = useState<boolean>(true)
-  const [upcomingMatches, setUpcomingMatches] = useState<TournamentMatch[]>([])
   const [ranking, setRanking] = useState<Ranking>([])
 
   // normal tournament only data
@@ -845,12 +904,14 @@ export default function MainPage (): JSX.Element {
       case WebsiteThemes.Fire: {
         const isFirstPhase = await isCurrentPhaseFirstPhase()
         setIsFirstPhase(isFirstPhase)
-        setUpcomingMatches(await getTournamentMatches())
+        setUpcomingMatches(upcomifyFireMatches(await getTournamentMatches()))
         setRanking(await getRankings(isFirstPhase ? TournamentPhase.Start : TournamentPhase.Final))
         break
       }
       case WebsiteThemes.Normal: {
-        setMatches(await getNormalTournament())
+        const matches = await getNormalTournament()
+        setMatches(matches)
+        setUpcomingMatches(upcomifyNormalMatches(matches))
         break
       }
     }
@@ -925,7 +986,7 @@ export default function MainPage (): JSX.Element {
       break
     case WebsiteThemes.Fire:
       contextProvider = (
-        <FireTournamentContext.Provider value={{ ranking, isFirstPhase, upcomingMatches }}>
+        <FireTournamentContext.Provider value={{ ranking, isFirstPhase }}>
           {baseElement}
         </FireTournamentContext.Provider>
       )
@@ -940,7 +1001,8 @@ export default function MainPage (): JSX.Element {
         state: tournamentState,
         setState: setTournamentState,
         date: tournamentDate,
-        playerInfo
+        playerInfo,
+        upcoming: upcomingMatches
       }}
       >
         {contextProvider}

@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import { NormalTournamentMatch, Ranking, TournamentMatch } from '../api'
+import { NormalTournamentMatch, Ranking } from '../api'
 
 /** Stage of the tournament */
 export enum TournamentState {
@@ -14,6 +14,14 @@ export enum TournamentState {
   Finished
 }
 
+/** Generic interface for a match of multiple players */
+export interface UpcomingMatchup {
+  /** Numbers represent IDs, while string represents non-players and some description instead */
+  players: Array<string | number>
+  /** Match number */
+  n: number
+}
+
 /** Object that has all relevant info for the current state of the tournament */
 export interface TournamentInfo {
   /** Status on it being started/etc. */
@@ -24,6 +32,8 @@ export interface TournamentInfo {
   date: Date | null | undefined
   /** Info of all players in tournament */
   playerInfo: { [id: number]: string }
+  /** Array with upcoming matches in the tournament */
+  upcoming: UpcomingMatchup[]
 }
 
 /** A package of information telling what needs to be updated. */
@@ -44,7 +54,8 @@ export interface TournamentUpdate {
 export const TournamentContext = createContext<TournamentInfo>({
   state: TournamentState.Unknown,
   date: undefined,
-  playerInfo: {}
+  playerInfo: {},
+  upcoming: []
 })
 
 interface FireTournamentInfo {
@@ -52,14 +63,11 @@ interface FireTournamentInfo {
   ranking: Ranking
   /** Whether or not tournament is in first phase (is always `true`, unless the tournament is running and not in first phase) */
   isFirstPhase: boolean
-  /** Array with upcoming matches in the tournament */
-  upcomingMatches: TournamentMatch[]
 }
 
 export const FireTournamentContext = createContext<FireTournamentInfo>({
   isFirstPhase: true,
-  ranking: [],
-  upcomingMatches: []
+  ranking: []
 })
 
 interface NormalTournamentInfo {

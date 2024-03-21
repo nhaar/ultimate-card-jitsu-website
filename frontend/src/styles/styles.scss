@@ -12,6 +12,7 @@ $fire-emblem-pink: #bf3b51;
 $cj-progression-background: #ebb366;
 $cj-progression-foreground: #fff7d9;
 $cj-progression-text: #3d261c;
+$hideout-gray-rock: #666666;
 
 $primary: white;
 
@@ -44,6 +45,10 @@ $body-background-color: $fire-emblem-red;
 
 .emblem-yellow {
   color: $fire-emblem-yellow;
+}
+
+.hideout-gray-bg {
+  background-color: rgba($hideout-gray-rock, .6);
 }
 
 @import "~bulma/bulma";

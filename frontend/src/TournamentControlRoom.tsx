@@ -3,7 +3,6 @@ import { NormalTournamentMatch, TournamentMatch, TournamentTies, createFireTourn
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import { getCookie } from './utils'
 import { TournamentUpdate, TournamentUpdateContext } from './context/TournamentContext'
-import { TournamentMatchElement } from './MainPage'
 import { UcjWS } from './ws'
 import { WebsiteThemes, getWebsiteTheme } from './website-theme'
 
@@ -274,6 +273,7 @@ function TournamentMatchController ({ match, index, decider }: {
   index: number
   decider: JSX.Element
 }): JSX.Element {
+  const playerInfo = useContext(PlayerInfoContext)
   const players = []
   let hasNull = false
   for (const player of match.runners) {
@@ -295,8 +295,12 @@ function TournamentMatchController ({ match, index, decider }: {
         <div className='burbank black-shadow'>
           NOT STARTED
         </div>
-        <div style={{ width: '5%' }}>
-          <TournamentMatchElement match={match} displayId />
+        <div>
+          {players.map((p, i) => {
+            return (
+              <div key={i}>{p} - {playerInfo[p]}</div>
+            )
+          })}
         </div><br />
         {decider}<br /><br />
       </div>
