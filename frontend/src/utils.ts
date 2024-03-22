@@ -1,4 +1,5 @@
 import config from './config.json'
+import { WebsiteThemes, getWebsiteTheme } from './website-theme'
 
 /**
  * Used to send a POST request to the server with a JSON object
@@ -123,4 +124,16 @@ export function convertBase64ToBlob (b64: string, type: string): Blob {
   }
   const byteArray = new Uint8Array(byteNumbers)
   return new Blob([byteArray], { type })
+}
+
+/** Get the CSS class used as the primary background color */
+export function getPrimaryBackgroundClass (): string {
+  switch (getWebsiteTheme()) {
+    case WebsiteThemes.Fire:
+      return 'emblem-pink-bg'
+    case WebsiteThemes.Normal:
+      return 'hideout-gray-bg'
+    default:
+      throw new Error('Not implemented')
+  }
 }

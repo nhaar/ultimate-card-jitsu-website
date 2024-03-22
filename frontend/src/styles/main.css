@@ -1,9 +1,14 @@
+:root {
+  --scroll-border-radius: 5px;
+}
+
 body {
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
   min-height: 100vh;
   min-width: 100vw;
+  padding-bottom: 50px;
 }
 
 .fire-background-overlay {
@@ -17,4 +22,41 @@ body {
 
 .black-shadow {
   text-shadow: 3px 3px 3px #000, -3px 3px 3px #000, -3px -3px 3px #000, 3px -3px 3px #000;
+}
+
+.black-shadow-1 {
+  text-shadow: 1px 1px 1px #000, -1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000;
+}
+
+.black-shadow-2 {
+  text-shadow: 2px 2px 2px #000, -2px 2px 2px #000, -2px -2px 2px #000, 2px -2px 2px #000;
+}
+
+.bracket::-webkit-scrollbar {
+  height: 10px;
+}
+
+.bracket::-webkit-scrollbar-track {
+  background: white;
+  border-radius: var(--scroll-border-radius);
+}
+
+.bracket::-webkit-scrollbar-thumb {
+  border-radius: var(--scroll-border-radius);
+}
+
+.bracket::-webkit-scrollbar-thumb {
+  background: rgb(129, 129, 129);
+}
+
+.bracket::-webkit-scrollbar-thumb:hover {
+  background: rgb(40, 40, 40);
+}
+
+.bracket:hover {
+  cursor: grab;
+}
+
+.bracket:active {
+  cursor: grabbing;
 }

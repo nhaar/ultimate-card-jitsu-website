@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 
 import config from './config.json'
 import { FinalStandings, NormalTournamentMatch, Ranking, TournamentMatch, TournamentPhase, getNormalTournament, getPlayerInfo, getRankings, getTournamentDate, getTournamentFinalStandings, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
@@ -102,7 +102,7 @@ function PreTournamentPage (): JSX.Element {
       </div>
       <div className='is-flex is-justify-content-center is-flex-direction-column mt-6'>
         <Haiku first='Place to go exists,' second='with power ninjas must know:' third='Power of friendship' />
-        <div className='is-flex is-justify-content-center mt-3 mb-6'>
+        <div className='is-flex is-justify-content-center mt-3 mb-3'>
           <DiscordWidget />
         </div>
 
@@ -251,19 +251,19 @@ export function TournamentMatchElement ({ match, displayId }: { match: UpcomingM
   }
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(3, 1fr)',
-      width: '80%',
-      textAlign: 'center',
-      textShadow: '2px 2px 2px #000, -2px 2px 2px #000, -2px -2px 2px #000, 2px -2px 2px #000'
-    }}
+    <div
+      className='black-shadow-2' style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        width: '80%',
+        textAlign: 'center'
+      }}
     >
       <div />
       <div>{players[0]}</div>
       <div />
       <div>{players[1]}</div>
-      <div className='candombe emblem-yellow' style={{ fontSize: '12pt', textShadow: '1px 1px 1px #000, -1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000' }}>VS</div>
+      <div className='candombe emblem-yellow black-shadow-1' style={{ fontSize: '12pt' }}>VS</div>
       <div>{players[2]}</div>
       <div />
       <div>{players[3]}</div>
@@ -299,11 +299,10 @@ export function UpcomingMatches ({ matches, startMatch, matchTotal, isComingUpLa
 
     added++
     matchComponents.push((
-      <div className='mb-5'>
+      <div className='mb-5 black-shadow-2'>
         <h2
           className='emblem-yellow' style={{
-            textAlign: 'center',
-            textShadow: '2px 2px 2px #000, -2px 2px 2px #000, -2px -2px 2px #000, 2px -2px 2px #000'
+            textAlign: 'center'
           }}
         >Match {match.n}
         </h2>
@@ -435,13 +434,14 @@ function PlayerInMatch ({ player, score, isBottom, lineHeight, height, borderRad
 }): JSX.Element {
   const playerInfo = useContext(PlayerInfoContext)
 
-  function getName (player: number | undefined | string): string {
+  /** Helper component that displayer the name in a match */
+  function Name ({ player }: { player: number | undefined | string }): JSX.Element {
     if (typeof player === 'number') {
-      return playerInfo[player]
+      return <span>{playerInfo[player]}</span>
     } else if (player === undefined) {
-      return 'BYE'
+      return <span>BYE</span>
     } else {
-      return player
+      return <span style={{ color: 'gray' }}><i>{player}</i></span>
     }
   }
 
@@ -482,7 +482,8 @@ function PlayerInMatch ({ player, score, isBottom, lineHeight, height, borderRad
       <div style={{
         width: '200px'
       }}
-      >{getName(player)}
+      >
+        <Name player={player} />
       </div>
       {scoreDisplay}
     </div>
@@ -497,10 +498,17 @@ function PlayerInMatch ({ player, score, isBottom, lineHeight, height, borderRad
  * @returns
  */
 function getRoundName (round: number, size: number, isLoser: boolean): string {
-  const distance = size - round
   if (isLoser) {
-    return 'Loser'
+    const loserDistance = (size - 1) * 2 - round
+    if (loserDistance === 0) {
+      return 'Losers Final'
+    }
+    if (loserDistance === 1) {
+      return 'Losers Semi-Final'
+    }
+    return `Losers Round ${round}`
   } else {
+    const distance = size - round
     if (round === 1) {
       return 'Start Round'
     }
@@ -522,7 +530,7 @@ function getRoundName (round: number, size: number, isLoser: boolean): string {
     if (distance === 3) {
       return 'Winners Eight-Finals'
     }
-    return 'Winner'
+    return `Winners Round ${round}`
   }
 }
 
@@ -574,8 +582,8 @@ function BracketView ({ bracket, size, isLoser }: {
                 }}
               >
                 <div
-                  className='mr-1' style={{
-                    color: 'black',
+                  className='mr-1 black-shadow-1' style={{
+                    color: 'white',
                     width: '20px'
                   }}
                 >
@@ -624,6 +632,36 @@ function DoubleEliminationBracket (): JSX.Element {
   const { matches } = useContext(NormalTournamentContext)
   const playerInfo = useContext(PlayerInfoContext)
   const [size, setSize] = useState<number>(0)
+
+  // reference to bracket DIV element used for scrolling
+  const bracketDiv = useRef<HTMLDivElement>(null)
+  // if scrolling bracket by grabbing
+  const isScrolling = useRef<boolean>(false)
+  // X position of the mouse before each scrolling cycle
+  const startX = useRef<number>(0)
+
+  /** Starts scrolling the bracket */
+  function startScrolling (e: React.MouseEvent<HTMLDivElement, MouseEvent>): void {
+    startX.current = e.clientX
+    isScrolling.current = true
+  }
+
+  /** Stops scrolling the bracket */
+  function stopScrolling (): void {
+    isScrolling.current = false
+  }
+
+  /** Handles the mouse move event to update the bracket scrolling */
+  function handleMouseMoveScroll (e: React.MouseEvent<HTMLDivElement, MouseEvent>): void {
+    if (isScrolling.current && bracketDiv.current !== null) {
+      bracketDiv.current.scrollLeft += 2 * (startX.current - e.clientX)
+      startX.current = e.clientX
+    }
+  }
+
+  useEffect(() => {
+    document.addEventListener('mouseup', stopScrolling)
+  }, [])
 
   useEffect(() => {
     setSize(Math.ceil(Math.log2(Object.keys(playerInfo).length)))
@@ -679,10 +717,12 @@ function DoubleEliminationBracket (): JSX.Element {
     }
 
     return (
-      <div style={{
-        width: '80vw',
-        overflow: 'scroll'
-      }}
+      <div
+        className='bracket pl-1' onMouseMove={handleMouseMoveScroll} onMouseDown={startScrolling} ref={bracketDiv} style={{
+          width: '80vw',
+          overflowX: 'auto',
+          userSelect: 'none'
+        }}
       >
         <BracketView bracket={winnerBracket} size={size} isLoser={false} />
         <BracketView bracket={loserBracket} size={size} isLoser />

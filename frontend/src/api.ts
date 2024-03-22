@@ -331,7 +331,6 @@ export async function getTournamentFinalStandings (): Promise<FinalStandings> {
       route = 'api/tournament/final-standings-fire'
       break
     case WebsiteThemes.Normal:
-      console.log('CALLING')
       route = 'api/tournament/final-standings-normal'
       break
     default:

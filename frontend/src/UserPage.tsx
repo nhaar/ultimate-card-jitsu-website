@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { formatCookies, getCookie } from './utils'
+import { formatCookies, getCookie, getPrimaryBackgroundClass } from './utils'
 import { CPImaginedCredentials, editUserInfo, EditUserResponse, getAccountInfo, getCPImaginedCredentials, UserRole } from './api'
 import Haiku from './Haiku'
 import { performLogout } from './PlayerPage'
 import { UcjWS } from './ws'
+import { WebsiteThemes, getWebsiteTheme } from './website-theme'
 
 /** Page where the players can share screen */
 function ScreensharePage (): JSX.Element {
@@ -103,7 +104,7 @@ function ScreensharePage (): JSX.Element {
           >START SCREENSHARING
           </button>
         </div>
-        <video autoPlay ref={videoRef} width={500} className='mb-5' />
+        <video autoPlay ref={videoRef} width={500} className='mb-1' />
       </div>
     </div>
   )
@@ -174,7 +175,7 @@ function EditProfilePage ({ usePFP }: {
   return (
     <div className='has-text-primary burbank is-flex is-justify-content-center'>
       <div
-        className='is-flex is-justify-content-center is-flex-direction-column' style={{
+        className='is-flex is-justify-content-center is-flex-direction-column black-shadow' style={{
           width: '500px'
         }}
       >
@@ -218,14 +219,14 @@ export default function UserPage ({ role }: {
   const cpImaginedElement = cpImaginedCredentials === null
     ? (
       <div
-        className='is-flex is-justify-content-center mt-3' style={{
+        className='is-flex is-justify-content-center mt-3 black-shadow' style={{
           color: 'orange'
         }}
       >You haven't received your CPImagined account for the tournament yet. One will be given to you before the tournament starts.
       </div>
       )
     : (
-      <div className='is-flex is-justify-content-center mt-3'>
+      <div className='is-flex is-justify-content-center mt-3 black-shadow'>
         <div style={{
           display: 'grid',
           gridTemplateColumns: '100px 200px',
@@ -259,6 +260,15 @@ export default function UserPage ({ role }: {
     adminDest = '/cpimagined-credentials'
   }
 
+  /** Get the color of the CPImagined link */
+  function getLinkColor (): string {
+    switch (getWebsiteTheme()) {
+      case WebsiteThemes.Fire: return '#169cf7'
+      case WebsiteThemes.Normal: return '#18098d'
+      default: throw new Error('Not implemented')
+    }
+  }
+
   return (
     <div className='has-text-primary burbank'>
       <div style={{
@@ -277,7 +287,7 @@ export default function UserPage ({ role }: {
       </div>
       {/* Admin button only for people with admin-like permissions */}
       {(role === UserRole.Admin || role === UserRole.CPIAdmin) &&
-        <div className='box' style={{ fontSize: '14pt' }}>
+        <div className={`box ${getPrimaryBackgroundClass()}`} style={{ fontSize: '14pt' }}>
           <Haiku first='Administrators' second='No fancy haiku for you' third='Go do your job already' />
           <div className='is-flex is-justify-content-center mt-2'>
             <button
@@ -288,7 +298,7 @@ export default function UserPage ({ role }: {
             </button>
           </div>
         </div>}
-      <div className='box' style={{ fontSize: '14pt' }}>
+      <div className={`box ${getPrimaryBackgroundClass()}`} style={{ fontSize: '14pt' }}>
         <Haiku first='Personality' second='Is important for ninjas' third='You may edit it here' />
         <div className='is-flex is-justify-content-center mt-2'>
           <button
@@ -299,7 +309,7 @@ export default function UserPage ({ role }: {
           </button>
         </div>
       </div>
-      <div className='box is-flex is-justify-content-center is-flex-direction-column' style={{ fontSize: '14pt' }}>
+      <div className={`box ${getPrimaryBackgroundClass()} is-flex is-justify-content-center is-flex-direction-column`} style={{ fontSize: '14pt' }}>
         <Haiku first='If now you compete' second='Please share your screen to the stream' third='Else I cannot see!' />
         <div className='is-flex is-justify-content-center mt-2'>
           <button
@@ -310,11 +320,11 @@ export default function UserPage ({ role }: {
           </button>
         </div>
       </div>
-      <div className='box' style={{ fontSize: '14pt' }}>
+      <div className={`box ${getPrimaryBackgroundClass()}`} style={{ fontSize: '14pt' }}>
         <div className='is-flex is-justify-content-center'>
           <a
             href='https://www.cpimagined.net/download' style={{
-              color: '#169cf7',
+              color: getLinkColor(),
               fontSize: '24px',
               textDecoration: 'underline'
             }}
@@ -324,17 +334,16 @@ export default function UserPage ({ role }: {
         <Haiku first='CPImagined' second='Is how you must play, but look!' third='Must use this account:' />
         {cpImaginedElement}
         <div
-          className='mt-2' style={{
+          className='mt-2 black-shadow' style={{
             textAlign: 'center'
           }}
         >
           Refresh this page if you are told you have received a new account.
         </div>
       </div>
-      <div className='box is-flex is-justify-content-center'>
+      <div className={`box ${getPrimaryBackgroundClass()} is-flex is-justify-content-center`}>
         <button className='button is-warning burbank' onClick={performLogout}>LOG OUT</button>
       </div>
-      <div />
     </div>
   )
 }

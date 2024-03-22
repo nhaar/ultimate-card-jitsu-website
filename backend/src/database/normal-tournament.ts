@@ -933,7 +933,7 @@ export default class NormalTournament extends Tournament {
               if (matchOrigin === undefined) {
                 throw new Error('Match number should not be undefined')
               }
-              return `Winner of ${matchOrigin}.`
+              return `Winner of ${matchOrigin}`
             } else {
               return id
             }
@@ -945,7 +945,7 @@ export default class NormalTournament extends Tournament {
               if (number === undefined) {
                 throw new Error('Impossible')
               }
-              return `Loser of ${number}.`
+              return `Loser of ${number}`
             } else if (id === null) {
               return undefined
             } else {
@@ -960,9 +960,9 @@ export default class NormalTournament extends Tournament {
                 if (number === undefined) {
                   throw new Error('Impossible')
                 }
-                return `Loser of ${number}.`
+                return `Loser of ${number}`
               } else {
-                return `Winner of ${match.getNonByeOriginNumber()}.`
+                return `Winner of ${match.getNonByeOriginNumber()}`
               }
             } else if (id === null) {
               // if this is `null`, it means there's TWO games of `null` in a row

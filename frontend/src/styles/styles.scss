@@ -33,7 +33,8 @@ $table-striped-row-even-background-color: $cj-progression-background;
 $table-row-hover-background-color: $cj-logo-orange;
 $table-striped-row-even-hover-background-color: $table-row-hover-background-color;
 
-$body-background-color: $fire-emblem-red;
+// color is not actually used, but is seen when loading screen. This create a seamless effect (if it's the same as navbar background
+$body-background-color: $logo-background;
 
 .emblem-pink-bg {
   background-color:  rgba($fire-emblem-pink, .6);
@@ -47,8 +48,8 @@ $body-background-color: $fire-emblem-red;
   color: $fire-emblem-yellow;
 }
 
+@import "~bulma/bulma";
+
 .hideout-gray-bg {
   background-color: rgba($hideout-gray-rock, .6);
 }
-
-@import "~bulma/bulma";
