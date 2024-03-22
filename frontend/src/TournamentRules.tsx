@@ -3,31 +3,40 @@ import { WebsiteThemes, getWebsiteTheme } from './website-theme'
 /** Component that renders the tournament rules page */
 export default function TournamentRules (): JSX.Element {
   const theme = getWebsiteTheme()
+  let paragraphs = []
   switch (theme) {
     case WebsiteThemes.Fire: {
-      return (
-        <div
-          className='has-text-primary p-6 burbank black-shadow' style={{
-            fontSize: '14pt'
-          }}
-        >
-          <p className='mb-3'>
-            The tournament will consist of two phases, which are similar to each other. In each phase, a certain number of players will be distributed along 4-player matches. At the end of each match, the players will receive points based on their performance in the match. The winner will be rewarded 4 points, the second place will receive 3 points, the third place will receive 1 points and the fourth place will receive no points. The players will then be ranked based on their points.
-          </p>
-          <p className='mb-3'>
-            In the eventuality of a tie taking place, the players tied will fight each other in a sudden match, and the winners of the tie will have a greater rank than the losers of the tie.
-          </p>
-          <p className='mb-3'>
-            In the first phase, all players that signed up will play, and the top 4 ranking ninjas will advance to the next phase. Each player will play at least 4 times in the first phase.
-          </p>
-          <p className='mb-3'>
-            In the second and final phase, the winners of the first phase will play 3 matches against one another, in a brutal showdown for who will become the champion of the tournament.
-          </p>
-        </div>
-      )
+      paragraphs = [
+        'The tournament will consist of two phases, which are similar to each other. In each phase, a certain number of players will be distributed along 4-player matches. At the end of each match, the players will receive points based on their performance in the match. The winner will be rewarded 4 points, the second place will receive 3 points, the third place will receive 1 points and the fourth place will receive no points. The players will then be ranked based on their points.',
+        'In the eventuality of a tie taking place, the players tied will fight each other in a sudden match, and the winners of the tie will have a greater rank than the losers of the tie.',
+        'In the first phase, all players that signed up will play, and the top 4 ranking ninjas will advance to the next phase. Each player will play at least 4 times in the first phase.',
+        'In the second and final phase, the winners of the first phase will play 3 matches against one another, in a brutal showdown for who will become the champion of the tournament.'
+      ]
+      break
+    }
+    case WebsiteThemes.Normal: {
+      paragraphs = [
+        'The tournament consists of a double elimination bracket. A double elimination bracket consists of the main bracket,c alled the winners bracket, where people will be matchmaked in the same format you see in cups like the "World Cup". Everyone who loses, is sent to the Losers Bracket where they will have a second chance. The winner of the Winners Bracket is qualified for the Grand Finals.',
+        'In the Loser Bracket, people who have lost compete with one another in phases. Anyone who loses in here is eliminated from the tournament. At the end, one person will stand as the winner of the Loser Brackets, and they will be qualified to play in the Grand Finals.',
+        'The Grand Finals is the last match that takes place. The winner of this match is the champion, while the loser, the 2nd place. Because the player that won the Winner Bracket has not been defeated yet, while the winner of the Loser Bracket has been defeated once, the Winner Bracket winner has an advantage. If the Loser Bracket winner is to win, there will be a rematch. Otherwise, if the Winner Bracket winner wins right away, there is no such rematch. So, in other words, the Loser Bracket winner has a harder task to overcome in order to become the champion.'
+      ]
+      break
     }
     default: {
       throw new Error('not implemented')
     }
   }
+  return (
+    <div
+      className='has-text-primary p-6 burbank black-shadow' style={{
+        fontSize: '14pt'
+      }}
+    >
+      {paragraphs.map((p, i) => {
+        return (
+          <p key={i} className='mb-3'>{p}</p>
+        )
+      })}
+    </div>
+  )
 }
