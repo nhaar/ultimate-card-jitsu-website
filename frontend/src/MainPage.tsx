@@ -495,9 +495,12 @@ function PlayerInMatch ({ player, score, isBottom, lineHeight, height, borderRad
  * @param round Round number, starts at 1
  * @param size Size of the tournament
  * @param isLoser Whether or not it is in the loser bracket
+ * @param emptyRounds Number of empty rounds in the loser bracket (rounds where only "BYE"s played)
  * @returns
  */
-function getRoundName (round: number, size: number, isLoser: boolean): string {
+function getRoundName (round: number, size: number, isLoser: boolean, emptyRounds: number): string {
+  // effective round is used to convey to the viewer the true time passed, but round is used internally for the distance
+  const effectiveRound = round - emptyRounds
   if (isLoser) {
     const loserDistance = (size - 1) * 2 - round
     if (loserDistance === 0) {
@@ -506,10 +509,10 @@ function getRoundName (round: number, size: number, isLoser: boolean): string {
     if (loserDistance === 1) {
       return 'Losers Semi-Final'
     }
-    return `Losers Round ${round}`
+    return `Losers Round ${effectiveRound}`
   } else {
     const distance = size - round
-    if (round === 1) {
+    if (effectiveRound === 1) {
       return 'Start Round'
     }
     if (distance === -2) {
@@ -530,7 +533,7 @@ function getRoundName (round: number, size: number, isLoser: boolean): string {
     if (distance === 3) {
       return 'Winners Eight-Finals'
     }
-    return `Winners Round ${round}`
+    return `Winners Round ${effectiveRound}`
   }
 }
 
@@ -542,7 +545,15 @@ function BracketView ({ bracket, size, isLoser }: {
   size: number
   /** Whether or not this is the losers bracket */
   isLoser: boolean }): JSX.Element {
+  let emptyRounds = 0
   const rounds = bracket.map((r, i) => {
+    // match < 0 is marked as not an actual match
+    const isEmpty = r.every((m) => m.n < 0)
+    if (isEmpty) {
+      emptyRounds++
+      return undefined
+    }
+
     const splitLineHeight = 2 // pixels
     const totalHeight = 50
     const playerHeight = (50 - 2) / 2
@@ -561,7 +572,7 @@ function BracketView ({ bracket, size, isLoser }: {
             alignItems: 'center'
           }}
         >
-          {getRoundName(i + 1, size, isLoser)}
+          {getRoundName(i + 1, size, isLoser, emptyRounds)}
         </div>
         <div style={{
           display: 'grid',
@@ -572,13 +583,16 @@ function BracketView ({ bracket, size, isLoser }: {
         }}
         >
           {r.map((m, i) => {
+            // hiding from view if it's not an actual match
+            const isVisible = m.n > 0
             return (
               <div
-                key={i} className='is-flex' style={{
+                key={i} style={{
                   fontSize: '16px',
                   height: '100%',
                   justifyContent: 'center',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  display: isVisible ? 'flex' : 'none'
                 }}
               >
                 <div
