@@ -1,6 +1,6 @@
 import { isObject } from '../utils/utils'
 import Database from './database'
-import Tournament, { PlayerInfo } from './tournament'
+import Tournament, { FinalStandings, PlayerInfo } from './tournament'
 
 /** Interface for a basic score reporting. */
 interface MatchResults {
@@ -117,6 +117,22 @@ abstract class Match {
     return this.results.scores[0] > this.results.scores[1] ? matchup[0] : matchup[1]
   }
 
+  /**
+   * Get the loser of this match, if it has been decided. In the presence of "BYE" players, the other player is automatically
+   * the winner
+   * @returns
+   */
+  getLoser (): number | null | undefined {
+    const [left, right] = this.getMatchup()
+    if (left === null || right === null) {
+      return null
+    }
+    if (this.results === undefined) {
+      return undefined
+    }
+    return this.results.scores[0] > this.results.scores[1] ? right : left
+  }
+
   /** Method that implements a way to get the matchup of two IDs, or `undefined` if either hasn't been decided or `null` if it is a "BYE" (ghost player) */
   abstract getMatchup (): [number | null | undefined, number | null | undefined]
 
@@ -138,22 +154,6 @@ abstract class Match {
   /** Checks if the matchup contains a "BYE" (ghost) player */
   hasBye (): boolean {
     return this.getMatchup().some(m => m === null)
-  }
-
-  /**
-   * Get the loser of this match, if it has been decided. In the presence of "BYE" players, the other player is automatically
-   * the winner
-   * @returns
-   */
-  getLoser (): number | null | undefined {
-    const [left, right] = this.getMatchup()
-    if (left === null || right === null) {
-      return null
-    }
-    if (this.results === undefined) {
-      return undefined
-    }
-    return this.results.scores[0] > this.results.scores[1] ? right : left
   }
 }
 
@@ -1028,14 +1028,64 @@ export default class NormalTournament extends Tournament {
         if (m instanceof GrandFinals) {
           // winner bracket winner won
           isRematchSkip = leftScore > rightScore
+        } else if (m instanceof GrandFinalsRematch) {
+          this.isFinished = true
         }
         m.decide(leftScore, rightScore)
       } else if (isRematchSkip && m instanceof GrandFinalsRematch) {
         // rematch is not needed
         m.decide(1, 0)
+        this.isFinished = true
       }
     })
 
     await this.save()
+  }
+
+  override getFinalStandings(): FinalStandings {
+    if (this.isFinished) {
+      const standings: FinalStandings = []
+      const winner = this.grandFinalsRematch.getWinner()
+      const loser = this.grandFinalsRematch.getLoser()
+      if (typeof winner !== 'number' || typeof loser !== 'number') {
+        throw new Error('Tournament is finished and has no winner')
+      }
+      standings.push(winner, loser)
+      
+      let currentEven:EvenLoserMatch[] = [this.losersBracket.final]
+      let currentOdd:Array<OddLoserMatch | StarterLoserMatch> = []
+      let reachedBottom = false
+      // add losers recursively until reaching the first losers round
+      // everyone is eliminated by losing so we know we're getting everyone
+      while (!reachedBottom) {
+        const tiedEven = []
+        for (const match of currentEven) {
+          currentOdd.push(match.loserOrigin)
+          const loser = match.getLoser()
+          if (typeof loser === 'number') {
+            tiedEven.push(loser)
+          }
+        }
+        standings.push(tiedEven)
+        currentEven = []
+        const tiedOdd = []
+        for (const match of currentOdd) {
+          if (match instanceof StarterLoserMatch) {
+            reachedBottom = true
+          } else {
+            currentEven.push(match.left, match.right)
+          }
+          const loser = match.getLoser()
+          if (typeof loser === 'number') {
+            tiedOdd.push(loser)
+          }
+        }
+        currentOdd = []
+        standings.push(tiedOdd)
+      }
+      return standings
+    } else {
+      return []
+    }
   }
 }

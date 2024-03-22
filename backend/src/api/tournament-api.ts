@@ -2,7 +2,7 @@ import express = require('express')
 import { Request, Response } from 'express'
 import { asyncWrapper, isStringNumber } from '../utils/utils'
 import User from '../database/user'
-import { PlayerInfo } from '../database/tournament'
+import Tournament, { PlayerInfo } from '../database/tournament'
 import FireTournament, { TournamentPhase } from '../database/fire-tournament'
 import NormalTournament from '../database/normal-tournament'
 import AnyTournament from '../database/any-tournament'
@@ -219,7 +219,7 @@ router.get('/current-phase', asyncWrapper(async (_: Request, res: Response): Pro
 }))
 
 router.get('/is-finished', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-  const tournament = await FireTournament.getTournament()
+  const tournament = await AnyTournament.get()
   if (tournament === undefined) {
     res.sendStatus(400)
     return
@@ -268,20 +268,35 @@ router.get('/get-display-phase', asyncWrapper(async (_: Request, res: Response):
   })
 }))
 
-router.get('/final-standings', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-  const tournament = await FireTournament.getTournament()
+/**
+ * Get a function that gets a function useable as a response to getting the final standings of a tournament
+ * @param tournamentGetter Asynchronous function that must return the tournament or `undefined`
+ * @returns Function for use in endpoint
+ */
+function getStandingsGetter (tournamentGetter: () => Promise<Tournament | undefined>): (req: Request, res: Response) => void {
+  return asyncWrapper(async (_: Request, res: Response): Promise<void> => {
+    const tournament = await tournamentGetter()
+  
+    if (tournament === undefined) {
+      res.sendStatus(400)
+      return
+    }
+  
+    const standings = tournament.getFinalStandings()
+    if (standings === undefined) {
+      res.sendStatus(400)
+    } else {
+      res.status(200).send({ standings })
+    }
+  })
+}
 
-  if (tournament === undefined) {
-    res.sendStatus(400)
-    return
-  }
+router.get('/final-standings-fire', getStandingsGetter(async () => {
+  return await FireTournament.getTournament()
+}))
 
-  const standings = tournament.getFinalStandings()
-  if (standings === undefined) {
-    res.sendStatus(400)
-  } else {
-    res.status(200).send({ standings })
-  }
+router.get('/final-standings-normal', getStandingsGetter(async () => {
+  return await NormalTournament.getTournament()
 }))
 
 export default router

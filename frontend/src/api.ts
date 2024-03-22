@@ -1,4 +1,5 @@
 import { getJSON, postAndGetJSON, postJSON } from './utils'
+import { WebsiteThemes, getWebsiteTheme } from './website-theme'
 
 /**
  * Checks if a tournament is active
@@ -316,18 +317,33 @@ export async function performLogin (username: string, password: string): Promise
   }
 }
 
+/** Array represents the final standings. All number are player IDs, and they are ordered from 1st to last. Ties are represented using arrays, where all players in the array have the same ranking. */
+export type FinalStandings = Array<number | number[]> 
+
 /**
- * Get the standings of the finals, an array with all player IDs from 1st ot last
+ * Get the standings of the finals, info of how every player ranked
  * @returns Will be empty if tournament isn't finished
  */
-export async function getTournamentFinalStandings (): Promise<number[]> {
-  const response = await getJSON('api/tournament/final-standings')
+export async function getTournamentFinalStandings (): Promise<FinalStandings> {
+  let route
+  switch (getWebsiteTheme()) {
+    case WebsiteThemes.Fire:
+      route = 'api/tournament/final-standings-fire'
+      break
+    case WebsiteThemes.Normal:
+      console.log('CALLING')
+      route = 'api/tournament/final-standings-normal'
+      break
+    default:
+      throw new Error('Not implemented')
+  }
+  const response = await getJSON(route)
 
   if (response === null) {
     return []
   }
 
-  return (response as { standings: number [] }).standings
+  return (response as { standings: FinalStandings }).standings
 }
 
 /**

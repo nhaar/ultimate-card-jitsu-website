@@ -1,5 +1,5 @@
 import Database from './database'
-import Tournament from './tournament'
+import Tournament, { FinalStandings } from './tournament'
 
 /** Class for a generic tournament. Performs actions for all tournament types. */
 export default class AnyTournament extends Tournament {
@@ -53,5 +53,9 @@ export default class AnyTournament extends Tournament {
 
     // skip backup because it would be the same as the latest snapshot
     await newTournament.save(false)
+  }
+  
+  override getFinalStandings(): FinalStandings {
+    return []
   }
 }

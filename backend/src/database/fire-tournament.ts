@@ -1,6 +1,6 @@
 import { isObject, isStringNumber } from '../utils/utils'
 import Database from './database'
-import Tournament, { PlayerInfo } from './tournament'
+import Tournament, { FinalStandings, PlayerInfo } from './tournament'
 
 interface PlayerPoints {
   [key: number]: number
@@ -84,8 +84,6 @@ class FireTournament extends Tournament {
 
   /** Whether or not the first phase of the tournament is fully done, including tie settling */
   isFirstPhaseFinished: boolean = false
-  /** Whether or not this tournament is finished */
-  isFinished: boolean = false
 
   constructor (value: any) {
     super(value)
@@ -607,7 +605,6 @@ class FireTournament extends Tournament {
     return {
       bracket: this.bracket,
       isFirstPhaseFinished: this.isFirstPhaseFinished,
-      isFinished: this.isFinished,
       tieStandings: this.tieStandings
     }
   }
@@ -691,14 +688,14 @@ class FireTournament extends Tournament {
    * Get the final standings, a list of all the player IDs from 1st to last
    * @returns The standings or undefined if the tournament isn't finished yet
    */
-  getFinalStandings (): number[] | undefined {
+  override getFinalStandings (): FinalStandings {
     if (!this.isFinished) {
-      return undefined
+      return []
     } else {
       const rankingsFirstPhase = this.getRankings(TournamentPhase.Start)
       const rankingsFinalPhase = this.getRankings(TournamentPhase.Final)
 
-      const standings: number[] = []
+      const standings: FinalStandings = []
 
       function pushToStandingsFromRankings (rankings: Ranking, indexStart: number): void {
         let i = 0

@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react'
 
 import config from './config.json'
-import { NormalTournamentMatch, Ranking, TournamentMatch, TournamentPhase, getNormalTournament, getPlayerInfo, getRankings, getTournamentDate, getTournamentFinalStandings, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
+import { FinalStandings, NormalTournamentMatch, Ranking, TournamentMatch, TournamentPhase, getNormalTournament, getPlayerInfo, getRankings, getTournamentDate, getTournamentFinalStandings, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
 import Haiku from './Haiku'
 import { FireTournamentContext, NormalTournamentContext, TournamentContext, TournamentState, UpcomingMatchup } from './context/TournamentContext'
 import CountdownTimer from './CountdownTimer'
@@ -758,7 +758,7 @@ function InTournamentPage (): JSX.Element {
 
 /** Component handles showing the final standings of the tournament */
 function TournamentFinalStandings (): JSX.Element {
-  const [standings, setStandings] = useState<number[]>([])
+  const [standings, setStandings] = useState<FinalStandings>([])
   const playerInfo = useContext(PlayerInfoContext)
 
   useEffect(() => {
@@ -767,32 +767,33 @@ function TournamentFinalStandings (): JSX.Element {
     })()
   }, [])
 
-  const standingsComponents = standings.map((player, i) => {
+  const standingsComponents: JSX.Element[] = []
+  // callback used to add a component of a player
+  const addComponent = (player: number, rank: number): void => {
     const style: React.CSSProperties = {
       borderRadius: '5px'
     }
-
-    if (i < 3) {
+    if (rank <= 3) {
       style.borderTopStyle = 'solid'
       style.borderTopWidth = '2px'
     }
     // colors meant to reflect the center of the fire, water and snow symbols
-    if (i === 0) {
+    if (rank === 1) {
       style.borderTopColor = '#e7e550'
-    } else if (i === 1) {
+    } else if (rank === 2) {
       style.borderTopColor = '#5a77ae'
-    } else if (i === 2) {
+    } else if (rank === 3) {
       style.borderTopColor = '#ebebeb'
     }
 
-    return (
-      <div key={i} className='is-flex emblem-pink-bg p-4' style={style}>
+    standingsComponents.push(
+      <div key={player} className='is-flex emblem-pink-bg p-4' style={style}>
         <div
           className='mr-5 black-shadow' style={{
             fontSize: '32px'
           }}
         >
-          {getOrdinalNumber(i + 1)}
+          {getOrdinalNumber(rank)}
         </div>
         <div
           className='black-shadow' style={{
@@ -805,7 +806,22 @@ function TournamentFinalStandings (): JSX.Element {
         </div>
       </div>
     )
-  })
+  }
+
+  let rank = 1
+  for (const element of standings) {
+    // save rank at the start so that ties will show the same rank for everyone
+    const currentRank = rank
+    if (typeof element === 'number') {
+      addComponent(element, currentRank)
+      rank++
+    } else {
+      for (const player of element) {
+        addComponent(player, currentRank)
+        rank++
+      }
+    }
+  }
 
   return (
     <div

@@ -15,9 +15,13 @@ interface TournamentObject {
   backups?: string[]
   /** Info from all players in the tournament */
   players: PlayerInfo[]
+  /** Whether or not the tournament is finished */
+  isFinished: boolean
   tournamentSpecific: any
-
 }
+
+/** Array structure for how the standings should look like, order player IDs from first to last, and ties are handled with the same number in an array */
+export type FinalStandings = Array<number | number[]>
 
 /** Base class for an ongoing tournament. */
 export default abstract class Tournament {
@@ -26,6 +30,9 @@ export default abstract class Tournament {
 
   /** Info for all players in the tournament */
   players: PlayerInfo[] = []
+
+  /** Whether or not the tournament has ended */
+  isFinished: boolean
 
   /** Creates the tournament from the JSON object in the database (that is, already parsed here as an object) */
   constructor (tournamentObject: TournamentObject)
@@ -40,8 +47,10 @@ export default abstract class Tournament {
     if (this.isTournamentObject(value)) {
       this.backups = value.backups ?? []
       this.players = value.players
+      this.isFinished = value.isFinished
     } else {
       this.players = value
+      this.isFinished = false
     }
   }
 
@@ -63,6 +72,7 @@ export default abstract class Tournament {
     const data: TournamentObject = {
       backups: withBackups ? this.backups : undefined,
       players: this.players,
+      isFinished: this.isFinished,
       tournamentSpecific: this.getSpecificData()
     }
     return JSON.stringify(data)
@@ -139,4 +149,7 @@ export default abstract class Tournament {
     }
     return playerInfo
   }
+
+  /** Method that implements getting all the players in the order they ranked at the end */
+  abstract getFinalStandings (): FinalStandings
 }
