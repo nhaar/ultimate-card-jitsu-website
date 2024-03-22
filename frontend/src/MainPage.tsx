@@ -678,7 +678,6 @@ function DoubleEliminationBracket (): JSX.Element {
       winnerBracket.push([matches[match + 1]])
     }
 
-
     return (
       <div style={{
         width: '80vw',

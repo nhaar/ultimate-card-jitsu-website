@@ -54,8 +54,8 @@ export default class AnyTournament extends Tournament {
     // skip backup because it would be the same as the latest snapshot
     await newTournament.save(false)
   }
-  
-  override getFinalStandings(): FinalStandings {
+
+  override getFinalStandings (): FinalStandings {
     return []
   }
 }

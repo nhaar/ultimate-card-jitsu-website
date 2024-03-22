@@ -167,7 +167,7 @@ class GrandFinalsRematch extends Match {
     this.grandFinals = grandFinals
   }
 
-  override getMatchup(): [number | null | undefined, number | null | undefined] {
+  override getMatchup (): [number | null | undefined, number | null | undefined] {
     return this.grandFinals.getMatchup()
   }
 
@@ -191,8 +191,8 @@ class GrandFinals extends Match {
     this.loserFinal = loserFinal
   }
 
-  override getMatchup(): [number | null | undefined, number | null | undefined] {
-    return [this.winnerFinal.getWinner(), this.loserFinal.getWinner()] 
+  override getMatchup (): [number | null | undefined, number | null | undefined] {
+    return [this.winnerFinal.getWinner(), this.loserFinal.getWinner()]
   }
 
   getData (): GrandFinalsData {
@@ -872,9 +872,9 @@ export default class NormalTournament extends Tournament {
         const firstPlayers = [player1, player2].map((p, i) => {
           if (p === undefined) {
             if (i === 0) {
-              return `Winner of Winner Bracket`
+              return 'Winner of Winner Bracket'
             } else {
-              return `Winner of Loser Bracket`
+              return 'Winner of Loser Bracket'
             }
           } else {
             return p
@@ -1042,7 +1042,7 @@ export default class NormalTournament extends Tournament {
     await this.save()
   }
 
-  override getFinalStandings(): FinalStandings {
+  override getFinalStandings (): FinalStandings {
     if (this.isFinished) {
       const standings: FinalStandings = []
       const winner = this.grandFinalsRematch.getWinner()
@@ -1051,9 +1051,9 @@ export default class NormalTournament extends Tournament {
         throw new Error('Tournament is finished and has no winner')
       }
       standings.push(winner, loser)
-      
-      let currentEven:EvenLoserMatch[] = [this.losersBracket.final]
-      let currentOdd:Array<OddLoserMatch | StarterLoserMatch> = []
+
+      let currentEven: EvenLoserMatch[] = [this.losersBracket.final]
+      let currentOdd: Array<OddLoserMatch | StarterLoserMatch> = []
       let reachedBottom = false
       // add losers recursively until reaching the first losers round
       // everyone is eliminated by losing so we know we're getting everyone

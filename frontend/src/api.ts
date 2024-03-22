@@ -318,7 +318,7 @@ export async function performLogin (username: string, password: string): Promise
 }
 
 /** Array represents the final standings. All number are player IDs, and they are ordered from 1st to last. Ties are represented using arrays, where all players in the array have the same ranking. */
-export type FinalStandings = Array<number | number[]> 
+export type FinalStandings = Array<number | number[]>
 
 /**
  * Get the standings of the finals, info of how every player ranked

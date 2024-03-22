@@ -276,12 +276,12 @@ router.get('/get-display-phase', asyncWrapper(async (_: Request, res: Response):
 function getStandingsGetter (tournamentGetter: () => Promise<Tournament | undefined>): (req: Request, res: Response) => void {
   return asyncWrapper(async (_: Request, res: Response): Promise<void> => {
     const tournament = await tournamentGetter()
-  
+
     if (tournament === undefined) {
       res.sendStatus(400)
       return
     }
-  
+
     const standings = tournament.getFinalStandings()
     if (standings === undefined) {
       res.sendStatus(400)
