@@ -26,8 +26,6 @@ app.use('/*', (_: Request, res: Response) => {
 const wss = new UcjWSS(new WebSocketServer({ server }))
 
 wss.onConnection((ws) => {
-  ws.send('me', ws.id)
-
   ws.onMessage((data) => {
     switch (data.type) {
       /** In this event, the frontend sends a blob object (encoded), and here we direct it to the admin's socket. */
@@ -51,7 +49,7 @@ wss.onConnection((ws) => {
       }
       /** Frontend connects player's screen */
       case 'screenshare': {
-        wss.screenshare.addPlayer(data.value.id, data.value.name)
+        wss.screenshare.addPlayer(ws.id, data.value.name)
         wss.screenshare.sendPlayersToAdmin()
         break
       }

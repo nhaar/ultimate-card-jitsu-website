@@ -16,10 +16,6 @@ function ScreensharePage (): JSX.Element {
 
     socket.onMessage((data) => {
       switch (data.type) {
-        case 'me': {
-          setMe(data.value)
-          break
-        }
         case 'watch': {
           amBeingWatched.current = true
           break
@@ -33,8 +29,6 @@ function ScreensharePage (): JSX.Element {
 
     return socket
   })
-  /** WebSocket id that will be used to identify this player */
-  const [me, setMe] = useState<string>('')
   const videoRef = useRef<HTMLVideoElement>(null)
 
   /**
@@ -51,7 +45,7 @@ function ScreensharePage (): JSX.Element {
           const reader = new FileReader()
           reader.readAsDataURL(e.data)
           reader.onloadend = () => {
-            socket.send('stream-data', { blob: reader.result, type: e.data.type, id: me })
+            socket.send('stream-data', { blob: reader.result, type: e.data.type })
           }
         }
       }
@@ -81,9 +75,9 @@ function ScreensharePage (): JSX.Element {
         videoRef.current.srcObject = stream
       }
       createMediaRecorder(stream)
+      socket.send('screenshare', { name: getCookie('name') })
     })
-    const name = formatCookies(document.cookie).name
-    socket.send('screenshare', { name, id: me })
+
   }
 
   return (
