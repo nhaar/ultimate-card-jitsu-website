@@ -9,6 +9,9 @@ export interface PlayerInfo {
   name: string
 }
 
+/** Possible tournaments */
+type TournamentType = 'normal' | 'fire'
+
 /** Interface for the object that's stored as a JSON in the database */
 interface TournamentObject {
   // left optional because when this is stored as a backup it doesn't have this property, to avoid circular backup and exponential growth of memory
@@ -17,6 +20,8 @@ interface TournamentObject {
   players: PlayerInfo[]
   /** Whether or not the tournament is finished */
   isFinished: boolean
+  /** Identifier for what tournament it is */
+  type: TournamentType
   tournamentSpecific: any
 }
 
@@ -33,6 +38,9 @@ export default abstract class Tournament {
 
   /** Whether or not the tournament has ended */
   isFinished: boolean
+
+  /** If this is an instance of a specific tournament, should specificy which one */
+  type?: TournamentType
 
   /** Creates the tournament from the JSON object in the database (that is, already parsed here as an object) */
   constructor (tournamentObject: TournamentObject)
@@ -69,10 +77,14 @@ export default abstract class Tournament {
    * @returns Serialized data
    */
   serializeData (withBackups: boolean): string {
+    if (this.type === undefined) {
+      throw new Error('Trying to serialize data but no object type found')
+    }
     const data: TournamentObject = {
       backups: withBackups ? this.backups : undefined,
       players: this.players,
       isFinished: this.isFinished,
+      type: this.type,
       tournamentSpecific: this.getSpecificData()
     }
     return JSON.stringify(data)
@@ -119,6 +131,9 @@ export default abstract class Tournament {
       return false
     }
     if (!this.isSpecificTournamentObject(value.tournamentSpecific)) {
+      return false
+    }
+    if (value.type !== 'fire' && value.type !== 'normal') {
       return false
     }
     return true

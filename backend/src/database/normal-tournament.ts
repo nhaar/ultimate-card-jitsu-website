@@ -751,6 +751,7 @@ export default class NormalTournament extends Tournament {
 
   constructor (value: any) {
     super(value)
+    this.type = 'normal'
     if (Array.isArray(value)) {
       const tournamentPlayers = new NormalTournamentPlayers(this.players)
       this.winnersBracket = WinnerBracket.fromPlayers(tournamentPlayers)
@@ -1011,7 +1012,12 @@ export default class NormalTournament extends Tournament {
     if (query.rows.length === 0) {
       return undefined
     } else {
-      return new NormalTournament(query.rows[0].data)
+      const data = query.rows[0].data
+      // trying to fetch wrong tournament
+      if (!isObject(data) || data.type !== 'normal') {
+        return undefined
+      }
+      return new NormalTournament(data)
     }
   }
 

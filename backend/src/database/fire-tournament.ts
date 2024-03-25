@@ -87,6 +87,7 @@ class FireTournament extends Tournament {
 
   constructor (value: any) {
     super(value)
+    this.type = 'fire'
     if (Array.isArray(value)) {
       this.bracket = {
         start: {
@@ -256,6 +257,11 @@ class FireTournament extends Tournament {
     if (query.rows.length === 0) {
       return undefined
     } else {
+      const data = query.rows[0].data
+      // not the correct type of tournament
+      if (!isObject(data) || data.type !== 'fire') {
+        return undefined
+      }
       return new FireTournament(query.rows[0].data)
     }
   }
