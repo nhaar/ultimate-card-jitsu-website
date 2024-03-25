@@ -1,7 +1,6 @@
 import { useContext, useEffect, useState } from 'react'
 import { NormalTournamentMatch, TournamentMatch, TournamentTies, createFireTournament, createNormalTournament, decideNormalMatch, deleteTournament, getAllPlayers, getNormalTournament, getPlayerInfo, getTies, getTournamentMatches, isTournamentActive, resetTournamentDate, rollbackTournament, setTournamentDate, settleTie, updateMatchScore } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
-import { getCookie } from './utils'
 import { TournamentUpdate, TournamentUpdateContext } from './context/TournamentContext'
 import { UcjWS } from './ws'
 import { WebsiteThemes, getWebsiteTheme } from './website-theme'
@@ -564,7 +563,7 @@ export default function TournamentControlRoom (): JSX.Element {
 
     socket.onOpen(() => {
       // to authenticate this user as an updater
-      socket.send('connect-updater', getCookie('token'))
+      socket.sendAdmin('connect-updater')
     })
 
     return socket
