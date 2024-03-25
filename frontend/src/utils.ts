@@ -132,7 +132,7 @@ export function getPrimaryBackgroundClass (): string {
     case WebsiteThemes.Fire:
       return 'emblem-pink-bg'
     case WebsiteThemes.Normal:
-      return 'hideout-gray-bg'
+      return 'hideout-gray-bg-alpha'
     default:
       throw new Error('Not implemented')
   }

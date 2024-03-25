@@ -323,7 +323,7 @@ export function UpcomingMatches ({ matches, startMatch, matchTotal, isComingUpLa
       bgClass = 'emblem-pink-bg'
       break
     case WebsiteThemes.Normal:
-      bgClass = 'hideout-gray-bg'
+      bgClass = 'hideout-gray-bg-alpha'
       break
     default:
       throw new Error('Not implemented')
@@ -814,6 +814,24 @@ function TournamentFinalStandings (): JSX.Element {
   const [standings, setStandings] = useState<FinalStandings>([])
   const playerInfo = useContext(PlayerInfoContext)
 
+  // bg is for the background itself
+  // cell is the background for the names
+  let bgColorClass
+  let cellBgClass: string
+
+  switch (getWebsiteTheme()) {
+    case WebsiteThemes.Fire:
+      bgColorClass = 'emblem-red-bg'
+      cellBgClass = 'emblem-pink-bg'
+      break
+    case WebsiteThemes.Normal:
+      bgColorClass = 'shadow-suit-bg'
+      cellBgClass = 'hideout-gray-bg'
+      break
+    default:
+      throw new Error('Not implemented')
+  }
+
   useEffect(() => {
     void (async () => {
       setStandings(await getTournamentFinalStandings())
@@ -840,7 +858,7 @@ function TournamentFinalStandings (): JSX.Element {
     }
 
     standingsComponents.push(
-      <div key={player} className='is-flex emblem-pink-bg p-4' style={style}>
+      <div key={player} className={`is-flex ${cellBgClass} p-4`} style={style}>
         <div
           className='mr-5 black-shadow' style={{
             fontSize: '32px'
@@ -878,7 +896,7 @@ function TournamentFinalStandings (): JSX.Element {
 
   return (
     <div
-      className='is-flex is-flex-direction-column emblem-red-bg p-5 mb-5' style={{
+      className={`is-flex is-flex-direction-column ${bgColorClass} p-5 mb-5`} style={{
         width: '60vw',
         rowGap: '20px'
       }}
@@ -891,7 +909,7 @@ function TournamentFinalStandings (): JSX.Element {
 /** Component that renders the page post tournament */
 function PostTournamentPage (): JSX.Element {
   return (
-    <div className='has-text-primary is-flex is-justify-content-center burbank mb-6'>
+    <div className='has-text-primary is-flex is-justify-content-center burbank'>
       <div className='is-flex is-flex-direction-column is-align-items-center'>
         <div
           className='mb-3' style={{

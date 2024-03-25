@@ -13,6 +13,7 @@ $cj-progression-background: #ebb366;
 $cj-progression-foreground: #fff7d9;
 $cj-progression-text: #3d261c;
 $hideout-gray-rock: #666666;
+$shadow-suit-black: #161718;
 
 $primary: white;
 
@@ -48,8 +49,16 @@ $body-background-color: $logo-background;
   color: $fire-emblem-yellow;
 }
 
+.hideout-gray-bg {
+  background-color: $hideout-gray-rock;
+}
+
+.shadow-suit-bg {
+  background-color: $shadow-suit-black;
+}
+
 @import "~bulma/bulma";
 
-.hideout-gray-bg {
+.hideout-gray-bg-alpha {
   background-color: rgba($hideout-gray-rock, .6);
 }
