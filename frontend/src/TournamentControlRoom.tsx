@@ -6,29 +6,43 @@ import { TournamentUpdate, TournamentUpdateContext } from './context/TournamentC
 import { UcjWS } from './ws'
 import { WebsiteThemes, getWebsiteTheme } from './website-theme'
 
+const LOCAL_SELECTED_PLAYERS = 'selectedPlayers'
+
 /** Component responsible for the control room when a tournament is not active */
 function PretournamentControlRoom (): JSX.Element {
   /** Value that will be used for the tournament date */
   const [date, setDate] = useState<string>('')
-  const [unselectedPlayers, setUnselectedPlayers] = useState<string[]>([])
-  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([])
+  const [players, setPlayers] = useState<string[]>([])
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>(() => {
+    const local = localStorage.getItem(LOCAL_SELECTED_PLAYERS)
+    if (local === null) {
+      return []
+    } else {
+      return JSON.parse(local)
+    }
+  })
   const sendUpdate = useContext(TournamentUpdateContext)
 
   useEffect(() => {
     void (async () => {
-      const players = await getAllPlayers()
-      setUnselectedPlayers(players)
+      setPlayers(await getAllPlayers())
     })()
   }, [])
+
+  const unselectedPlayers = players.filter(p => !selectedPlayers.includes(p))
+
+  /** Update selected players locally and in state */
+  function updateSelectedPlayers (players: string[]): void {
+    localStorage.setItem(LOCAL_SELECTED_PLAYERS, JSON.stringify(players))
+    setSelectedPlayers(players)
+  }
 
   /**
    * Moves a player from unselected to selected
    * @param player
    */
   function selectPlayer (player: string): void {
-    const u = [...unselectedPlayers].filter((p) => p !== player)
-    setUnselectedPlayers(u)
-    setSelectedPlayers([...selectedPlayers, player])
+    updateSelectedPlayers([...selectedPlayers, player])
   }
 
   /**
@@ -37,8 +51,7 @@ function PretournamentControlRoom (): JSX.Element {
    */
   function unselectPlayer (player: string): void {
     const s = [...selectedPlayers].filter((p) => p !== player)
-    setSelectedPlayers(s)
-    setUnselectedPlayers([...unselectedPlayers, player])
+    updateSelectedPlayers(s)
   }
 
   /**
@@ -51,7 +64,7 @@ function PretournamentControlRoom (): JSX.Element {
     const player = s.splice(index, 1)[0]
     const indexDelta = isUp ? -1 : 1
     s.splice(index + indexDelta, 0, player)
-    setSelectedPlayers(s)
+    updateSelectedPlayers(s)
   }
 
   /**
@@ -171,7 +184,8 @@ function PretournamentControlRoom (): JSX.Element {
               </span>
               <button className='button burbank' onClick={() => movePlayerUp(i)} style={moveWidthStyle}>{moveUpText}</button>
               <button className='button burbank' onClick={() => movePlayerDown(i)} style={moveWidthStyle}>{moveDownText}</button>
-              <button className='button burbank' onClick={() => unselectPlayer(player)}>{player}</button>
+              <button className='button burbank'>{player}</button>
+              <button className='button burbank is-danger' onClick={() => unselectPlayer(player)}>REMOVE</button>
             </div>
           )
         })}
