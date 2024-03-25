@@ -417,6 +417,7 @@ function NormalMatchDecider ({ match }: { match: NormalTournamentMatchup }): JSX
   const [leftScore, setLeftScore] = useState<string>('0')
   const [rightScore, setRightScore] = useState<string>('0')
   const playerInfo = useContext(PlayerInfoContext)
+  const sendUpdate = useContext(TournamentUpdateContext)
 
   function handleDecide (): void {
     const l = Number(leftScore)
@@ -432,6 +433,7 @@ function NormalMatchDecider ({ match }: { match: NormalTournamentMatchup }): JSX
     void decideNormalMatch(match.n, Number(leftScore), Number(rightScore)).then((ok) => {
       if (ok) {
         window.alert('Match updated!')
+        sendUpdate({ scoreUpdate: true, updateState: true })
         window.location.reload()
       } else {
         window.alert('Epic fail')
