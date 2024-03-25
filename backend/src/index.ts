@@ -32,8 +32,6 @@ wss.onConnection((ws) => {
     switch (data.type) {
       /** In this event, the frontend sends a blob object (encoded), and here we direct it to the admin's socket. */
       case 'stream-data': {
-        wss.screenshare.updatePlayerActivity(data.value.id)
-
         // to avoid sending too much data and potentially overloading the backend
         // we only send back if the data is truly being demanded
         if (wss.screenshare.isPlayerBeingWatched(data.value.id)) {

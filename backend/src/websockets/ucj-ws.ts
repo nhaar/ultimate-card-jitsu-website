@@ -37,10 +37,6 @@ class ScreenShareManager {
 
   /** Websocket of admin watching the screens, or `undefined` if it hasn't been set yet */
   adminWS?: UcjWS
-  /** A map of all player ids and the last time they have sent any data */
-  activityData: Map<string, Date>
-  /** Interval that periodically checks if any players should be removed from the queue */
-  purgeInterval: NodeJS.Timeout
 
   /** Reference to the websocket server */
   wss: UcjWSS
@@ -49,12 +45,6 @@ class ScreenShareManager {
     this.wss = wss
     this.connectedPlayers = []
     this.playersBeingWatched = []
-    this.activityData = new Map<string, Date>()
-    this.purgeInterval = setInterval(() => {
-      if (this.removeInactivePlayers()) {
-        this.sendPlayersToAdmin()
-      }
-    }, 10000)
   }
 
   /** Send all players to the admin watching the screens */
@@ -77,8 +67,6 @@ class ScreenShareManager {
 
     // logically will also be removed from being watched if it is being removed in general
     this.playersBeingWatched = this.playersBeingWatched.filter(player => player !== id)
-
-    this.activityData.delete(id)
   }
 
   /** Add this player to the list of players being watched */
@@ -94,34 +82,6 @@ class ScreenShareManager {
   /** Check if a player is being watched based on its ID */
   isPlayerBeingWatched (id: string): boolean {
     return this.playersBeingWatched.includes(id)
-  }
-
-  updatePlayerActivity (id: string): void {
-    this.activityData.set(id, new Date())
-  }
-
-  /**
-   * Removes all inactive players
-   * @returns `true` if any players were removed
-   */
-  removeInactivePlayers (): boolean {
-    const now = new Date()
-    const inactivePlayers = Object.keys(this.activityData).filter(id => {
-      const lastActivity = this.activityData.get(id)
-
-      // true ensures this player will be removed
-      if (lastActivity === undefined) {
-        return true
-      }
-      const diff = now.getTime() - lastActivity.getTime()
-      return diff > 10000
-    })
-    const playerCount = this.connectedPlayers.length
-    inactivePlayers.forEach(id => {
-      this.removePlayer(id)
-    })
-
-    return playerCount !== this.connectedPlayers.length
   }
 }
 
