@@ -5,22 +5,14 @@ import { getCookie } from './utils'
 import { TournamentUpdate, TournamentUpdateContext } from './context/TournamentContext'
 import { UcjWS } from './ws'
 import { WebsiteThemes, getWebsiteTheme } from './website-theme'
-
-const LOCAL_SELECTED_PLAYERS = 'selectedPlayers'
+import { useLocalState } from './hooks/useLocalState'
 
 /** Component responsible for the control room when a tournament is not active */
 function PretournamentControlRoom (): JSX.Element {
   /** Value that will be used for the tournament date */
   const [date, setDate] = useState<string>('')
   const [players, setPlayers] = useState<string[]>([])
-  const [selectedPlayers, setSelectedPlayers] = useState<string[]>(() => {
-    const local = localStorage.getItem(LOCAL_SELECTED_PLAYERS)
-    if (local === null) {
-      return []
-    } else {
-      return JSON.parse(local)
-    }
-  })
+  const [selectedPlayers, setSelectedPlayers] = useLocalState<string[]>('selectedPlayers', [])
   const sendUpdate = useContext(TournamentUpdateContext)
 
   useEffect(() => {
@@ -31,18 +23,12 @@ function PretournamentControlRoom (): JSX.Element {
 
   const unselectedPlayers = players.filter(p => !selectedPlayers.includes(p))
 
-  /** Update selected players locally and in state */
-  function updateSelectedPlayers (players: string[]): void {
-    localStorage.setItem(LOCAL_SELECTED_PLAYERS, JSON.stringify(players))
-    setSelectedPlayers(players)
-  }
-
   /**
    * Moves a player from unselected to selected
    * @param player
    */
   function selectPlayer (player: string): void {
-    updateSelectedPlayers([...selectedPlayers, player])
+    setSelectedPlayers([...selectedPlayers, player])
   }
 
   /**
@@ -51,7 +37,7 @@ function PretournamentControlRoom (): JSX.Element {
    */
   function unselectPlayer (player: string): void {
     const s = [...selectedPlayers].filter((p) => p !== player)
-    updateSelectedPlayers(s)
+    setSelectedPlayers(s)
   }
 
   /**
@@ -64,7 +50,7 @@ function PretournamentControlRoom (): JSX.Element {
     const player = s.splice(index, 1)[0]
     const indexDelta = isUp ? -1 : 1
     s.splice(index + indexDelta, 0, player)
-    updateSelectedPlayers(s)
+    setSelectedPlayers(s)
   }
 
   /**

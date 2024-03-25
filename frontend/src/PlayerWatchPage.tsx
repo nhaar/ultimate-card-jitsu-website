@@ -5,6 +5,7 @@ import FoldImage from './images/fold.png'
 import VideoPlayer, { CropInfo, VideoCache } from './VideoPlayer'
 import { UcjWS } from './ws'
 import { WebsiteThemes, getWebsiteTheme } from './website-theme'
+import { useLocalState } from './hooks/useLocalState'
 
 interface PlayerInfo {
   id: string
@@ -27,10 +28,6 @@ interface FoldData {
   /** Percentage representing how far from the top the fold is within the video */
   top: string
 }
-
-/** Name for the local storage variable that stores crop data */
-const LOCAL_CROP_DATA = 'cropData'
-const LOCAL_FOLD_DATA = 'foldData'
 
 /** Component that handles the admin page */
 export default function PlayerWatchPage (): JSX.Element {
@@ -71,28 +68,14 @@ export default function PlayerWatchPage (): JSX.Element {
   /** Keeps crop of current selected player while being editted */
   const [currentCrop, setCurrentCrop] = useState<CropInfo | null>(null)
   /** To store all player crops locally */
-  const [playerCrops, setPlayerCrops] = useState<PlayerCrops>(() => {
-    const localCrops = localStorage.getItem(LOCAL_CROP_DATA)
-    if (localCrops !== null) {
-      return JSON.parse(localCrops)
-    }
-
-    return {}
-  })
+  const [playerCrops, setPlayerCrops] = useLocalState<PlayerCrops>('cropData', {})
 
   /** Store all fold information */
-  const [foldData, setFoldData] = useState<FoldData>(() => {
-    const local = localStorage.getItem(LOCAL_FOLD_DATA)
-    if (local === null) {
-      return {
-        visible: false,
-        scale: '100',
-        top: '0',
-        left: '0'
-      }
-    } else {
-      return JSON.parse(local)
-    }
+  const [foldData, setFoldData] = useLocalState<FoldData>('foldData', {
+    visible: false,
+    scale: '100',
+    top: '0',
+    left: '0'
   })
 
   /** Ref to the image element containing fold */
@@ -227,7 +210,6 @@ export default function PlayerWatchPage (): JSX.Element {
     if (selectedPlayer !== null && currentCrop !== null) {
       const p = { ...playerCrops, [selectedPlayer.name]: currentCrop }
       setPlayerCrops(p)
-      localStorage.setItem(LOCAL_CROP_DATA, JSON.stringify(p))
     }
   }, [currentCrop])
 
@@ -276,12 +258,6 @@ export default function PlayerWatchPage (): JSX.Element {
   // in CJ fire, we must use a vertical fold
   if (getWebsiteTheme() === WebsiteThemes.Fire) {
     foldStyle.transform = 'rotate(90deg)'
-  }
-
-  /** Updates and saves locally */
-  function updateFoldData (data: FoldData): void {
-    localStorage.setItem(LOCAL_FOLD_DATA, JSON.stringify(data))
-    setFoldData(data)
   }
 
   return (
@@ -339,19 +315,19 @@ export default function PlayerWatchPage (): JSX.Element {
           <div>
             <div>
               <span>fold-visible</span>
-              <input type='checkbox' checked={foldData.visible} onChange={e => updateFoldData({ ...foldData, visible: e.target.checked })} />
+              <input type='checkbox' checked={foldData.visible} onChange={e => setFoldData({ ...foldData, visible: e.target.checked })} />
             </div>
             <div>
               <span>fold-scale</span>
-              <input type='number' value={foldData.scale} onChange={e => updateFoldData({ ...foldData, scale: e.target.value })} />
+              <input type='number' value={foldData.scale} onChange={e => setFoldData({ ...foldData, scale: e.target.value })} />
             </div>
             <div>
               <span>fold-top</span>
-              <input type='number' value={foldData.top} onChange={e => updateFoldData({ ...foldData, top: e.target.value })} />
+              <input type='number' value={foldData.top} onChange={e => setFoldData({ ...foldData, top: e.target.value })} />
             </div>
             <div>
               <span>fold-left</span>
-              <input type='number' value={foldData.left} onChange={e => updateFoldData({ ...foldData, left: e.target.value })} />
+              <input type='number' value={foldData.left} onChange={e => setFoldData({ ...foldData, left: e.target.value })} />
             </div>
           </div>
         </div>
