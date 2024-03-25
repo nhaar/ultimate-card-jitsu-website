@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { formatCookies, getCookie, getPrimaryBackgroundClass } from './utils'
+import { getCookie, getPrimaryBackgroundClass } from './utils'
 import { CPImaginedCredentials, editUserInfo, EditUserResponse, getAccountInfo, getCPImaginedCredentials, UserRole } from './api'
 import Haiku from './Haiku'
 import { performLogout } from './PlayerPage'
@@ -92,18 +92,20 @@ function ScreensharePage (): JSX.Element {
           <Haiku first='Your vision is seen' second='As long as you can see it' third='Down below the page' />
         </div>
         <div className='is-flex is-justify-content-center'>
-        {isTryingShare ? (
-          <div className='burbank black-shadow-2'>
-            Refresh this page if you wish to screenshare again
-          </div>
-        ) : (
-          <button
-            className='button mb-3 burbank' onClick={startScreensharing} style={{
-              width: '300px'
-            }}
-            >START SCREENSHARING
-          </button>
-        )}
+          {isTryingShare
+            ? (
+              <div className='burbank black-shadow-2'>
+                Refresh this page if you wish to screenshare again
+              </div>
+              )
+            : (
+              <button
+                className='button mb-3 burbank' onClick={startScreensharing} style={{
+                  width: '300px'
+                }}
+              >START SCREENSHARING
+              </button>
+              )}
         </div>
         <video autoPlay ref={videoRef} width={500} className='mb-1' />
       </div>
