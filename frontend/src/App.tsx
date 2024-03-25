@@ -19,7 +19,6 @@ import TournamentControlRoom from './TournamentControlRoom'
 import TournamentRules from './TournamentRules'
 import AccountCreator from './AccountCreator'
 import CPImaginedCredentialsHandler from './CPImaginedCredentialsHandler'
-import UpcomingMatchesPopout from './UpcomingMatchesPopout'
 import CPIAdminAssigner from './CPIAdminAssigner'
 import AdminPage from './AdminPage'
 import DiscordAssigner from './DiscordAssigner'
@@ -180,10 +179,6 @@ export default function App (): JSX.Element {
     }
     case '/cpimagined-credentials': {
       Page = <CPImaginedCredentialsHandler />
-      break
-    }
-    case '/upcoming': {
-      Page = <UpcomingMatchesPopout />
       break
     }
     case '/cpiadmin-assign': {
