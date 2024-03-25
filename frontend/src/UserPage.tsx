@@ -10,6 +10,7 @@ import { WebsiteThemes, getWebsiteTheme } from './website-theme'
 function ScreensharePage (): JSX.Element {
   // using a ref because of it's "pointer" behavior being needed in the environment it's being called
   const amBeingWatched = useRef<boolean>(false)
+  const [isTryingShare, setIsTryingShare] = useState<boolean>(false)
   /** WebSocket connection as a player */
   const [socket] = useState<UcjWS>(() => {
     const socket = new UcjWS()
@@ -77,7 +78,7 @@ function ScreensharePage (): JSX.Element {
       createMediaRecorder(stream)
       socket.send('screenshare', { name: getCookie('name') })
     })
-
+    setIsTryingShare(true)
   }
 
   return (
@@ -91,12 +92,18 @@ function ScreensharePage (): JSX.Element {
           <Haiku first='Your vision is seen' second='As long as you can see it' third='Down below the page' />
         </div>
         <div className='is-flex is-justify-content-center'>
+        {isTryingShare ? (
+          <div className='burbank black-shadow-2'>
+            Refresh this page if you wish to screenshare again
+          </div>
+        ) : (
           <button
             className='button mb-3 burbank' onClick={startScreensharing} style={{
               width: '300px'
             }}
-          >START SCREENSHARING
+            >START SCREENSHARING
           </button>
+        )}
         </div>
         <video autoPlay ref={videoRef} width={500} className='mb-1' />
       </div>
