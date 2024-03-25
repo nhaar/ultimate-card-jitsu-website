@@ -30,6 +30,7 @@ interface FoldData {
 
 /** Name for the local storage variable that stores crop data */
 const LOCAL_CROP_DATA = 'cropData'
+const LOCAL_FOLD_DATA = 'foldData'
 
 /** Component that handles the admin page */
 export default function PlayerWatchPage (): JSX.Element {
@@ -80,11 +81,18 @@ export default function PlayerWatchPage (): JSX.Element {
   })
 
   /** Store all fold information */
-  const [foldData, setFoldData] = useState<FoldData>({
-    visible: false,
-    scale: '100',
-    top: '0',
-    left: '0'
+  const [foldData, setFoldData] = useState<FoldData>(() => {
+    const local = localStorage.getItem(LOCAL_FOLD_DATA)
+    if (local === null) {
+      return {
+        visible: false,
+        scale: '100',
+        top: '0',
+        left: '0'
+      }
+    } else {
+      return JSON.parse(local)
+    }
   })
 
   /** Ref to the image element containing fold */
@@ -270,6 +278,12 @@ export default function PlayerWatchPage (): JSX.Element {
     foldStyle.transform = 'rotate(90deg)'
   }
 
+  /** Updates and saves locally */
+  function updateFoldData (data: FoldData): void {
+    localStorage.setItem(LOCAL_FOLD_DATA, JSON.stringify(data))
+    setFoldData(data)
+  }
+
   return (
     <div className='is-flex is-flex-direction-row'>
       <div className='is-relative'>
@@ -325,19 +339,19 @@ export default function PlayerWatchPage (): JSX.Element {
           <div>
             <div>
               <span>fold-visible</span>
-              <input type='checkbox' checked={foldData.visible} onChange={e => setFoldData(f => ({ ...f, visible: e.target.checked }))} />
+              <input type='checkbox' checked={foldData.visible} onChange={e => updateFoldData({ ...foldData, visible: e.target.checked })} />
             </div>
             <div>
               <span>fold-scale</span>
-              <input type='number' value={foldData.scale} onChange={e => setFoldData(f => ({ ...f, scale: e.target.value }))} />
+              <input type='number' value={foldData.scale} onChange={e => updateFoldData({ ...foldData, scale: e.target.value })} />
             </div>
             <div>
               <span>fold-top</span>
-              <input type='number' value={foldData.top} onChange={e => setFoldData(f => ({ ...f, top: e.target.value }))} />
+              <input type='number' value={foldData.top} onChange={e => updateFoldData({ ...foldData, top: e.target.value })} />
             </div>
             <div>
               <span>fold-left</span>
-              <input type='number' value={foldData.left} onChange={e => setFoldData(f => ({ ...f, left: e.target.value }))} />
+              <input type='number' value={foldData.left} onChange={e => updateFoldData({ ...foldData, left: e.target.value })} />
             </div>
           </div>
         </div>
