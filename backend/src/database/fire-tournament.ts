@@ -251,21 +251,6 @@ class FireTournament extends Tournament {
     return true
   }
 
-  static async getTournament (): Promise<FireTournament | undefined> {
-    const db = new Database()
-    const query = await db.getQuery('SELECT * FROM tournament', [])
-    if (query.rows.length === 0) {
-      return undefined
-    } else {
-      const data = query.rows[0].data
-      // not the correct type of tournament
-      if (!isObject(data) || data.type !== 'fire') {
-        return undefined
-      }
-      return new FireTournament(query.rows[0].data)
-    }
-  }
-
   static async tournamentExists (): Promise<boolean> {
     const db = new Database()
     const query = await db.getQuery('SELECT * FROM tournament', [])

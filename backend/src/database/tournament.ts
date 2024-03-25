@@ -10,7 +10,7 @@ export interface PlayerInfo {
 }
 
 /** Possible tournaments */
-type TournamentType = 'normal' | 'fire'
+export type TournamentType = 'normal' | 'fire'
 
 /** Interface for the object that's stored as a JSON in the database */
 interface TournamentObject {

@@ -1,5 +1,8 @@
+import { isObject } from '../utils/utils'
 import Database from './database'
-import Tournament, { FinalStandings } from './tournament'
+import FireTournament from './fire-tournament'
+import NormalTournament from './normal-tournament'
+import Tournament, { FinalStandings, TournamentType } from './tournament'
 
 /** Class for a generic tournament. Performs actions for all tournament types. */
 export default class AnyTournament extends Tournament {
@@ -24,15 +27,54 @@ export default class AnyTournament extends Tournament {
     return this.specificData
   }
 
-  /** Get an instance of a generic tournament, or `undefined` if no tournament exists. */
-  static async get (): Promise<AnyTournament | undefined> {
+  /** Get the data of the tournament or `undefined` if none */
+  private static async getTournamentData (): Promise<object | undefined> {
     const db = new Database()
     const query = await db.getQuery('SELECT * FROM tournament', [])
     if (query.rows.length === 0) {
       return undefined
     } else {
-      return new AnyTournament(query.rows[0].data)
+      const data = query.rows[0].data
+      if (!isObject(data)) {
+        return undefined
+      }
+      return data
     }
+  }
+
+  /** Get the tournament based on its type */
+  private static async getTournamentOfType (type: TournamentType): Promise<FireTournament | NormalTournament | undefined> {
+    const data = AnyTournament.getTournamentData()
+    if (data === undefined || !('type' in data) || data.type !== type) {
+      return undefined
+    } else {
+      if (type === 'fire') {
+        return new FireTournament(data)
+      } else if (type === 'normal') {
+        return new FireTournament(data)
+      } else {
+        return undefined
+      }
+    }
+  }
+
+  /** Get a fire tournament instance or `undefined` if it doesn't exist */
+  static async getFire (): Promise<FireTournament | undefined> {
+    return await AnyTournament.getTournamentOfType('fire') as FireTournament | undefined  
+  }
+
+  /** Get a regulard card-jitsu tournament instance or `undefined` if it doesnt' exist */
+  static async getNormal (): Promise<NormalTournament | undefined> {
+    return await AnyTournament.getTournamentOfType('normal') as NormalTournament | undefined
+  }
+
+  /** Get an instance of a generic tournament, or `undefined` if no tournament exists. */
+  static async getAny (): Promise<AnyTournament | undefined> {
+    const data = await AnyTournament.getTournamentData()
+    if (data === undefined) {
+      return undefined
+    }
+    return new AnyTournament(data)
   }
 
   /** Rollback the tournament to the last backup in the database */

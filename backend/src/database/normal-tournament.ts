@@ -1006,21 +1006,6 @@ export default class NormalTournament extends Tournament {
     return tournament
   }
 
-  static async getTournament (): Promise<NormalTournament | undefined> {
-    const db = new Database()
-    const query = await db.getQuery('SELECT * FROM tournament', [])
-    if (query.rows.length === 0) {
-      return undefined
-    } else {
-      const data = query.rows[0].data
-      // trying to fetch wrong tournament
-      if (!isObject(data) || data.type !== 'normal') {
-        return undefined
-      }
-      return new NormalTournament(data)
-    }
-  }
-
   /**
    * Decide a match's results
    * @param matchNumber Number of the match

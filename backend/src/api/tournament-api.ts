@@ -1,5 +1,5 @@
 import express = require('express')
-import { Request, Response } from 'express'
+import { Request, Response, NextFunction } from 'express'
 import { asyncWrapper, isStringNumber } from '../utils/utils'
 import User from '../database/user'
 import Tournament, { PlayerInfo } from '../database/tournament'
@@ -60,7 +60,7 @@ router.post('/create-normal', User.checkAdminMiddleware, getCreateTournamentResp
 }))
 
 router.get('/matches', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
-  const tournament = await FireTournament.getTournament()
+  const tournament = await AnyTournament.getFire()
   if (tournament === undefined) {
     res.sendStatus(400)
     return
@@ -69,7 +69,7 @@ router.get('/matches', asyncWrapper(async (req: Request, res: Response): Promise
 }))
 
 router.get('/normal-tournament', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-  const tournament = await NormalTournament.getTournament()
+  const tournament = await AnyTournament.getNormal()
   if (tournament === undefined) {
     res.sendStatus(400)
     return
@@ -81,7 +81,7 @@ router.get('/normal-tournament', asyncWrapper(async (_: Request, res: Response):
 router.post('/update-normal-score', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   const { matchNumber, leftScore, rightScore } = req.body
 
-  const tournament = await NormalTournament.getTournament()
+  const tournament = await AnyTournament.getNormal()
   if (tournament === undefined) {
     res.sendStatus(400)
     return
@@ -108,7 +108,7 @@ router.post('/update-score', User.checkAdminMiddleware, asyncWrapper(async (req:
     return
   }
 
-  const tournament = await FireTournament.getTournament()
+  const tournament = await AnyTournament.getFire()
   if (tournament === undefined) {
     res.sendStatus(400)
     return
@@ -123,7 +123,7 @@ router.post('/update-score', User.checkAdminMiddleware, asyncWrapper(async (req:
 }))
 
 router.get('/tie', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
-  const tournament = await FireTournament.getTournament()
+  const tournament = await AnyTournament.getFire()
   if (tournament === undefined) {
     res.sendStatus(400)
     return
@@ -159,7 +159,7 @@ router.post('/settle-tie', User.checkAdminMiddleware, asyncWrapper(async (req: R
     return
   }
 
-  const tournament = await FireTournament.getTournament()
+  const tournament = await AnyTournament.getFire()
   if (tournament === undefined) {
     res.sendStatus(400)
     return
@@ -170,7 +170,7 @@ router.post('/settle-tie', User.checkAdminMiddleware, asyncWrapper(async (req: R
 }))
 
 router.get('/players-info', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
-  const tournament = await AnyTournament.get()
+  const tournament = await AnyTournament.getAny()
   if (tournament === undefined) {
     res.sendStatus(400)
     return
@@ -180,7 +180,7 @@ router.get('/players-info', asyncWrapper(async (req: Request, res: Response): Pr
 }))
 
 router.post('/rollback', User.checkAdminMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-  const tournament = await AnyTournament.get()
+  const tournament = await AnyTournament.getAny()
   if (tournament === undefined) {
     res.sendStatus(400)
     return
@@ -193,7 +193,7 @@ router.post('/rollback', User.checkAdminMiddleware, asyncWrapper(async (_: Reque
 /** Helper function to create the response to asking for rankings of a phase */
 const rankingResponse = (phase: TournamentPhase): ((req: Request, res: Response) => void) => {
   return asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-    const tournament = await FireTournament.getTournament()
+    const tournament = await AnyTournament.getFire()
     if (tournament === undefined) {
       res.sendStatus(400)
       return
@@ -209,7 +209,7 @@ router.get('/start-rankings', rankingResponse(TournamentPhase.Start))
 router.get('/final-rankings', rankingResponse(TournamentPhase.Final))
 
 router.get('/current-phase', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-  const tournament = await FireTournament.getTournament()
+  const tournament = await AnyTournament.getFire()
   if (tournament === undefined) {
     res.sendStatus(400)
     return
@@ -219,7 +219,7 @@ router.get('/current-phase', asyncWrapper(async (_: Request, res: Response): Pro
 }))
 
 router.get('/is-finished', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-  const tournament = await AnyTournament.get()
+  const tournament = await AnyTournament.getAny()
   if (tournament === undefined) {
     res.sendStatus(400)
     return
@@ -253,7 +253,7 @@ router.post('/reset-date', User.checkAdminMiddleware, asyncWrapper(async (_: Req
 }))
 
 router.get('/get-display-phase', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-  const tournament = await FireTournament.getTournament()
+  const tournament = await AnyTournament.getFire()
 
   if (tournament === undefined) {
     res.status(200).send({
@@ -292,11 +292,11 @@ function getStandingsGetter (tournamentGetter: () => Promise<Tournament | undefi
 }
 
 router.get('/final-standings-fire', getStandingsGetter(async () => {
-  return await FireTournament.getTournament()
+  return await AnyTournament.getFire()
 }))
 
 router.get('/final-standings-normal', getStandingsGetter(async () => {
-  return await NormalTournament.getTournament()
+  return await AnyTournament.getNormal()
 }))
 
 export default router
