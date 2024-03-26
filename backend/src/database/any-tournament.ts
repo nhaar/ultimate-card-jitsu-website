@@ -44,28 +44,21 @@ export default class AnyTournament extends Tournament {
 
   /** Gets the tournament that is currently ongoing, or `undefined` if no tournament. */
   static async getCurrent (): Promise<FireTournament | NormalTournament | undefined> {
+    return AnyTournament.getTournamentOfType()
+  }
+
+  /** Get the tournament based on its type, or leave blank to get whichever type it is */
+  private static async getTournamentOfType (type?: TournamentType): Promise<FireTournament | NormalTournament | undefined> {
     const data = await AnyTournament.getTournamentData()
     if (data === undefined || !('type' in data)) {
       return undefined
-    }
-    if (data.type === 'fire') {
-      return new FireTournament(data)
-    } else if (data.type === 'normal') {
-      return new NormalTournament(data)
     } else {
-      return undefined
-    }
-  }
-
-  /** Get the tournament based on its type */
-  private static async getTournamentOfType (type: TournamentType): Promise<FireTournament | NormalTournament | undefined> {
-    const data = await AnyTournament.getTournamentData()
-    if (data === undefined || !('type' in data) || data.type !== type) {
-      return undefined
-    } else {
-      if (type === 'fire') {
+      const targetType = type ?? data.type
+      if (data.type !== targetType) {
+        return undefined
+      } else if (targetType === 'fire') {
         return new FireTournament(data)
-      } else if (type === 'normal') {
+      } else if (targetType === 'normal') {
         return new NormalTournament(data)
       } else {
         return undefined
