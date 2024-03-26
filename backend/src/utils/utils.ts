@@ -1,4 +1,5 @@
-import { Request, Response } from 'express'
+import { Request, Response, NextFunction } from 'express'
+import { config } from '../config'
 
 export function asyncWrapper (asyncFn: (req: Request, res: Response) => Promise<void>): (req: Request, res: Response) => void {
   return (req: Request, res: Response): void => {
@@ -30,4 +31,14 @@ export function isObject (obj: any): boolean {
 /** Check if a string has a number */
 export function isStringNumber (str: string): boolean {
   return !isNaN(Number(str))
+}
+
+/** Middleware that checks if the request is sending the appropriate body to identify the user as the discord bot */
+export function checkBotMiddleware (req: Request, res: Response, next: NextFunction): void {
+  const { secret } = req.body
+  if (secret !== config.BOT_SECRET) {
+    res.sendStatus(401)
+  } else {
+    next()
+  }
 }

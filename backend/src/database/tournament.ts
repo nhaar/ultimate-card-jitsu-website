@@ -25,6 +25,12 @@ interface TournamentObject {
   tournamentSpecific: any
 }
 
+/** Generic information for a match of any format.  */
+export interface Matchup {
+  /** Player ID of all players that will play */
+  players: number[]
+}
+
 /** Array structure for how the standings should look like, order player IDs from first to last, and ties are handled with the same number in an array */
 export type FinalStandings = Array<number | number[]>
 
@@ -167,4 +173,7 @@ export default abstract class Tournament {
 
   /** Method that implements getting all the players in the order they ranked at the end */
   abstract getFinalStandings (): FinalStandings
+
+  /** Method that implements a way of getting the upcoming matchups */
+  abstract getMatchups (): Matchup[]
 }

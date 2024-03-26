@@ -232,4 +232,16 @@ export default class User {
     const res = await db.getQuery('SELECT username FROM players WHERE discord IS NULL OR discord = \'\'', [])
     return res.rows.map((row: any) => row.username)
   }
+
+  /** Get a object that maps user ID to their respective discord number */
+  static async getAllDiscords (): Promise<{[key: number]: string}> {
+    const db = new Database()
+    const res = await db.getQuery('SELECT id, discord FROM players WHERE discord IS NOT NULL AND discord != \'\'', [])
+    const map: {[key: number]: string} = {}
+    for (const row of res.rows) {
+      map[row.id] = row.discord
+    }
+
+    return map
+  }
 }

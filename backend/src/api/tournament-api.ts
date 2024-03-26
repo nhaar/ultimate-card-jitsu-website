@@ -1,11 +1,12 @@
 import express = require('express')
-import { Request, Response, NextFunction } from 'express'
-import { asyncWrapper, isStringNumber } from '../utils/utils'
+import { Request, Response } from 'express'
+import { asyncWrapper, checkBotMiddleware, isStringNumber } from '../utils/utils'
 import User from '../database/user'
 import Tournament, { PlayerInfo } from '../database/tournament'
 import FireTournament, { TournamentPhase } from '../database/fire-tournament'
 import NormalTournament from '../database/normal-tournament'
 import AnyTournament from '../database/any-tournament'
+import { config } from '../config'
 
 const router = express.Router()
 
@@ -297,6 +298,17 @@ router.get('/final-standings-fire', getStandingsGetter(async () => {
 
 router.get('/final-standings-normal', getStandingsGetter(async () => {
   return await AnyTournament.getNormal()
+}))
+
+router.get('/matchups', checkBotMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
+  const tournament = await AnyTournament.getCurrent()
+  if (tournament === undefined) {
+    res.status(200).send([])
+    return
+  }
+
+  const matchups = tournament.getMatchups()
+  res.status(200).send(matchups)
 }))
 
 export default router

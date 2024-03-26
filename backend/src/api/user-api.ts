@@ -2,7 +2,7 @@ import express = require('express')
 import { Request, Response } from 'express'
 
 import User from '../database/user'
-import { asyncWrapper, formatCookies } from '../utils/utils'
+import { asyncWrapper, checkBotMiddleware, formatCookies } from '../utils/utils'
 import FireTournament from '../database/fire-tournament'
 
 const router = express.Router()
@@ -259,6 +259,12 @@ router.post('/get-discord', User.checkAdminMiddleware, asyncWrapper(async (req: 
 router.get('/discordless-users', User.checkAdminMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
   const users = await User.getDiscordlessUsers()
   res.status(200).send({ users })
+}))
+
+router.get('/discord-names', checkBotMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
+  const discord = await User.getAllDiscords()
+
+  res.status(200).send(discord)
 }))
 
 export default router

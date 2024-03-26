@@ -2,7 +2,7 @@ import { isObject } from '../utils/utils'
 import Database from './database'
 import FireTournament from './fire-tournament'
 import NormalTournament from './normal-tournament'
-import Tournament, { FinalStandings, TournamentType } from './tournament'
+import Tournament, { FinalStandings, Matchup, TournamentType } from './tournament'
 
 /** Class for a generic tournament. Performs actions for all tournament types. */
 export default class AnyTournament extends Tournament {
@@ -39,6 +39,21 @@ export default class AnyTournament extends Tournament {
         return undefined
       }
       return data
+    }
+  }
+
+  /** Gets the tournament that is currently ongoing, or `undefined` if no tournament. */
+  static async getCurrent (): Promise<FireTournament | NormalTournament | undefined> {
+    const data = await AnyTournament.getTournamentData()
+    if (data === undefined || !('type' in data)) {
+      return undefined
+    }
+    if (data.type === 'fire') {
+      return new FireTournament(data)
+    } else if (data.type === 'normal') {
+      return new NormalTournament(data)
+    } else {
+      return undefined
     }
   }
 
@@ -98,6 +113,10 @@ export default class AnyTournament extends Tournament {
   }
 
   override getFinalStandings (): FinalStandings {
+    return []
+  }
+  
+  override getMatchups (): Matchup[] {
     return []
   }
 }

@@ -1,6 +1,5 @@
 import { isObject } from '../utils/utils'
-import Database from './database'
-import Tournament, { FinalStandings, PlayerInfo } from './tournament'
+import Tournament, { FinalStandings, Matchup, PlayerInfo } from './tournament'
 
 /** Interface for a basic score reporting. */
 interface MatchResults {
@@ -1078,5 +1077,19 @@ export default class NormalTournament extends Tournament {
     } else {
       return []
     }
+  }
+
+  override getMatchups(): Matchup[] {
+    const matches = this.getMatches()
+    return matches.filter((match) => match.n !== -1 && match.results === undefined).map((match) => {
+      const players = []
+      if (typeof match.player1 === 'number') {
+        players.push(match.player1)
+      }
+      if (typeof match.player2 === 'number') {
+        players.push(match.player2)
+      }
+      return { players }
+    })
   }
 }

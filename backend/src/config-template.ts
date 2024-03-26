@@ -12,5 +12,7 @@ export const config = {
   /** Name of the admin user in the website */
   ADMIN_NAME: '',
   /** Password of the admin user in the website */
-  ADMIN_PASSWORD: ''
+  ADMIN_PASSWORD: '',
+  /** Keyword used to identify the DISCORD BOT */
+  BOT_SECRET: ''
 }
