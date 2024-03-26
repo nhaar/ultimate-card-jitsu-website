@@ -44,14 +44,14 @@ export default class AnyTournament extends Tournament {
 
   /** Get the tournament based on its type */
   private static async getTournamentOfType (type: TournamentType): Promise<FireTournament | NormalTournament | undefined> {
-    const data = AnyTournament.getTournamentData()
+    const data = await AnyTournament.getTournamentData()
     if (data === undefined || !('type' in data) || data.type !== type) {
       return undefined
     } else {
       if (type === 'fire') {
         return new FireTournament(data)
       } else if (type === 'normal') {
-        return new FireTournament(data)
+        return new NormalTournament(data)
       } else {
         return undefined
       }
