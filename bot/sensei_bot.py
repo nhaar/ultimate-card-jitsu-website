@@ -18,9 +18,13 @@ class SenseiBot:
   player_info: dict
   discords: dict
 
+  # Message ID of the last sent message
+  last_ping_message: int | None
+
   def __init__(self):
     self.tracker = PlayerTracker()
     self.bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
+    self.last_ping_message = None
     @self.bot.event
     async def on_ready():
       print('Sensei is ready')
@@ -39,21 +43,29 @@ class SenseiBot:
       self.tracker = new_tracker
       self.discords = get_discords()
       self.player_info = get_player_info()
-      await self.ping_players(self.tracker.current_players, 'Up next are: ', '\nGET READY! Start the match when I type in CPImagined to begin.')
-      await self.ping_players(self.tracker.next_players, 'After this match are: ', '\nMake sure you get ready for the match and start screensharing. Will ping again when it\'s time for the battle.')
+      ping_message = self.get_ping_message(self.tracker.current_players, 'Up next are: ', '\nGET READY! Start the match when I type in CPImagined to begin.') + '\n\n' + self.get_ping_message(self.tracker.next_players, 'After this match are: ', '\nMake sure you get ready for the match and start screensharing. Will ping again when it\'s time for the battle.')
+      await self.ping_players(ping_message)
 
-  async def ping_players(self, ids: list[int], premessage: str, postmessage: str):
+  async def ping_players(self, message: str) -> None:
+    '''Function to send message that should ping players that must play now'''
+    channel = self.bot.get_channel(CHANNEL_ID)
+    if self.last_ping_message != None:
+      previous_message = await channel.fetch_message(self.last_ping_message)
+      await previous_message.delete()
+    
+    sent_message = await channel.send(message)
+    self.last_ping_message = sent_message.id
+
+  def get_ping_message(self, ids: list[int], premessage: str, postmessage: str) -> str:
     '''
-    Helper function that will ping the players with a message
+    Helper function that will get the message to ping players
+    
     Args:
       ids: List of all website player IDs that will be alerted
-      player_info: Dictionary with player info
-      discords: Dictionary with the discord usernames
       premessage: To place before the usernames
       postmessage: To place after the usernames
     '''
     guild = self.bot.get_guild(GUILD_ID)
-    channel = self.bot.get_channel(CHANNEL_ID)
     ids_to_ping = []
     names_to_mention = []
     for id in ids:
@@ -73,5 +85,4 @@ class SenseiBot:
     if (len(names_to_mention) > 0):
       vs_substrings.append(vs_sep.join(names_to_mention))
     vs_string = vs_sep.join(vs_substrings)
-    final_message = premessage + vs_string + postmessage
-    await channel.send(final_message)
+    return premessage + vs_string + postmessage
