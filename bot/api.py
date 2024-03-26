@@ -9,9 +9,9 @@ def bot_get(route: str) -> requests.Response:
   })
   return r
 
-def get_matchups() -> list[dict]:
+def get_matchups() -> list[list[int]]:
   '''Fetch matchups'''
-  r = bot_get('api/tournament/matchups')
+  r = bot_get('api/tournament/decided-matchups')
   matchups = r.json()
   return matchups
 

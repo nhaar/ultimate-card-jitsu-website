@@ -1082,14 +1082,13 @@ export default class NormalTournament extends Tournament {
   override getMatchups(): Matchup[] {
     const matches = this.getMatches()
     return matches.filter((match) => match.n !== -1 && match.results === undefined).map((match) => {
-      const players = []
-      if (typeof match.player1 === 'number') {
-        players.push(match.player1)
-      }
-      if (typeof match.player2 === 'number') {
-        players.push(match.player2)
-      }
-      return { players }
+      const players: Array<string | number> = [];
+      [match.player1, match.player2].forEach(player => {
+        if (player !== undefined) {
+          players.push(player)
+        }
+      })
+      return { players, n: match.n }
     })
   }
 }

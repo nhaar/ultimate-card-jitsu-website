@@ -12,15 +12,15 @@ class PlayerTracker:
     self.next_players = [] if next_players == None else next_players
   
   @staticmethod
-  def from_matchups(matchups: list[dict]):
+  def from_matchups(matchups: list[list[int]]):
     '''Initialize from the matchups list, fetched from backend'''
     length = len(matchups)
     current_players = []
     next_players = []
     if (length > 0):
-      current_players = matchups[0]['players']
+      current_players = matchups[0]
     if (length > 1):
-      next_players = matchups[1]['players']
+      next_players = matchups[1]
     
     return PlayerTracker(current_players=current_players, next_players=next_players)
   

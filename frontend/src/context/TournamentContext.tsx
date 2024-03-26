@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import { NormalTournamentMatch, Ranking } from '../api'
+import { NormalTournamentMatch, Ranking, UpcomingMatchup } from '../api'
 
 /** Stage of the tournament */
 export enum TournamentState {
@@ -12,14 +12,6 @@ export enum TournamentState {
   InProgress,
   /** Just finished, wrapping up */
   Finished
-}
-
-/** Generic interface for a match of multiple players */
-export interface UpcomingMatchup {
-  /** Numbers represent IDs, while string represents non-players and some description instead */
-  players: Array<string | number>
-  /** Match number */
-  n: number
 }
 
 /** Object that has all relevant info for the current state of the tournament */

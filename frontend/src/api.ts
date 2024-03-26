@@ -53,6 +53,23 @@ export interface TournamentMatch {
   standings: number[]
 }
 
+/** Generic interface for a match of multiple players */
+export interface UpcomingMatchup {
+  /** Numbers represent IDs, while string represents non-players and some description instead */
+  players: Array<string | number>
+  /** Match number */
+  n: number
+}
+
+/** Gets the upcoming matchups for the tournament */
+export async function getUpcomingMatchups (): Promise<UpcomingMatchup[]> {
+  const response = await getJSON('api/tournament/upcoming-matchups')
+  if (response === null) {
+    return []
+  }
+  return response as UpcomingMatchup[]
+}
+
 export async function getTournamentMatches (): Promise<TournamentMatch[]> {
   const response = await getJSON('api/tournament/matches')
   if (response === null) {

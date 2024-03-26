@@ -6,7 +6,6 @@ import Tournament, { PlayerInfo } from '../database/tournament'
 import FireTournament, { TournamentPhase } from '../database/fire-tournament'
 import NormalTournament from '../database/normal-tournament'
 import AnyTournament from '../database/any-tournament'
-import { config } from '../config'
 
 const router = express.Router()
 
@@ -300,7 +299,7 @@ router.get('/final-standings-normal', getStandingsGetter(async () => {
   return await AnyTournament.getNormal()
 }))
 
-router.get('/matchups', checkBotMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
+router.get('/upcoming-matchups', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
   const tournament = await AnyTournament.getCurrent()
   if (tournament === undefined) {
     res.status(200).send([])
@@ -308,6 +307,17 @@ router.get('/matchups', checkBotMiddleware, asyncWrapper(async (_: Request, res:
   }
 
   const matchups = tournament.getMatchups()
+  res.status(200).send(matchups)
+}))
+
+router.get('/decided-matchups', checkBotMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
+  const tournament = await AnyTournament.getCurrent()
+  if (tournament === undefined) {
+    res.status(200).send([])
+    return
+  }
+
+  const matchups = tournament.getDecidedMatchups()
   res.status(200).send(matchups)
 }))
 

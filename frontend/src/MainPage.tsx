@@ -1,9 +1,9 @@
 import { useContext, useEffect, useRef, useState } from 'react'
 
 import config from './config.json'
-import { FinalStandings, NormalTournamentMatch, Ranking, TournamentMatch, TournamentPhase, getNormalTournament, getPlayerInfo, getRankings, getTournamentDate, getTournamentFinalStandings, getTournamentMatches, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished } from './api'
+import { FinalStandings, NormalTournamentMatch, Ranking, TournamentPhase, getNormalTournament, getPlayerInfo, getRankings, getTournamentDate, getTournamentFinalStandings, getUpcomingMatchups, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished, UpcomingMatchup } from './api'
 import Haiku from './Haiku'
-import { FireTournamentContext, NormalTournamentContext, TournamentContext, TournamentState, UpcomingMatchup } from './context/TournamentContext'
+import { FireTournamentContext, NormalTournamentContext, TournamentContext, TournamentState } from './context/TournamentContext'
 import CountdownTimer from './CountdownTimer'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import { getOrdinalNumber } from './utils'
@@ -348,50 +348,6 @@ export function UpcomingMatches ({ matches, startMatch, matchTotal, isComingUpLa
       </div>
     </div>
   )
-}
-
-/** Transform the fetched card-jitsu fire matches into upcoming matchups */
-export function upcomifyFireMatches (matches: TournamentMatch[]): UpcomingMatchup[] {
-  const upcoming: UpcomingMatchup[] = []
-
-  let i = 0
-  for (const match of matches) {
-    // only include matches that haven't been played (i.e. have no standings)
-    if (match.standings.length === 0) {
-      upcoming.push({
-        players: match.runners.map((id) => {
-          if (id === null) {
-            return '??????'
-          } else {
-            return id
-          }
-        }),
-        n: i + 1
-      })
-    }
-    i++
-  }
-
-  return upcoming
-}
-
-/** Transform the fetched regular card-jitsu matches into upcoming matchups */
-export function upcomifyNormalMatches (matches: NormalTournamentMatch[]): UpcomingMatchup[] {
-  const upcoming: UpcomingMatchup[] = []
-  for (const match of matches) {
-    if (match.results !== undefined) {
-      continue
-    }
-    if (match.player1 === undefined || match.player2 === undefined) {
-      continue
-    }
-    const players = [match.player1, match.player2]
-    upcoming.push({
-      players,
-      n: match.n
-    })
-  }
-  return upcoming
 }
 
 /** Component that renders the fire tournament's page */
@@ -1001,18 +957,16 @@ export default function MainPage (): JSX.Element {
 
   /** Update the tournament info that depends on scores */
   async function updateTournamentScoreDependentInfo (): Promise<void> {
+    setUpcomingMatches(await getUpcomingMatchups())
     switch (getWebsiteTheme()) {
       case WebsiteThemes.Fire: {
         const isFirstPhase = await isCurrentPhaseFirstPhase()
         setIsFirstPhase(isFirstPhase)
-        setUpcomingMatches(upcomifyFireMatches(await getTournamentMatches()))
         setRanking(await getRankings(isFirstPhase ? TournamentPhase.Start : TournamentPhase.Final))
         break
       }
       case WebsiteThemes.Normal: {
-        const matches = await getNormalTournament()
-        setMatches(matches)
-        setUpcomingMatches(upcomifyNormalMatches(matches))
+        setMatches(await getNormalTournament())
         break
       }
     }

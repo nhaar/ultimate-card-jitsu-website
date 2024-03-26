@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
 
-import { getNormalTournament, getPlayerInfo, getTournamentMatches } from './api'
-import { FireTournamentContext, TournamentContext, TournamentState, UpcomingMatchup } from './context/TournamentContext'
-import { UpcomingMatches, upcomifyFireMatches, upcomifyNormalMatches } from './MainPage'
+import { UpcomingMatchup, getPlayerInfo, getUpcomingMatchups } from './api'
+import { FireTournamentContext, TournamentContext, TournamentState } from './context/TournamentContext'
+import { UpcomingMatches } from './MainPage'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import { UcjWS } from './ws'
-import { WebsiteThemes, getWebsiteTheme } from './website-theme'
 
 /** Component for the page with independent upcoming matches used for streaming as a popout */
 export default function UpcomingMatchesPopout (): JSX.Element {
@@ -35,17 +34,7 @@ export default function UpcomingMatchesPopout (): JSX.Element {
 
   /** Updates the upcoming matches */
   async function updateMatches (): Promise<void> {
-    switch (getWebsiteTheme()) {
-      case WebsiteThemes.Fire: {
-        const matches = await getTournamentMatches()
-        setMatches(upcomifyFireMatches(matches))
-        break
-      }
-      case WebsiteThemes.Normal: {
-        const matches = await getNormalTournament()
-        setMatches(upcomifyNormalMatches(matches))
-      }
-    }
+    setMatches(await getUpcomingMatchups())
   }
 
   // for reasons beyond me, I have to use this value so that it's exactly halfway through

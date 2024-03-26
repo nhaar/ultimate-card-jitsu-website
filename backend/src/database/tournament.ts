@@ -27,9 +27,13 @@ interface TournamentObject {
 
 /** Generic information for a match of any format.  */
 export interface Matchup {
-  /** Player ID of all players that will play */
-  players: number[]
+  /** Player ID of all players that will play, or a descriptor if a user is not yet decided. */
+  players: Array<number | string>
+  n: number
 }
+
+/** List of player IDs */
+type PlayerList = number[]
 
 /** Array structure for how the standings should look like, order player IDs from first to last, and ties are handled with the same number in an array */
 export type FinalStandings = Array<number | number[]>
@@ -176,4 +180,27 @@ export default abstract class Tournament {
 
   /** Method that implements a way of getting the upcoming matchups */
   abstract getMatchups (): Matchup[]
+
+  /** Gets a list of all decided matchups in the order they will appear. Each element of the list is just the list of player IDs in the match */
+  getDecidedMatchups (): PlayerList[] {
+    const matchups = this.getMatchups()
+    const decided = []
+    for (const matchup of matchups) {
+      const playerList: number[] = []
+      let isDecided = true
+      for (const player of matchup.players) {
+        if (typeof player !== 'number') {
+          isDecided = false
+          break
+        } else {
+          playerList.push(player)
+        }
+      }
+      if (isDecided) {
+        decided.push(playerList)
+      }
+    }
+
+    return decided
+  }
 }
