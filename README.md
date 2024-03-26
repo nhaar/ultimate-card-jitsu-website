@@ -37,3 +37,14 @@ Run `npm install` in both the `frontend` and `backend` directories.
 ## Helper
 
 The helper is a third part of the repository meant for very basic API scraping used to collect data and display in OBS. It is very simple and is not worth touching unless you're the tournament host.
+
+## Discord Bot
+
+The discord bot will keep track of which players are to play and ping them. For it to work, the database must have been correctly updated to contain the correct discord usernames.
+
+Bot setup:
+
+1. First, create the bot in Discord
+2. Then, go to `bot/config_template.py`, rename it to `bot/config.py` and write the needed details.
+3. Install the libraries in `bot/requirements.txt`
+4. Run the bot with `python bot/main.py`
