@@ -234,10 +234,10 @@ export default class User {
   }
 
   /** Get a object that maps user ID to their respective discord number */
-  static async getAllDiscords (): Promise<{[key: number]: string}> {
+  static async getAllDiscords (): Promise<{ [key: number]: string }> {
     const db = new Database()
     const res = await db.getQuery('SELECT id, discord FROM players WHERE discord IS NOT NULL AND discord != \'\'', [])
-    const map: {[key: number]: string} = {}
+    const map: { [key: number]: string } = {}
     for (const row of res.rows) {
       map[row.id] = row.discord
     }

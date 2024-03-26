@@ -707,11 +707,11 @@ class FireTournament extends Tournament {
     }
   }
 
-  override getMatchups(): Matchup[] {
+  override getMatchups (): Matchup[] {
     const matches = this.getMatches()
     return matches.map((match, i) => {
       const players = match.runners.map(player => player ?? '??????')
-      
+
       return { players, n: i + 1 }
     })
   }

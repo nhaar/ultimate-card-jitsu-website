@@ -1079,7 +1079,7 @@ export default class NormalTournament extends Tournament {
     }
   }
 
-  override getMatchups(): Matchup[] {
+  override getMatchups (): Matchup[] {
     const matches = this.getMatches()
     return matches.filter((match) => match.n !== -1 && match.results === undefined).map((match) => {
       const players: Array<string | number> = [];

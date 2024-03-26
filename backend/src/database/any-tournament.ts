@@ -44,7 +44,7 @@ export default class AnyTournament extends Tournament {
 
   /** Gets the tournament that is currently ongoing, or `undefined` if no tournament. */
   static async getCurrent (): Promise<FireTournament | NormalTournament | undefined> {
-    return AnyTournament.getTournamentOfType()
+    return await AnyTournament.getTournamentOfType()
   }
 
   /** Get the tournament based on its type, or leave blank to get whichever type it is */
@@ -68,7 +68,7 @@ export default class AnyTournament extends Tournament {
 
   /** Get a fire tournament instance or `undefined` if it doesn't exist */
   static async getFire (): Promise<FireTournament | undefined> {
-    return await AnyTournament.getTournamentOfType('fire') as FireTournament | undefined  
+    return await AnyTournament.getTournamentOfType('fire') as FireTournament | undefined
   }
 
   /** Get a regulard card-jitsu tournament instance or `undefined` if it doesnt' exist */
@@ -108,7 +108,7 @@ export default class AnyTournament extends Tournament {
   override getFinalStandings (): FinalStandings {
     return []
   }
-  
+
   override getMatchups (): Matchup[] {
     return []
   }
