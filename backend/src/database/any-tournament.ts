@@ -1,8 +1,8 @@
 import { isObject } from '../utils/utils'
 import Database from './database'
 import FireTournament from './fire-tournament'
-import NormalTournament from './normal-tournament'
-import Tournament, { FinalStandings, Matchup, TournamentType } from './tournament'
+import { DoubleEliminationTournament, SingleEliminationTournament } from './normal-tournament'
+import Tournament, { FinalStandings, Matchup, PlayerInfo, TournamentType } from './tournament'
 
 /** Class for a generic tournament. Performs actions for all tournament types. */
 export default class AnyTournament extends Tournament {
@@ -15,6 +15,8 @@ export default class AnyTournament extends Tournament {
       // it makes no sense to create a generic tournament to perform actions for no tournament
       throw new Error('Any Tournament can\' be used from scratch')
     } else {
+      // get whatever type is in here, needed to serialize
+      this.type = value.type
       this.specificData = value.tournamentSpecific
     }
   }
@@ -43,12 +45,12 @@ export default class AnyTournament extends Tournament {
   }
 
   /** Gets the tournament that is currently ongoing, or `undefined` if no tournament. */
-  static async getCurrent (): Promise<FireTournament | NormalTournament | undefined> {
+  static async getCurrent (): Promise<FireTournament | DoubleEliminationTournament | SingleEliminationTournament | undefined> {
     return await AnyTournament.getTournamentOfType()
   }
 
   /** Get the tournament based on its type, or leave blank to get whichever type it is */
-  private static async getTournamentOfType (type?: TournamentType): Promise<FireTournament | NormalTournament | undefined> {
+  private static async getTournamentOfType (type?: TournamentType): Promise<FireTournament | DoubleEliminationTournament | SingleEliminationTournament | undefined> {
     const data = await AnyTournament.getTournamentData()
     if (data === undefined || !('type' in data)) {
       return undefined
@@ -58,8 +60,10 @@ export default class AnyTournament extends Tournament {
         return undefined
       } else if (targetType === 'fire') {
         return new FireTournament(data)
-      } else if (targetType === 'normal') {
-        return new NormalTournament(data)
+      } else if (targetType === 'double-elimination') {
+        return new DoubleEliminationTournament(data)
+      } else if (targetType === 'single-elimination') {
+        return new SingleEliminationTournament(data)
       } else {
         return undefined
       }
@@ -71,9 +75,24 @@ export default class AnyTournament extends Tournament {
     return await AnyTournament.getTournamentOfType('fire') as FireTournament | undefined
   }
 
-  /** Get a regulard card-jitsu tournament instance or `undefined` if it doesnt' exist */
-  static async getNormal (): Promise<NormalTournament | undefined> {
-    return await AnyTournament.getTournamentOfType('normal') as NormalTournament | undefined
+  /** Get a elimination tournament, which can be both a double or single elimination one, or `undefined` if it's not available */
+  static async getNormal (): Promise<DoubleEliminationTournament | SingleEliminationTournament | undefined> {
+    const double = await AnyTournament.getDoubleElimination()
+    if (double === undefined) {
+      return await AnyTournament.getSingleElimination()
+    } else {
+      return double
+    }
+  }
+
+  /** Get a single elimination tournament or `undefined` if it's not available */
+  static async getSingleElimination (): Promise<SingleEliminationTournament | undefined> {
+    return await AnyTournament.getTournamentOfType('single-elimination') as SingleEliminationTournament | undefined
+  }
+
+  /** Get a double elimination tournament instance or `undefined` if it doesnt' exist */
+  static async getDoubleElimination (): Promise<DoubleEliminationTournament | undefined> {
+    return await AnyTournament.getTournamentOfType('double-elimination') as DoubleEliminationTournament | undefined
   }
 
   /** Get an instance of a generic tournament, or `undefined` if no tournament exists. */
@@ -111,5 +130,27 @@ export default class AnyTournament extends Tournament {
 
   override getMatchups (): Matchup[] {
     return []
+  }
+
+  /**
+   * Create a tournament and returns it
+   * @param type 
+   * @param players 
+   * @returns `undefined` if was not able to create it (invalid type)
+   */
+  static async createTournament (type: TournamentType, players: PlayerInfo[]): Promise<FireTournament | DoubleEliminationTournament | SingleEliminationTournament | undefined> {
+    let tournament
+    if (type === 'fire') {
+      tournament = new FireTournament(players)
+    } else if (type === 'double-elimination') {
+      tournament = new DoubleEliminationTournament(players)
+    } else if (type === 'single-elimination') {
+      tournament = new SingleEliminationTournament(players)
+    } else {
+      return undefined
+    }
+
+    await tournament.save()
+    return tournament
   }
 }

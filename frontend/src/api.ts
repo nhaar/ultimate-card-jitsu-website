@@ -27,23 +27,16 @@ export async function getAllPlayers (): Promise<string[]> {
   }
 }
 
-/**
- * Creates a FIRE tournament with the given player names
- * @param players
- * @returns `true` if the tournament was created successfully, `false` otherwise
- */
-export async function createFireTournament (players: string[]): Promise<boolean> {
-  const response = await postJSON('api/tournament/create-fire', { players })
-  return response.ok
-}
+export type TournamentType = 'single-elimination' | 'double-elimination' | 'fire'
 
 /**
- * Creates a normal tournament with the given player names
+ * Creates a tournament with the given player names
  * @param players
- * @returns `true` if the tournament was created succesfully, `false` otherwise
+ * @param type
+ * @returns `true` if the tournament was created successfully, `false` otherwise
  */
-export async function createNormalTournament (players: string[]): Promise<boolean> {
-  const response = await postJSON('api/tournament/create-normal', { players })
+export async function createTournament (players: string[], type: TournamentType): Promise<boolean> {
+  const response = await postJSON('api/tournament/create', { players, type })
   return response.ok
 }
 
@@ -342,18 +335,7 @@ export type FinalStandings = Array<number | number[]>
  * @returns Will be empty if tournament isn't finished
  */
 export async function getTournamentFinalStandings (): Promise<FinalStandings> {
-  let route
-  switch (getWebsiteTheme()) {
-    case WebsiteThemes.Fire:
-      route = 'api/tournament/final-standings-fire'
-      break
-    case WebsiteThemes.Normal:
-      route = 'api/tournament/final-standings-normal'
-      break
-    default:
-      throw new Error('Not implemented')
-  }
-  const response = await getJSON(route)
+  const response = await getJSON('api/tournament/final-standings')
 
   if (response === null) {
     return []
@@ -436,13 +418,19 @@ export interface NormalTournamentMatch {
   n: number
 }
 
+/** Tournament in a match of regular card-jitsu */
+export interface NormalTournament {
+  matches: NormalTournamentMatch[],
+  type: 'double-elimination' | 'single-elimination'
+}
+
 /** Get all the data of a normal tournament. */
-export async function getNormalTournament (): Promise<NormalTournamentMatch[]> {
+export async function getNormalTournament (): Promise<NormalTournament> {
   const response = await getJSON('api/tournament/normal-tournament')
   if (response === null) {
-    return []
+    throw new Error('No tournament')
   } else {
-    return response as NormalTournamentMatch[]
+    return response as NormalTournament
   }
 }
 

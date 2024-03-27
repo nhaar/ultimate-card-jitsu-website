@@ -257,13 +257,6 @@ class FireTournament extends Tournament {
     return query.rows.length > 0
   }
 
-  static async createTournament (runners: PlayerInfo[]): Promise<FireTournament> {
-    const tournament: FireTournament = new FireTournament(runners)
-
-    await tournament.save()
-    return tournament
-  }
-
   /**
    * Get the scheduled date for the tournament
    * @returns Timestamp of the date in string format and in miliseconds since start of unix, or null if it hasn't been set

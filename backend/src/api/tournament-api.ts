@@ -2,61 +2,44 @@ import express = require('express')
 import { Request, Response } from 'express'
 import { asyncWrapper, checkBotMiddleware, isStringNumber } from '../utils/utils'
 import User from '../database/user'
-import Tournament, { PlayerInfo } from '../database/tournament'
+import { PlayerInfo, TournamentType } from '../database/tournament'
 import FireTournament, { TournamentPhase } from '../database/fire-tournament'
-import NormalTournament from '../database/normal-tournament'
 import AnyTournament from '../database/any-tournament'
 
 const router = express.Router()
 
-/**
- * Get a function that can be used as a base endpoint response for creating a tournament
- * @param minimumPlayers Minimum number of players allowed in tournament
- * @param createCallback Function that takes the array of player info and creates the tournament in the database
- * @returns The function that can be used
- */
-function getCreateTournamentResponse (minimumPlayers: number, createCallback: (...playerInfo: PlayerInfo[]) => Promise<void>): ((req: Request, res: Response) => void) {
-  return asyncWrapper(async (req: Request, res: Response): Promise<void> => {
-    const { players }: { players: string[] } = req.body
+router.post('/create', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+  const { players, type }: { players: string[], type: TournamentType } = req.body
 
-    if (!Array.isArray(players)) {
-      res.status(400).json({ error: 'players must be an array' })
+  if (!Array.isArray(players)) {
+    res.status(400).json({ error: 'players must be an array' })
+    return
+  }
+  if (!players.every((player) => typeof (player) === 'string')) {
+    res.status(400).json({ error: 'players must be an array of strings' })
+    return
+  }
+  if (players.length < 4) {
+    res.status(400).json({ error: 'not enough players' })
+    return
+  }
+
+  const playerInfo: PlayerInfo[] = []
+  for (const player of players) {
+    const user = await User.getUserByName(player)
+    if (user === null) {
+      res.status(400).json({ error: `user ${player} does not exist` })
       return
     }
-    if (!players.every((player) => typeof (player) === 'string')) {
-      res.status(400).json({ error: 'players must be an array of strings' })
-      return
-    }
-    if (players.length < minimumPlayers) {
-      res.status(400).json({ error: 'not enough players' })
-      return
-    }
+    playerInfo.push({
+      name: player,
+      id: user.id
+    })
+  }
 
-    const playerInfo: PlayerInfo[] = []
-    for (const player of players) {
-      const user = await User.getUserByName(player)
-      if (user === null) {
-        res.status(400).json({ error: `user ${player} does not exist` })
-        return
-      }
-      playerInfo.push({
-        name: player,
-        id: user.id
-      })
-    }
+  await AnyTournament.createTournament(type, playerInfo)
 
-    await createCallback(...playerInfo)
-
-    res.sendStatus(200)
-  })
-}
-
-router.post('/create-fire', User.checkAdminMiddleware, getCreateTournamentResponse(4, async (...playerInfo: PlayerInfo[]): Promise<void> => {
-  await FireTournament.createTournament(playerInfo)
-}))
-
-router.post('/create-normal', User.checkAdminMiddleware, getCreateTournamentResponse(4, async (...playerInfo: PlayerInfo[]): Promise<void> => {
-  await NormalTournament.createTournament(playerInfo)
+  res.sendStatus(200)
 }))
 
 router.get('/matches', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
@@ -75,7 +58,10 @@ router.get('/normal-tournament', asyncWrapper(async (_: Request, res: Response):
     return
   }
 
-  res.json(tournament.getMatches()).status(200)
+  res.json({
+    matches: tournament.getMatches(),
+    type: tournament.type
+  }).status(200)
 }))
 
 router.post('/update-normal-score', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
@@ -268,35 +254,20 @@ router.get('/get-display-phase', asyncWrapper(async (_: Request, res: Response):
   })
 }))
 
-/**
- * Get a function that gets a function useable as a response to getting the final standings of a tournament
- * @param tournamentGetter Asynchronous function that must return the tournament or `undefined`
- * @returns Function for use in endpoint
- */
-function getStandingsGetter (tournamentGetter: () => Promise<Tournament | undefined>): (req: Request, res: Response) => void {
-  return asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-    const tournament = await tournamentGetter()
+router.get('/final-standings', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
+  const tournament = await AnyTournament.getCurrent()
 
-    if (tournament === undefined) {
-      res.sendStatus(400)
-      return
-    }
+  if (tournament === undefined) {
+    res.sendStatus(400)
+    return
+  }
 
-    const standings = tournament.getFinalStandings()
-    if (standings === undefined) {
-      res.sendStatus(400)
-    } else {
-      res.status(200).send({ standings })
-    }
-  })
-}
-
-router.get('/final-standings-fire', getStandingsGetter(async () => {
-  return await AnyTournament.getFire()
-}))
-
-router.get('/final-standings-normal', getStandingsGetter(async () => {
-  return await AnyTournament.getNormal()
+  const standings = tournament.getFinalStandings()
+  if (standings === undefined) {
+    res.sendStatus(400)
+  } else {
+    res.status(200).send({ standings })
+  }
 }))
 
 router.get('/upcoming-matchups', asyncWrapper(async (_: Request, res: Response): Promise<void> => {

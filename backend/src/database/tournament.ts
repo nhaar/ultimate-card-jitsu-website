@@ -10,7 +10,7 @@ export interface PlayerInfo {
 }
 
 /** Possible tournaments */
-export type TournamentType = 'normal' | 'fire'
+export type TournamentType = 'single-elimination' | 'double-elimination' | 'fire'
 
 /** Interface for the object that's stored as a JSON in the database */
 interface TournamentObject {
@@ -143,7 +143,7 @@ export default abstract class Tournament {
     if (!this.isSpecificTournamentObject(value.tournamentSpecific)) {
       return false
     }
-    if (value.type !== 'fire' && value.type !== 'normal') {
+    if (typeof value.type !== 'string') {
       return false
     }
     return true

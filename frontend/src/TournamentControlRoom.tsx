@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react'
-import { NormalTournamentMatch, TournamentMatch, TournamentTies, createFireTournament, createNormalTournament, decideNormalMatch, deleteTournament, getAllPlayers, getNormalTournament, getPlayerInfo, getTies, getTournamentMatches, isTournamentActive, resetTournamentDate, rollbackTournament, setTournamentDate, settleTie, updateMatchScore } from './api'
+import { NormalTournamentMatch, TournamentMatch, TournamentTies, TournamentType, createTournament, decideNormalMatch, deleteTournament, getAllPlayers, getNormalTournament, getPlayerInfo, getTies, getTournamentMatches, isTournamentActive, resetTournamentDate, rollbackTournament, setTournamentDate, settleTie, updateMatchScore } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import { TournamentUpdate, TournamentUpdateContext } from './context/TournamentContext'
 import { UcjWS } from './ws'
@@ -12,7 +12,24 @@ function PretournamentControlRoom (): JSX.Element {
   const [date, setDate] = useState<string>('')
   const [players, setPlayers] = useState<string[]>([])
   const [selectedPlayers, setSelectedPlayers] = useLocalState<string[]>('selectedPlayers', [])
+  const [tournamentType, setTournamentType] = useState<TournamentType>(() => {
+    switch (getWebsiteTheme()) {
+      case WebsiteThemes.Fire: return 'fire'
+      case WebsiteThemes.Normal: return 'double-elimination'
+      default: throw new Error('Not implemented')
+    }
+  })
   const sendUpdate = useContext(TournamentUpdateContext)
+
+  let availableTypes: TournamentType[] = []
+  switch (getWebsiteTheme()) {
+    case WebsiteThemes.Fire:
+      availableTypes = ['fire']
+      break
+    case WebsiteThemes.Normal:
+      availableTypes = ['double-elimination', 'single-elimination']
+      break
+  }
 
   useEffect(() => {
     void (async () => {
@@ -76,17 +93,7 @@ function PretournamentControlRoom (): JSX.Element {
 
   /** Handles clicking for creating a tournament */
   async function handleCreateTournament (): Promise<void> {
-    let ok = false
-    switch (getWebsiteTheme()) {
-      case WebsiteThemes.Fire:
-        ok = await createFireTournament(selectedPlayers)
-        break
-      case WebsiteThemes.Normal:
-        ok = await createNormalTournament(selectedPlayers)
-        break
-      default:
-        throw new Error('Not implemented')
-    }
+    const ok = await createTournament(selectedPlayers, tournamentType)
 
     window.alert(ok ? 'Tournament created!' : 'Failed to create tournament')
     if (ok) {
@@ -111,6 +118,14 @@ function PretournamentControlRoom (): JSX.Element {
     })()
   }
 
+  function displayTournamentType (type: TournamentType): string {
+    switch (type) {
+      case 'fire': return 'CARD-JITSU FIRE TOURNAMENT'
+      case 'double-elimination': return 'DOUBLE ELIMINATION TOURNAMENT'
+      case 'single-elimination': return 'SINGLE ELIMINATION TOURNAMENT'
+    }
+  }
+
   return (
     <div style={{ padding: '2%' }}>
       <span
@@ -124,6 +139,18 @@ function PretournamentControlRoom (): JSX.Element {
       <input className='input burbank' style={{ width: 'fit-content' }} type='datetime-local' value={date} onChange={(e) => setDate(e.target.value)} /><br /><br />
       <button className='button burbank' style={{ marginRight: '1%' }} onClick={changeDate}>SET DATE</button>
       <button className='button is-danger burbank' onClick={removeDate}>REMOVE DATE</button><br /><br />
+      <div className='burbank black-shadow-2 mb-3'>
+        <div>SELECTED TOURNAMENT: {displayTournamentType(tournamentType)}</div>
+        {availableTypes.map((type, i) => {
+          return (
+            <div key={i} className='is-flex'>
+              <div>{displayTournamentType(type)}</div>
+              <button className='button burbank' onClick={() => setTournamentType(type)}>SELECT THIS TYPE!</button>
+            </div>
+          )
+        })}
+      </div>
+      
       <div>
         <span
           className='burbank black-shadow' style={{
@@ -468,7 +495,7 @@ function ActiveNormalTournamentControlRoom (): JSX.Element {
   const [matches, setMatches] = useState<NormalTournamentMatch[]>([])
 
   useEffect(() => {
-    void getNormalTournament().then(setMatches)
+    void getNormalTournament().then(t => setMatches(t.matches))
   }, [])
 
   const matchComponents = matches.map((m, i) => {

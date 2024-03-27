@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import { NormalTournamentMatch, Ranking, UpcomingMatchup } from '../api'
+import { NormalTournament, Ranking, UpcomingMatchup } from '../api'
 
 /** Stage of the tournament */
 export enum TournamentState {
@@ -63,12 +63,10 @@ export const FireTournamentContext = createContext<FireTournamentInfo>({
 })
 
 interface NormalTournamentInfo {
-  matches: NormalTournamentMatch[]
+  tournament?: NormalTournament
 }
 
-export const NormalTournamentContext = createContext<NormalTournamentInfo>({
-  matches: []
-})
+export const NormalTournamentContext = createContext<NormalTournamentInfo>({})
 
 // need to use this because of parsing error with ts-standard
 const defaultFunction = (): void => { throw new Error('Not implemented') }

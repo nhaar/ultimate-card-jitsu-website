@@ -1,7 +1,7 @@
 import { useContext, useEffect, useRef, useState } from 'react'
 
 import config from './config.json'
-import { FinalStandings, NormalTournamentMatch, Ranking, TournamentPhase, getNormalTournament, getPlayerInfo, getRankings, getTournamentDate, getTournamentFinalStandings, getUpcomingMatchups, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished, UpcomingMatchup } from './api'
+import { FinalStandings, NormalTournamentMatch, Ranking, TournamentPhase, getNormalTournament, getPlayerInfo, getRankings, getTournamentDate, getTournamentFinalStandings, getUpcomingMatchups, isCurrentPhaseFirstPhase, isTournamentActive, isTournamentFinished, UpcomingMatchup, NormalTournament } from './api'
 import Haiku from './Haiku'
 import { FireTournamentContext, NormalTournamentContext, TournamentContext, TournamentState } from './context/TournamentContext'
 import CountdownTimer from './CountdownTimer'
@@ -597,9 +597,9 @@ function BracketView ({ bracket, size, isLoser }: {
   )
 }
 
-/** Component that renders the full view of a double elimination bracket for a regulard card-jitsu tournament */
-function DoubleEliminationBracket (): JSX.Element {
-  const { matches } = useContext(NormalTournamentContext)
+/** Component that renders the full view of elimination bracket for a regulard card-jitsu tournament */
+function EliminationBracket (): JSX.Element {
+  const { tournament } = useContext(NormalTournamentContext)
   const playerInfo = useContext(PlayerInfoContext)
   const [size, setSize] = useState<number>(0)
 
@@ -637,65 +637,93 @@ function DoubleEliminationBracket (): JSX.Element {
     setSize(Math.ceil(Math.log2(Object.keys(playerInfo).length)))
   }, [playerInfo])
 
-  if (size > 0) {
-    const winnerBracket: Bracket = []
-    const loserBracket: Bracket = []
-
-    // in this part here we have to order the rounds accordingly
-
-    let match = 0
-    let round: Round = []
-    let end = 0
-    let matchNumber = Math.pow(2, size - 1)
-    for (let j = 0; j < size; j++) {
-      round = []
-      end = match + matchNumber
-      for (let i = match; i < end; i++) {
-        round.push(matches[i])
-        match++
-      }
-      winnerBracket.push(round)
-      // skip for the first round
-      if (j !== 0) {
+  if (tournament !== undefined) {
+    let bracketElement
+    if (tournament.type === 'double-elimination') {
+      const winnerBracket: Bracket = []
+      const loserBracket: Bracket = []
+  
+      // in this part here we have to order the rounds accordingly
+  
+      let match = 0
+      let round: Round = []
+      let end = 0
+      let matchNumber = Math.pow(2, size - 1)
+      for (let j = 0; j < size; j++) {
         round = []
-        // this one's inverted
-        end = match
-        for (let i = match + matchNumber - 1; i >= end; i--) {
-          round.push(matches[i])
-          match++
-        }
-        loserBracket.push(round)
-      }
-      // skip for the last round
-      if (j !== size - 1) {
-        round = []
-        matchNumber /= 2
         end = match + matchNumber
         for (let i = match; i < end; i++) {
-          round.push(matches[i])
+          round.push(tournament.matches[i])
           match++
         }
-        loserBracket.push(round)
+        winnerBracket.push(round)
+        // skip for the first round
+        if (j !== 0) {
+          round = []
+          // this one's inverted
+          end = match
+          for (let i = match + matchNumber - 1; i >= end; i--) {
+            round.push(tournament.matches[i])
+            match++
+          }
+          loserBracket.push(round)
+        }
+        // skip for the last round
+        if (j !== size - 1) {
+          round = []
+          matchNumber /= 2
+          end = match + matchNumber
+          for (let i = match; i < end; i++) {
+            round.push(tournament.matches[i])
+            match++
+          }
+          loserBracket.push(round)
+        }
       }
-    }
+  
+      const grandFinals = tournament.matches[match]
+      winnerBracket.push([grandFinals])
+      // only add rematch if needed
+      if (grandFinals.results !== undefined) {
+        winnerBracket.push([tournament.matches[match + 1]])
+      }
 
-    const grandFinals = matches[match]
-    winnerBracket.push([grandFinals])
-    // only add rematch if needed
-    if (grandFinals.results !== undefined) {
-      winnerBracket.push([matches[match + 1]])
+      bracketElement = (
+        <div style={{
+          display: 'contents'
+        }}>
+          <BracketView bracket={winnerBracket} size={size} isLoser={false} />
+          <BracketView bracket={loserBracket} size={size} isLoser />
+        </div>
+      )
+    } else if (tournament.type === 'single-elimination') {
+      const bracket: Bracket = []
+      let matchIndex = 0
+      let matchNumber = Math.pow(2, size - 1)
+      for (let j = 0; j < size; j++) {
+        const round: Round = []
+        for (let i = 0; i < matchNumber; i++) {
+          round.push(tournament.matches[matchIndex])
+          matchIndex++
+        }
+        bracket.push(round)
+        matchNumber /= 2
+      }
+
+      bracketElement = (
+        <BracketView bracket={bracket} size={size} isLoser={false} />
+      )
     }
 
     return (
       <div
-        className='bracket pl-1' onMouseMove={handleMouseMoveScroll} onMouseDown={startScrolling} ref={bracketDiv} style={{
+        className='bracket pl-1 is-flex is-justify-content-center is-align-items-center' onMouseMove={handleMouseMoveScroll} onMouseDown={startScrolling} ref={bracketDiv} style={{
           width: '80vw',
           overflowX: 'auto',
           userSelect: 'none'
         }}
       >
-        <BracketView bracket={winnerBracket} size={size} isLoser={false} />
-        <BracketView bracket={loserBracket} size={size} isLoser />
+        {bracketElement}
       </div>
     )
   }
@@ -717,7 +745,7 @@ function NormalTournamentPage (): JSX.Element {
       >
         <Haiku first='The tournament view' second='We can see who is winning' third='And those who are not' />
       </div>
-      <DoubleEliminationBracket />
+      <EliminationBracket />
       <div className='my-5' />
       <UpcomingMatches matches={upcoming} />
     </div>
@@ -898,8 +926,8 @@ export default function MainPage (): JSX.Element {
   const [isFirstPhase, setIsFirstPhase] = useState<boolean>(true)
   const [ranking, setRanking] = useState<Ranking>([])
 
-  // normal tournament only data
-  const [matches, setMatches] = useState<NormalTournamentMatch[]>([])
+  // normal tournament only data, `undefined` if not received
+  const [tournament, setTournament] = useState<NormalTournament | undefined>(undefined)
 
   // initializing page
   useEffect(() => {
@@ -966,7 +994,7 @@ export default function MainPage (): JSX.Element {
         break
       }
       case WebsiteThemes.Normal: {
-        setMatches(await getNormalTournament())
+        setTournament(await getNormalTournament())
         break
       }
     }
@@ -1032,7 +1060,7 @@ export default function MainPage (): JSX.Element {
     case WebsiteThemes.Normal:
       contextProvider = (
         <NormalTournamentContext.Provider value={{
-          matches
+          tournament
         }}
         >
           {baseElement}

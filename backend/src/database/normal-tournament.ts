@@ -741,8 +741,171 @@ class EvenLoserRound {
   }
 }
 
-/** Class for an ongoing tournament of Card-Jitsu */
-export default class NormalTournament extends Tournament {
+/** Base class for double and single elimination tournaments */
+abstract class EliminationBracket extends Tournament {
+  /**
+   * Method implements way of iterating through all matches in order and use a callback on it
+   * @param callback Function takes the match itself, the match number (in the order they will actually be played) and the original match number (including matchs not played)
+   */
+  abstract iterate (callback: (match: Match, n: number, on: number) => void): void
+
+  /** Method that implements getting all matches (in the order they are played) */
+  abstract getMatches (): TournamentMatch[]
+  
+  override getMatchups (): Matchup[] {
+    const matches = this.getMatches()
+    return matches.filter((match) => match.n !== -1 && match.results === undefined).map((match) => {
+      const players: Array<string | number> = [];
+      [match.player1, match.player2].forEach(player => {
+        if (player !== undefined) {
+          players.push(player)
+        }
+      })
+      return { players, n: match.n }
+    })
+  }
+
+  /** Method that implements deciding a match, only changing the class data and not involving saving the results. */
+  protected abstract decideMatchInternally (matchNumber: number, leftScore: number, rightScore: number): void
+
+  /**
+   * Decides a match's results (and saves it).
+   * @param matchNumber Number of the match (in the order they are played)
+   * @param leftScore Score of the "left" player
+   * @param rightScore Score of the "right" player
+   */
+  async decideMatch (matchNumber: number, leftScore: number, rightScore: number): Promise<void> {
+    this.decideMatchInternally(matchNumber, leftScore, rightScore)
+    await this.save()
+  }
+}
+
+/** Class for a single elimination tournament */
+export class SingleEliminationTournament extends EliminationBracket {
+  bracket: WinnerBracket
+
+  constructor (value: any) {
+    super(value)
+    this.type = 'single-elimination'
+    if (Array.isArray(value)) {
+      const tournamentPlayers = new NormalTournamentPlayers(this.players)
+      this.bracket = WinnerBracket.fromPlayers(tournamentPlayers)
+    } else {
+      this.bracket = WinnerBracket.fromData(value.tournamentSpecific.bracket)
+    }
+  }
+
+  override iterate (callback: (match: Match, n: number, on: number) => void): void {
+    let round = this.bracket.getFirstRound()
+    let number = 1
+    let orderNumber = 1
+    while (true) {
+      for (const match of round.matches) {
+        const hasBye = match.hasBye()
+        const n = hasBye ? -1 : number
+        callback(match, n, orderNumber)
+        if (!hasBye) {
+          number++
+        }
+        orderNumber++
+      }
+      if (round.isEnd()) {
+        break
+      } else {
+        round = round.getNextRound()
+      }
+    }
+  }
+
+  override isSpecificTournamentObject(tournamentSpecific: any): boolean {
+    return true  
+  }
+
+  override getSpecificData() {
+    return {
+      bracket: this.bracket.getData()
+    }
+  }
+
+  override getFinalStandings(): FinalStandings {
+    const standings: FinalStandings = []
+    const winner = this.bracket.final.getWinner()
+    if (typeof winner !== 'number') {
+      throw new Error('Tournament not finished')
+    }
+    standings.push(winner)
+    let current: WinnerMatch[] = [this.bracket.final]
+    let queue:WinnerMatch[] = []
+    let isBottom = false
+    while (!isBottom) {
+      const roundStandings: number[] = []
+      for (const match of current) {
+        const loser = match.getLoser()
+        if (typeof loser !== 'number') {
+          throw new Error('Tournament not finished')
+        }
+        if (match.left instanceof WinnerMatch && match.right instanceof WinnerMatch) {
+          queue.push(match.left)
+          queue.push(match.right)
+        } else {
+          isBottom = true
+        }
+        roundStandings.push(loser)
+      }
+      current = queue
+      queue = []
+      if (roundStandings.length === 1) {
+        standings.push(roundStandings[0])
+      } else {
+        standings.push(roundStandings)
+      }
+    }
+    return standings    
+  }
+
+  override getMatches (): TournamentMatch[] {
+    const matches:TournamentMatch[] = []
+    this.iterate((match, n, on) => {
+      const matchup = match.getMatchup()
+      let players = matchup.map((player) => {
+        if (player === null) {
+          return undefined
+        } else if (player === undefined) {
+          return ''
+        } else {
+          return player
+        }
+      })
+      matches.push({
+        player1: players[0],
+        player2: players[1],
+        results: match.results,
+        n
+      })
+    })
+
+    return matches
+  }
+
+  protected override decideMatchInternally(matchNumber: number, leftScore: number, rightScore: number): void {
+    let isLast = true
+    let decided = false
+    this.iterate((match, n) => {
+      if (matchNumber === n) {
+        decided = true
+        match.decide(leftScore, rightScore)
+      } else if (decided) {
+        isLast = false
+      }
+    })
+    if (isLast) {
+      this.isFinished = true
+    }
+  }
+}
+
+/** Class for a double elimination tournament */
+export class DoubleEliminationTournament extends EliminationBracket {
   winnersBracket: WinnerBracket
   losersBracket: LoserBracket
   grandFinals: GrandFinals
@@ -750,7 +913,7 @@ export default class NormalTournament extends Tournament {
 
   constructor (value: any) {
     super(value)
-    this.type = 'normal'
+    this.type = 'double-elimination'
     if (Array.isArray(value)) {
       const tournamentPlayers = new NormalTournamentPlayers(this.players)
       this.winnersBracket = WinnerBracket.fromPlayers(tournamentPlayers)
@@ -999,19 +1162,7 @@ export default class NormalTournament extends Tournament {
     }
   }
 
-  static async createTournament (players: PlayerInfo[]): Promise<NormalTournament> {
-    const tournament = new NormalTournament(players)
-    await tournament.save()
-    return tournament
-  }
-
-  /**
-   * Decide a match's results
-   * @param matchNumber Number of the match
-   * @param leftScore Score of the "left" player
-   * @param rightScore Score of the "right" player
-   */
-  async decideMatch (matchNumber: number, leftScore: number, rightScore: number): Promise<void> {
+  override decideMatchInternally (matchNumber: number, leftScore: number, rightScore: number): void {
     let isRematchSkip = false
     this.iterate((m, n) => {
       if (n === matchNumber) {
@@ -1028,8 +1179,6 @@ export default class NormalTournament extends Tournament {
         this.isFinished = true
       }
     })
-
-    await this.save()
   }
 
   override getFinalStandings (): FinalStandings {
@@ -1079,16 +1228,5 @@ export default class NormalTournament extends Tournament {
     }
   }
 
-  override getMatchups (): Matchup[] {
-    const matches = this.getMatches()
-    return matches.filter((match) => match.n !== -1 && match.results === undefined).map((match) => {
-      const players: Array<string | number> = [];
-      [match.player1, match.player2].forEach(player => {
-        if (player !== undefined) {
-          players.push(player)
-        }
-      })
-      return { players, n: match.n }
-    })
-  }
+
 }
