@@ -251,26 +251,6 @@ class FireTournament extends Tournament {
     return true
   }
 
-  static async tournamentExists (): Promise<boolean> {
-    const db = new Database()
-    const query = await db.getQuery('SELECT * FROM tournament', [])
-    return query.rows.length > 0
-  }
-
-  /**
-   * Get the scheduled date for the tournament
-   * @returns Timestamp of the date in string format and in miliseconds since start of unix, or null if it hasn't been set
-   */
-  static async getTournamentDate (): Promise<string | null> {
-    const db = new Database()
-    const query = await db.getQuery('SELECT * FROM tournament_date', [])
-    if (query.rows.length === 0) {
-      return null
-    } else {
-      return query.rows[0].date
-    }
-  }
-
   getMatches (): Match[] {
     return [...this.bracket.start.matches, ...this.bracket.final.matches]
   }
@@ -615,32 +595,6 @@ class FireTournament extends Tournament {
     } else {
       return this.hasFinalEnded() && this.containsTie()
     }
-  }
-
-  /**
-   * Updates date for the start of the tournament
-   * @param date Miliseconds since epoch in string format
-   */
-  static async setTournamentDate (date: string): Promise<void> {
-    const db = new Database()
-    const query = await db.getQuery('SELECT * FROM tournament_date', [])
-    if (query.rows.length === 0) {
-      await db.getQuery('INSERT INTO tournament_date (date) VALUES ($1)', [date])
-    } else {
-      await db.getQuery('UPDATE tournament_date SET date = $1', [date])
-    }
-  }
-
-  /** Removes the scheduled tournament date */
-  static async removeTournamentDate (): Promise<void> {
-    const db = new Database()
-    await db.getQuery('DELETE FROM tournament_date', [])
-  }
-
-  /** Deletes an active tournament */
-  static async deleteTournament (): Promise<void> {
-    const db = new Database()
-    await db.getQuery('DELETE FROM tournament', [])
   }
 
   /** Get a string descriptor of the current phase, used for display by the stream */

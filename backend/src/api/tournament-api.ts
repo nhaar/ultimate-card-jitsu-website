@@ -2,8 +2,8 @@ import express = require('express')
 import { Request, Response } from 'express'
 import { asyncWrapper, checkBotMiddleware, isStringNumber } from '../utils/utils'
 import User from '../database/user'
-import { PlayerInfo, TournamentType } from '../database/tournament'
-import FireTournament, { TournamentPhase } from '../database/fire-tournament'
+import Tournament, { PlayerInfo, TournamentType } from '../database/tournament'
+import { TournamentPhase } from '../database/fire-tournament'
 import AnyTournament from '../database/any-tournament'
 
 const router = express.Router()
@@ -121,12 +121,12 @@ router.get('/tie', asyncWrapper(async (req: Request, res: Response): Promise<voi
 }))
 
 router.get('/active', asyncWrapper(async (req: Request, res: Response): Promise<void> => {
-  const exists = await FireTournament.tournamentExists()
+  const exists = await Tournament.tournamentExists()
   res.json({ active: exists }).status(200)
 }))
 
 router.get('/date', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-  const date = await FireTournament.getTournamentDate()
+  const date = await Tournament.getTournamentDate()
   res.json({ date }).status(200)
 }))
 
@@ -215,7 +215,7 @@ router.get('/is-finished', asyncWrapper(async (_: Request, res: Response): Promi
 }))
 
 router.post('/delete', User.checkAdminMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-  await FireTournament.deleteTournament()
+  await Tournament.deleteTournament()
   res.sendStatus(200)
 }))
 
@@ -229,12 +229,12 @@ router.post('/set-date', User.checkAdminMiddleware, asyncWrapper(async (req: Req
     res.status(400).json({ error: 'date must be a number' })
     return
   }
-  await FireTournament.setTournamentDate(date)
+  await Tournament.setTournamentDate(date)
   res.sendStatus(200)
 }))
 
 router.post('/reset-date', User.checkAdminMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
-  await FireTournament.removeTournamentDate()
+  await Tournament.removeTournamentDate()
   res.sendStatus(200)
 }))
 
