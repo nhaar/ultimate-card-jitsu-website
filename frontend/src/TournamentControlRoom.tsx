@@ -150,7 +150,7 @@ function PretournamentControlRoom (): JSX.Element {
           )
         })}
       </div>
-      
+
       <div>
         <span
           className='burbank black-shadow' style={{

@@ -751,7 +751,7 @@ abstract class EliminationBracket extends Tournament {
 
   /** Method that implements getting all matches (in the order they are played) */
   abstract getMatches (): TournamentMatch[]
-  
+
   override getMatchups (): Matchup[] {
     const matches = this.getMatches()
     return matches.filter((match) => match.n !== -1 && match.results === undefined).map((match) => {
@@ -817,17 +817,17 @@ export class SingleEliminationTournament extends EliminationBracket {
     }
   }
 
-  override isSpecificTournamentObject(tournamentSpecific: any): boolean {
-    return true  
+  override isSpecificTournamentObject (tournamentSpecific: any): boolean {
+    return true
   }
 
-  override getSpecificData() {
+  override getSpecificData (): any {
     return {
       bracket: this.bracket.getData()
     }
   }
 
-  override getFinalStandings(): FinalStandings {
+  override getFinalStandings (): FinalStandings {
     const standings: FinalStandings = []
     const winner = this.bracket.final.getWinner()
     if (typeof winner !== 'number') {
@@ -835,7 +835,7 @@ export class SingleEliminationTournament extends EliminationBracket {
     }
     standings.push(winner)
     let current: WinnerMatch[] = [this.bracket.final]
-    let queue:WinnerMatch[] = []
+    let queue: WinnerMatch[] = []
     let isBottom = false
     while (!isBottom) {
       const roundStandings: number[] = []
@@ -860,14 +860,14 @@ export class SingleEliminationTournament extends EliminationBracket {
         standings.push(roundStandings)
       }
     }
-    return standings    
+    return standings
   }
 
   override getMatches (): TournamentMatch[] {
-    const matches:TournamentMatch[] = []
+    const matches: TournamentMatch[] = []
     this.iterate((match, n, on) => {
       const matchup = match.getMatchup()
-      let players = matchup.map((player) => {
+      const players = matchup.map((player) => {
         if (player === null) {
           return undefined
         } else if (player === undefined) {
@@ -887,7 +887,7 @@ export class SingleEliminationTournament extends EliminationBracket {
     return matches
   }
 
-  protected override decideMatchInternally(matchNumber: number, leftScore: number, rightScore: number): void {
+  protected override decideMatchInternally (matchNumber: number, leftScore: number, rightScore: number): void {
     let isLast = true
     let decided = false
     this.iterate((match, n) => {
@@ -1227,6 +1227,4 @@ export class DoubleEliminationTournament extends EliminationBracket {
       return []
     }
   }
-
-
 }

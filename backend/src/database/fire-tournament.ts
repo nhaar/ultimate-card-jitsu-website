@@ -1,6 +1,5 @@
 import { isObject, isStringNumber } from '../utils/utils'
-import Database from './database'
-import Tournament, { FinalStandings, Matchup, PlayerInfo } from './tournament'
+import Tournament, { FinalStandings, Matchup } from './tournament'
 
 interface PlayerPoints {
   [key: number]: number

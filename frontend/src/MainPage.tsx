@@ -642,9 +642,9 @@ function EliminationBracket (): JSX.Element {
     if (tournament.type === 'double-elimination') {
       const winnerBracket: Bracket = []
       const loserBracket: Bracket = []
-  
+
       // in this part here we have to order the rounds accordingly
-  
+
       let match = 0
       let round: Round = []
       let end = 0
@@ -680,7 +680,7 @@ function EliminationBracket (): JSX.Element {
           loserBracket.push(round)
         }
       }
-  
+
       const grandFinals = tournament.matches[match]
       winnerBracket.push([grandFinals])
       // only add rematch if needed
@@ -691,7 +691,8 @@ function EliminationBracket (): JSX.Element {
       bracketElement = (
         <div style={{
           display: 'contents'
-        }}>
+        }}
+        >
           <BracketView bracket={winnerBracket} size={size} isLoser={false} />
           <BracketView bracket={loserBracket} size={size} isLoser />
         </div>

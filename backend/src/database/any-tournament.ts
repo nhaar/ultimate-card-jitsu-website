@@ -134,8 +134,8 @@ export default class AnyTournament extends Tournament {
 
   /**
    * Create a tournament and returns it
-   * @param type 
-   * @param players 
+   * @param type
+   * @param players
    * @returns `undefined` if was not able to create it (invalid type)
    */
   static async createTournament (type: TournamentType, players: PlayerInfo[]): Promise<FireTournament | DoubleEliminationTournament | SingleEliminationTournament | undefined> {

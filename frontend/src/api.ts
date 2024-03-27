@@ -1,5 +1,4 @@
 import { getJSON, postAndGetJSON, postJSON } from './utils'
-import { WebsiteThemes, getWebsiteTheme } from './website-theme'
 
 /**
  * Checks if a tournament is active
@@ -420,7 +419,7 @@ export interface NormalTournamentMatch {
 
 /** Tournament in a match of regular card-jitsu */
 export interface NormalTournament {
-  matches: NormalTournamentMatch[],
+  matches: NormalTournamentMatch[]
   type: 'double-elimination' | 'single-elimination'
 }
 
