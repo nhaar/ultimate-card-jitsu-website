@@ -57,7 +57,7 @@ $body-background-color: $logo-background;
   background-color: $shadow-suit-black;
 }
 
-@import "~bulma/bulma";
+@import "node_modules/bulma/bulma";
 
 .hideout-gray-bg-alpha {
   background-color: rgba($hideout-gray-rock, .6);

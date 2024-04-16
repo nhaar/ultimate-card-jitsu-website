@@ -236,7 +236,7 @@ function FinalPhaseRankings ({ ranking }: { ranking: Ranking }): JSX.Element {
 }
 
 /** Component that renders a match's players */
-export function TournamentMatchElement ({ match, displayId }: { match: UpcomingMatchup, displayId?: boolean }): JSX.Element {
+export function TournamentMatchElement ({ match }: { match: UpcomingMatchup, displayId?: boolean }): JSX.Element {
   const playerInfo = useContext(PlayerInfoContext)
 
   let players = match.players.map((p) => {
