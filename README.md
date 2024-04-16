@@ -14,6 +14,7 @@ Run `npm install` in both the `frontend` and `backend` directories.
     3. Set your `DISCORD_WIDGET` (widget id for the Discord server on the front page)
     4. Set your `STREAM_CHANNEL`, (Twitch username for embed on the front page)
     5. Set your `TOURNAMENT_TYPE` (`normal`, `fire`, `water`, or `snow` for respective theming)
+    6. For the normal tournament rules, update `NORMAL_TYPE` to either `single` or `double`
 
     For the backend:
     1. Copy `config-template.ts` in `/backend/src` and rename it to `config.ts`

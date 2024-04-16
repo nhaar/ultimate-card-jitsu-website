@@ -2,5 +2,6 @@
   "SERVER_URL": "",
   "DISCORD_WIDGET": "",
   "STREAM_CHANNEL": "",
-  "TOURNAMENT_TYPE": ""
+  "TOURNAMENT_TYPE": "",
+  "NORMAL_TYPE": ""
 }
