@@ -451,7 +451,7 @@ export interface UserInfo {
   pronouns: string
 }
 
-export async function getAllUserInfo(): Promise<UserInfo[]> {
+export async function getAllUserInfo (): Promise<UserInfo[]> {
   const response = await getJSON('api/user/all-user-info')
   if (response === null) {
     return []
