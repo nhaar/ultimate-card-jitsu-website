@@ -267,4 +267,9 @@ router.get('/discord-names', checkBotMiddleware, asyncWrapper(async (_: Request,
   res.status(200).send(discord)
 }))
 
+router.get('/all-user-info', User.checkAdminMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
+  const info = await User.getAllUserInfo()
+  res.status(200).send(info)
+}))
+
 export default router

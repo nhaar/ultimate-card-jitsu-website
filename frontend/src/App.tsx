@@ -24,6 +24,7 @@ import AdminPage from './AdminPage'
 import DiscordAssigner from './DiscordAssigner'
 import Haiku from './Haiku'
 import { WebsiteThemes, getWebsiteTheme } from './website-theme'
+import InfoViewer from './InfoViewer'
 
 // dynamically update site theme based on tourney type
 function changeFavicon (theme: WebsiteThemes): void {
@@ -191,6 +192,10 @@ export default function App (): JSX.Element {
     }
     case '/discord-assign': {
       Page = <DiscordAssigner />
+      break
+    }
+    case '/players-info': {
+      Page = <InfoViewer />
       break
     }
     default: {

@@ -7,6 +7,12 @@ import Database from './database'
 import { config } from '../config'
 import { formatCookies } from '../utils/utils'
 
+interface UserInfo {
+  name: string
+  discord: string
+  pronouns: string
+}
+
 export default class User {
   db: Database
   id: number
@@ -243,5 +249,15 @@ export default class User {
     }
 
     return map
+  }
+
+  static async getAllUserInfo (): Promise<UserInfo[]> {
+    const db = new Database()
+    const res = await db.getQuery('SELECT username, discord, pronouns FROM players', [])
+    return res.rows.map((row: any) => ({
+      name: row.username,
+      discord: row.discord,
+      pronouns: row.pronouns?.slice(0, 10)
+    }))
   }
 }

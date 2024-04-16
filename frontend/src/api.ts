@@ -444,3 +444,18 @@ export async function decideNormalMatch (matchNumber: number, leftScore: number,
   const response = await postJSON('api/tournament/update-normal-score', { matchNumber, leftScore, rightScore })
   return response.ok
 }
+
+export interface UserInfo {
+  name: string
+  discord: string
+  pronouns: string
+}
+
+export async function getAllUserInfo(): Promise<UserInfo[]> {
+  const response = await getJSON('api/user/all-user-info')
+  if (response === null) {
+    return []
+  } else {
+    return response as UserInfo[]
+  }
+}
