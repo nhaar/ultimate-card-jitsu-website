@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react'
-import { NormalTournamentMatch, TournamentMatch, TournamentTies, TournamentType, createTournament, decideNormalMatch, deleteTournament, getAllPlayers, getNormalTournament, getPlayerInfo, getTies, getTournamentMatches, isTournamentActive, resetTournamentDate, rollbackTournament, setTournamentDate, settleTie, updateMatchScore } from './api'
+import { NormalTournamentMatch, TournamentMatch, TournamentTies, TournamentType, createTournament, decideNormalMatch, deleteTournament, getAllPlayers, getNormalTournament, getPlayerInfo, getTies, getTournamentMatches, isTournamentActive, resetTournamentDate, rollbackTournament, setTournamentDate, settleTie, updateBattleInfo, updateMatchScore } from './api'
 import { PlayerInfoContext } from './context/PlayerInfoContext'
 import { TournamentUpdate, TournamentUpdateContext } from './context/TournamentContext'
 import { UcjWS } from './ws'
@@ -468,6 +468,15 @@ function NormalMatchDecider ({ match }: { match: NormalTournamentMatchup }): JSX
     })
   }
 
+  /** Used to send to database what the current player match is */
+  function handleSet (): void {
+    void updateBattleInfo(playerInfo[match.player1], playerInfo[match.player2]).then((ok) => {
+      if (!ok) {
+        window.alert('BROKEN!!!???')
+      }
+    })
+  }
+
   return (
     <div
       className='is-flex' style={{
@@ -486,6 +495,7 @@ function NormalMatchDecider ({ match }: { match: NormalTournamentMatchup }): JSX
         </div>
       </div>
       <button className='button is-danger' onClick={handleDecide}>DECIDE</button>
+      <button className='button burbank' onClick={handleSet}> SET CURRENT! </button>
     </div>
   )
 }

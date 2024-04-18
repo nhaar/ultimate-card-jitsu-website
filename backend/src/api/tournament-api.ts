@@ -5,6 +5,7 @@ import User from '../database/user'
 import Tournament, { PlayerInfo, TournamentType } from '../database/tournament'
 import { TournamentPhase } from '../database/fire-tournament'
 import AnyTournament from '../database/any-tournament'
+import BattleInfo from '../database/battle-info'
 
 const router = express.Router()
 
@@ -290,6 +291,28 @@ router.get('/decided-matchups', checkBotMiddleware, asyncWrapper(async (_: Reque
 
   const matchups = tournament.getDecidedMatchups()
   res.status(200).send(matchups)
+}))
+
+router.get('/obs-battle-info', asyncWrapper(async (_: Request, res: Response): Promise<void> => {
+  const battleInfo = new BattleInfo()
+  const info = await battleInfo.readInfo()
+  if (info === undefined) {
+    res.sendStatus(404)
+    return
+  }
+  res.status(200).send(info)
+}))
+
+router.post('/obs-battle-info', User.checkAdminMiddleware, asyncWrapper(async (req: Request, res: Response): Promise<void> => {
+  const battleInfo = new BattleInfo()
+  const { player1, player2 } = req.body
+  if (typeof player1 !== 'string' || typeof player2 !== 'string') {
+    res.sendStatus(400)
+    return
+  }
+
+  await battleInfo.writeInfo(player1, player2)
+  res.sendStatus(200)
 }))
 
 export default router

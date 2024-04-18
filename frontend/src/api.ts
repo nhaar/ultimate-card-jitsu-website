@@ -459,3 +459,9 @@ export async function getAllUserInfo (): Promise<UserInfo[]> {
     return response as UserInfo[]
   }
 }
+
+/** Updates the database's info for the current battle (meant for the helper in UCJ tournaments) */
+export async function updateBattleInfo (player1: string, player2: string): Promise<boolean> {
+  const response = await postJSON('api/tournament/obs-battle-info', { player1, player2 })
+  return response.ok
+}

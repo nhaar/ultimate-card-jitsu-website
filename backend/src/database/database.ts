@@ -48,6 +48,13 @@ export default class Database {
         date TEXT
       );
     `)
+
+    await this.pool.query(`
+      CREATE TABLE IF NOT EXISTS obs_battle_info (
+        player1 TEXT,
+        player2 TEXT
+      )
+    `)
   }
 
   async getQuery (query: string, values: any[]): Promise<any> {
