@@ -26,3 +26,8 @@ def get_player_info() -> dict:
   r = bot_get('api/tournament/players-info')
   info = r.json()
   return info
+
+def ping() -> bool:
+  '''Checks whether bot is authenticated'''
+  r = bot_get('api/tournament/bot-ping')
+  return r.status_code == 200

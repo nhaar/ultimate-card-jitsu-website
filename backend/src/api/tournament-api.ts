@@ -315,4 +315,8 @@ router.post('/obs-battle-info', User.checkAdminMiddleware, asyncWrapper(async (r
   res.sendStatus(200)
 }))
 
+router.get('/bot-ping', checkBotMiddleware, asyncWrapper(async (_: Request, res: Response): Promise<void> => {
+  res.sendStatus(200)
+}))
+
 export default router
