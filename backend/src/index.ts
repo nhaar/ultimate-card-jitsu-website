@@ -32,9 +32,9 @@ wss.onConnection((ws) => {
       case 'stream-data': {
         // to avoid sending too much data and potentially overloading the backend
         // we only send back if the data is truly being demanded
-        if (wss.screenshare.isPlayerBeingWatched(data.value.id)) {
+        if (wss.screenshare.isPlayerBeingWatched(ws.id)) {
           if (wss.screenshare.adminWS !== undefined) {
-            wss.screenshare.adminWS.send('stream-data', data.value)
+            wss.screenshare.adminWS.send('stream-data', { ...data.value, id: ws.id })
           }
         }
         break
